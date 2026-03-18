@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import BookmarkRoundedIcon from '@mui/icons-material/BookmarkRounded';
 import DomainRoundedIcon from '@mui/icons-material/DomainRounded';
@@ -117,8 +117,9 @@ export default function StatCards({ summary, jobs, loading }) {
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 'var(--dashboard-block-gap)' }}>
       {cards.map((card) => (
         <Card key={card.label} sx={cardBaseSx}>
-          <CardContent sx={{ px: 'var(--dashboard-card-px)', py: 'var(--dashboard-card-py)', '&:last-child': { pb: 'var(--dashboard-card-py)' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+          <Grid container sx={{ px: 'var(--dashboard-card-px)', py: 'var(--dashboard-card-py)', '&:last-child': { pb: 'var(--dashboard-card-py)' } }}>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
               <Box sx={{ minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.25 }}>
                   {(() => {
@@ -226,7 +227,8 @@ export default function StatCards({ summary, jobs, loading }) {
                 </Box>
               )}
             </Box>
-          </CardContent>
+            </Grid>
+          </Grid>
         </Card>
       ))}
     </Box>

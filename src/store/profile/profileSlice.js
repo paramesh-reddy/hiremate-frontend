@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getProfileDataAPI, patchProfileAPI } from '../../services';
+import { getProfileDataAPI, patchProfileAPI, invalidateFieldAnswersAPI } from '../../services';
 import {
   mapParsedProfile,
   mapParsedExperience,
@@ -81,6 +81,12 @@ export const updateProfile = createAsyncThunk(
       const { profile } = getState();
       const payload = buildProfilePayload(profile.form);
       const { data } = await patchProfileAPI(payload);
+      try {
+        await invalidateFieldAnswersAPI();
+        if (typeof window !== 'undefined') {
+          window.postMessage({ type: 'HIREMATE_PROFILE_SAVED' }, window.location.origin);
+        }
+      } catch (_) { /* non-blocking */ }
       return data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message || 'Failed to save profile');

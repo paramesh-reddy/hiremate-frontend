@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160">
+  <rect fill="#fff" stroke="#e0e0e0" stroke-width="1" width="120" height="160" rx="2"/>
+  <!-- Navy header band -->
+  <rect fill="#0f2952" x="0" y="0" width="120" height="28" rx="2"/>
+  <rect fill="#0f2952" x="0" y="22" width="120" height="6"/>
+  <text x="8" y="11" fill="#fff" font-size="8" font-weight="bold" font-family="Calibri,Arial,sans-serif" letter-spacing="1">JOHN DOE</text>
+  <text x="8" y="20" fill="#93c5fd" font-size="3.8" font-family="Calibri,Arial,sans-serif">email@example.com | 555-0100 | linkedin.com/in/john</text>
+  <!-- CORE COMPETENCIES -->
+  <text x="8" y="34" fill="#0f2952" font-size="4.5" font-weight="bold" font-family="Calibri,Arial,sans-serif" letter-spacing="1">CORE COMPETENCIES</text>
+  <line x1="8" y1="36" x2="112" y2="36" stroke="#0f2952" stroke-width="1.2"/>
+  <rect fill="#d1d5db" x="8" y="38" width="48" height="2" rx="0.5"/>
+  <rect fill="#d1d5db" x="62" y="38" width="50" height="2" rx="0.5"/>
+  <rect fill="#d1d5db" x="8" y="42" width="44" height="2" rx="0.5"/>
+  <rect fill="#d1d5db" x="62" y="42" width="46" height="2" rx="0.5"/>
+  <!-- PROFESSIONAL EXPERIENCE -->
+  <text x="8" y="51" fill="#0f2952" font-size="4.5" font-weight="bold" font-family="Calibri,Arial,sans-serif" letter-spacing="1">PROFESSIONAL EXPERIENCE</text>
+  <line x1="8" y1="53" x2="112" y2="53" stroke="#0f2952" stroke-width="1.2"/>
+  <rect fill="#333" x="8" y="55" width="62" height="2.5" rx="0.5"/>
+  <rect fill="#777" x="8" y="59" width="40" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="63" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="67" width="96" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="71" width="88" height="1.8" rx="0.5"/>
+  <!-- EDUCATION -->
+  <text x="8" y="80" fill="#0f2952" font-size="4.5" font-weight="bold" font-family="Calibri,Arial,sans-serif" letter-spacing="1">EDUCATION</text>
+  <line x1="8" y1="82" x2="112" y2="82" stroke="#0f2952" stroke-width="1.2"/>
+  <rect fill="#333" x="8" y="84" width="70" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="89" width="55" height="1.8" rx="0.5"/>
+  <!-- PROJECTS -->
+  <text x="8" y="98" fill="#0f2952" font-size="4.5" font-weight="bold" font-family="Calibri,Arial,sans-serif" letter-spacing="1">PROJECTS</text>
+  <line x1="8" y1="100" x2="112" y2="100" stroke="#0f2952" stroke-width="1.2"/>
+  <rect fill="#333" x="8" y="102" width="64" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="107" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="111" width="90" height="1.8" rx="0.5"/>
+</svg>

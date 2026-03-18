@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160">
+  <rect fill="#fff" stroke="#e0e0e0" stroke-width="1" width="120" height="160" rx="2"/>
+  <text x="60" y="13" fill="#000" font-size="9" font-family="Garamond,Georgia,serif" text-anchor="middle" font-weight="bold">JOHN DOE</text>
+  <text x="60" y="20" fill="#333" font-size="4" font-family="Garamond,Georgia,serif" text-anchor="middle">email@example.com · github · linkedin</text>
+  <line x1="8" y1="23" x2="112" y2="23" stroke="#000" stroke-width="0.9"/>
+  <text x="8" y="30" fill="#000" font-size="5" font-family="Garamond,Georgia,serif" font-weight="bold" letter-spacing="0.8">EXPERIENCE</text>
+  <line x1="8" y1="32" x2="112" y2="32" stroke="#000" stroke-width="0.5"/>
+  <rect fill="#444" x="8" y="34" width="62" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="39" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="43" width="95" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="47" width="88" height="1.8" rx="0.5"/>
+  <rect fill="#444" x="8" y="53" width="58" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="58" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="62" width="92" height="1.8" rx="0.5"/>
+  <text x="8" y="71" fill="#000" font-size="5" font-family="Garamond,Georgia,serif" font-weight="bold" letter-spacing="0.8">EDUCATION</text>
+  <line x1="8" y1="73" x2="112" y2="73" stroke="#000" stroke-width="0.5"/>
+  <rect fill="#444" x="8" y="75" width="72" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="80" width="58" height="1.8" rx="0.5"/>
+  <text x="8" y="89" fill="#000" font-size="5" font-family="Garamond,Georgia,serif" font-weight="bold" letter-spacing="0.8">SKILLS</text>
+  <line x1="8" y1="91" x2="112" y2="91" stroke="#000" stroke-width="0.5"/>
+  <rect fill="#bbb" x="8" y="93" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="97" width="88" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="101" width="94" height="1.8" rx="0.5"/>
+  <text x="8" y="110" fill="#000" font-size="5" font-family="Garamond,Georgia,serif" font-weight="bold" letter-spacing="0.8">PROJECTS</text>
+  <line x1="8" y1="112" x2="112" y2="112" stroke="#000" stroke-width="0.5"/>
+  <rect fill="#444" x="8" y="114" width="65" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="119" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="123" width="90" height="1.8" rx="0.5"/>
+</svg>

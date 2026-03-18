@@ -13,6 +13,9 @@ export const listJobsAPI = (options) => {
   return axiosClient.get('/chrome-extension/jobs', Object.keys(params).length ? { params } : {});
 };
 
+export const getJobAPI = (jobId) =>
+  axiosClient.get(`/chrome-extension/jobs/${jobId}`);
+
 export const updateJobStatusAPI = (jobId, applicationStatus) =>
   axiosClient.patch(`/chrome-extension/jobs/${jobId}`, { application_status: applicationStatus });
 

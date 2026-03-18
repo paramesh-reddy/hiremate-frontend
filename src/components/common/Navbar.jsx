@@ -74,16 +74,16 @@ export default function Navbar({ showProfile = true }) {
       position="fixed"
       elevation={0}
       sx={{
-        height: 'var(--navbar-height)',
+        height: '60px',
         bgcolor: 'var(--navbar-bg)',
         color: 'var(--text-primary)',
-        boxShadow: 'var(--navbar-shadow)',
+        boxShadow: '0 1px 0 0 var(--border-color)',
       }}
     >
       <Toolbar
         disableGutters
         sx={{
-          minHeight: 'var(--navbar-height) !important',
+          minHeight: '60px !important',
           px: 3,
           display: 'flex',
           alignItems: 'center',

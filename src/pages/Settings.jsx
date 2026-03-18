@@ -3,7 +3,7 @@ import {
   Typography,
   Box,
   Card,
-  CardContent,
+  Grid,
   Button,
 } from '@mui/material';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
@@ -50,16 +50,17 @@ export default function Settings() {
           overflow: 'visible',
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              flexWrap: { xs: 'wrap', sm: 'nowrap' },
-              gap: 2,
-            }}
-          >
+        <Grid container sx={{ p: 3 }}>
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                gap: 2,
+              }}
+            >
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
               <AssignmentRoundedIcon
                 sx={{
@@ -120,7 +121,8 @@ export default function Settings() {
               View Plans
             </Button>
           </Box>
-        </CardContent>
+          </Grid>
+        </Grid>
       </Card>
 
       {/* Danger Zone */}
@@ -133,16 +135,17 @@ export default function Settings() {
           overflow: 'visible',
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              flexWrap: { xs: 'wrap', sm: 'nowrap' },
-              gap: 2,
-            }}
-          >
+        <Grid container sx={{ p: 3 }}>
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                gap: 2,
+              }}
+            >
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
               <WarningAmberRoundedIcon
                 sx={{
@@ -214,7 +217,8 @@ export default function Settings() {
               Delete Account
             </Button>
           </Box>
-        </CardContent>
+          </Grid>
+        </Grid>
       </Card>
     </PageContainer>
   );

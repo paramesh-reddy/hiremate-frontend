@@ -8,7 +8,7 @@ import {
   Tabs,
   Tab,
   Card,
-  CardContent,
+  Grid,
   IconButton,
   Accordion,
   AccordionSummary,
@@ -348,18 +348,20 @@ export default function InterviewQnAGenerator() {
                     },
                   }}
                 >
-                  <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: isSelected ? 600 : 500,
-                        color: 'text.primary',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {idx + 1}. {q.question}
-                    </Typography>
-                  </CardContent>
+                  <Grid container sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+                    <Grid item xs={12}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: isSelected ? 600 : 500,
+                          color: 'text.primary',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {idx + 1}. {q.question}
+                      </Typography>
+                    </Grid>
+                  </Grid>
                 </Card>
               );
             })}
@@ -418,8 +420,9 @@ export default function InterviewQnAGenerator() {
                   flexShrink: 0,
                 }}
               >
-                <CardContent sx={{ p: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
-                  <Typography
+                <Grid container sx={{ p: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
+                  <Grid item xs={12}>
+                    <Typography
                     variant="h6"
                     sx={{
                       fontWeight: 700,
@@ -567,7 +570,8 @@ export default function InterviewQnAGenerator() {
                       </Typography>
                     </AccordionDetails>
                   </Accordion>
-                </CardContent>
+                  </Grid>
+                </Grid>
               </Card>
 
               {/* Beta notice */}

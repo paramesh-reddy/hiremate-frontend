@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160">
+  <rect fill="#fff" stroke="#e0e0e0" stroke-width="1" width="120" height="160" rx="2"/>
+  <!-- Dark sidebar -->
+  <rect fill="#2d3748" x="0" y="0" width="35" height="160" rx="2"/>
+  <rect fill="#2d3748" x="2" y="0" width="33" height="160"/>
+  <!-- Sidebar: name -->
+  <text x="4" y="12" fill="#fff" font-size="5" font-weight="bold" font-family="Segoe UI,sans-serif">JOHN</text>
+  <text x="4" y="18" fill="#fff" font-size="5" font-weight="bold" font-family="Segoe UI,sans-serif">DOE</text>
+  <!-- Sidebar: contact -->
+  <rect fill="#90cdf4" x="4" y="21" width="28" height="1.2" rx="0.3" opacity="0.5"/>
+  <rect fill="#a0aec0" x="4" y="24" width="26" height="1.5" rx="0.3"/>
+  <rect fill="#a0aec0" x="4" y="27" width="22" height="1.5" rx="0.3"/>
+  <rect fill="#a0aec0" x="4" y="30" width="28" height="1.5" rx="0.3"/>
+  <!-- Sidebar: SKILLS label -->
+  <text x="4" y="39" fill="#cbd5e0" font-size="4" font-weight="bold" font-family="Segoe UI,sans-serif" letter-spacing="0.5">SKILLS</text>
+  <rect fill="#4a5568" x="4" y="41" width="28" height="0.8" rx="0.2"/>
+  <rect fill="#718096" x="4" y="44" width="26" height="1.5" rx="0.3"/>
+  <rect fill="#718096" x="4" y="48" width="22" height="1.5" rx="0.3"/>
+  <rect fill="#718096" x="4" y="52" width="24" height="1.5" rx="0.3"/>
+  <rect fill="#718096" x="4" y="56" width="20" height="1.5" rx="0.3"/>
+  <rect fill="#718096" x="4" y="60" width="25" height="1.5" rx="0.3"/>
+  <!-- Main panel: divider -->
+  <line x1="35" y1="0" x2="35" y2="160" stroke="#1a202c" stroke-width="1.5"/>
+  <!-- Main: PROFESSIONAL SUMMARY -->
+  <text x="39" y="10" fill="#2d3748" font-size="4.5" font-weight="bold" font-family="Segoe UI,sans-serif">PROFESSIONAL SUMMARY</text>
+  <line x1="39" y1="12" x2="114" y2="12" stroke="#2d3748" stroke-width="0.8"/>
+  <rect fill="#bbb" x="39" y="14" width="75" height="1.8" rx="0.3"/>
+  <rect fill="#bbb" x="39" y="18" width="68" height="1.8" rx="0.3"/>
+  <!-- Main: WORK EXPERIENCE -->
+  <text x="39" y="27" fill="#2d3748" font-size="4.5" font-weight="bold" font-family="Segoe UI,sans-serif">WORK EXPERIENCE</text>
+  <line x1="39" y1="29" x2="114" y2="29" stroke="#2d3748" stroke-width="0.8"/>
+  <rect fill="#444" x="39" y="31" width="52" height="2.5" rx="0.3"/>
+  <rect fill="#888" x="39" y="35" width="36" height="1.8" rx="0.3"/>
+  <rect fill="#ccc" x="39" y="39" width="75" height="1.8" rx="0.3"/>
+  <rect fill="#ccc" x="39" y="43" width="70" height="1.8" rx="0.3"/>
+  <rect fill="#ccc" x="39" y="47" width="65" height="1.8" rx="0.3"/>
+  <!-- Main: EDUCATION -->
+  <text x="39" y="56" fill="#2d3748" font-size="4.5" font-weight="bold" font-family="Segoe UI,sans-serif">EDUCATION</text>
+  <line x1="39" y1="58" x2="114" y2="58" stroke="#2d3748" stroke-width="0.8"/>
+  <rect fill="#444" x="39" y="60" width="60" height="2.5" rx="0.3"/>
+  <rect fill="#ccc" x="39" y="65" width="50" height="1.8" rx="0.3"/>
+  <!-- Main: PROJECTS -->
+  <text x="39" y="74" fill="#2d3748" font-size="4.5" font-weight="bold" font-family="Segoe UI,sans-serif">PROJECTS</text>
+  <line x1="39" y1="76" x2="114" y2="76" stroke="#2d3748" stroke-width="0.8"/>
+  <rect fill="#444" x="39" y="78" width="55" height="2.5" rx="0.3"/>
+  <rect fill="#ccc" x="39" y="83" width="75" height="1.8" rx="0.3"/>
+  <rect fill="#ccc" x="39" y="87" width="68" height="1.8" rx="0.3"/>
+</svg>

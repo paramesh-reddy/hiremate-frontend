@@ -142,10 +142,10 @@ function IssueCard({ card }) {
           <CancelRoundedIcon sx={{ color: '#ef4444', fontSize: 20, mt: 0.25 }} />
         )}
         <Box>
-          <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: '#1a1a2e', mb: 0.3 }}>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', mb: 0.3 }}>
             {card.title}
           </Typography>
-          <Typography sx={{ fontSize: '0.82rem', color: '#6b7280', lineHeight: 1.5 }}>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             {card.desc}
           </Typography>
         </Box>
@@ -197,6 +197,14 @@ export default function ResumeAnalyzeScore() {
 
   const resumeUrl = location.state?.resumeUrl || null;
   const fileName = location.state?.fileName || 'resume.pdf';
+  const analysis = location.state?.analysis || null;
+
+  const score = analysis?.score ?? SCORE;
+  const maxScore = analysis?.max_score ?? MAX_SCORE;
+  const topFixes = analysis?.top_fixes ?? TOP_FIXES;
+  const completed = analysis?.completed ?? COMPLETED;
+  const issueCards = analysis?.issues ?? ISSUE_CARDS;
+  const didWell = analysis?.did_well ?? DID_WELL;
 
   const [activeTab, setActiveTab] = useState('latest');
   const [activeSection, setActiveSection] = useState('fixes');
@@ -218,7 +226,7 @@ export default function ResumeAnalyzeScore() {
         display: 'flex',
         height: 'calc(100vh - 64px)',
         overflow: 'hidden',
-        bgcolor: '#f8f9fa',
+        bgcolor: 'var(--bg-app)',
         fontFamily: 'var(--font-family)',
       }}
     >
@@ -237,7 +245,7 @@ export default function ResumeAnalyzeScore() {
       >
         {/* Score circle */}
         <Box sx={{ px: 2, pt: 3, pb: 2, textAlign: 'center' }}>
-          <ScoreCircle score={SCORE} />
+          <ScoreCircle score={score} max={maxScore} />
           <Typography
             sx={{
               fontSize: '0.68rem',
@@ -270,7 +278,7 @@ export default function ResumeAnalyzeScore() {
             Top Fixes
           </Typography>
 
-          {TOP_FIXES.map((fix) => (
+          {topFixes.map((fix) => (
             <Box
               key={fix.label}
               onClick={() => !fix.locked && setActiveSection('fixes')}
@@ -355,7 +363,7 @@ export default function ResumeAnalyzeScore() {
             Completed
           </Typography>
 
-          {COMPLETED.map((item) => (
+          {completed.map((item) => (
             <Box
               key={item.label}
               sx={{
@@ -567,7 +575,7 @@ export default function ResumeAnalyzeScore() {
               fontFamily: 'var(--font-family)',
             }}
           >
-            Your resume scored {SCORE} out of {MAX_SCORE}.
+            Your resume scored {score} out of {maxScore}.
           </Typography>
           <Typography
             sx={{ color: '#6b7280', mb: 2.5, fontSize: '0.9rem', lineHeight: 1.7, fontFamily: 'var(--font-family)' }}
@@ -591,7 +599,7 @@ export default function ResumeAnalyzeScore() {
           <Box sx={{ position: 'relative', borderRadius: 10, overflow: 'visible' }}>
             <LinearProgress
               variant="determinate"
-              value={SCORE}
+              value={score}
               sx={{
                 height: 18,
                 borderRadius: 10,
@@ -660,7 +668,7 @@ export default function ResumeAnalyzeScore() {
           where you went wrong and how to improve your score.
         </Typography>
 
-        {ISSUE_CARDS.map((card, i) => (
+        {issueCards.map((card, i) => (
           <IssueCard key={i} card={card} />
         ))}
 
@@ -719,7 +727,7 @@ export default function ResumeAnalyzeScore() {
           well done.
         </Typography>
 
-        {DID_WELL.map((item, i) => (
+        {didWell.map((item, i) => (
           <Box
             key={i}
             sx={{

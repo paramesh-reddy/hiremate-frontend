@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160">
+  <rect fill="#fff" stroke="#e0e0e0" stroke-width="1" width="120" height="160" rx="2"/>
+  <!-- Dark blue header band -->
+  <rect fill="#1e3a5f" x="0" y="0" width="120" height="26" rx="2"/>
+  <rect fill="#1e3a5f" x="0" y="20" width="120" height="6"/>
+  <text x="8" y="11" fill="#fff" font-size="8" font-weight="bold" font-family="Times New Roman,serif">JOHN DOE</text>
+  <text x="8" y="20" fill="#b8d4ff" font-size="3.8" font-family="Times New Roman,serif">email@example.com | 555-0100 | linkedin.com/in/john</text>
+  <!-- PROFESSIONAL SUMMARY -->
+  <text x="8" y="33" fill="#1e3a5f" font-size="4.5" font-weight="bold" font-family="Times New Roman,serif" letter-spacing="0.4">PROFESSIONAL SUMMARY</text>
+  <line x1="8" y1="35" x2="112" y2="35" stroke="#1e3a5f" stroke-width="1.2"/>
+  <rect fill="#bbb" x="8" y="37" width="104" height="2" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="41" width="88" height="2" rx="0.5"/>
+  <!-- SKILLS -->
+  <text x="8" y="49" fill="#1e3a5f" font-size="4.5" font-weight="bold" font-family="Times New Roman,serif" letter-spacing="0.4">SKILLS</text>
+  <line x1="8" y1="51" x2="112" y2="51" stroke="#1e3a5f" stroke-width="1.2"/>
+  <rect fill="#bbb" x="8" y="53" width="104" height="2" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="57" width="78" height="2" rx="0.5"/>
+  <!-- WORK EXPERIENCE -->
+  <text x="8" y="65" fill="#1e3a5f" font-size="4.5" font-weight="bold" font-family="Times New Roman,serif" letter-spacing="0.4">WORK EXPERIENCE</text>
+  <line x1="8" y1="67" x2="112" y2="67" stroke="#1e3a5f" stroke-width="1.2"/>
+  <rect fill="#333" x="8" y="69" width="60" height="2.5" rx="0.5"/>
+  <rect fill="#777" x="8" y="73" width="40" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="77" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="81" width="94" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="12" y="85" width="86" height="1.8" rx="0.5"/>
+  <!-- EDUCATION -->
+  <text x="8" y="93" fill="#1e3a5f" font-size="4.5" font-weight="bold" font-family="Times New Roman,serif" letter-spacing="0.4">EDUCATION</text>
+  <line x1="8" y1="95" x2="112" y2="95" stroke="#1e3a5f" stroke-width="1.2"/>
+  <rect fill="#333" x="8" y="97" width="70" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="102" width="55" height="1.8" rx="0.5"/>
+  <!-- PROJECTS -->
+  <text x="8" y="110" fill="#1e3a5f" font-size="4.5" font-weight="bold" font-family="Times New Roman,serif" letter-spacing="0.4">PROJECTS</text>
+  <line x1="8" y1="112" x2="112" y2="112" stroke="#1e3a5f" stroke-width="1.2"/>
+  <rect fill="#333" x="8" y="114" width="65" height="2.5" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="119" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#bbb" x="8" y="123" width="90" height="1.8" rx="0.5"/>
+</svg>

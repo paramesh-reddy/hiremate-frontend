@@ -1,13 +1,12 @@
 import { Box } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
-import Navbar from '../common/Navbar';
 import Sidebar from '../common/Sidebar';
 
 export default function DashboardLayout() {
   const location = useLocation();
   const profileOnly = location.state?.fromRegister === true;
 
-  // After register: show profile page only (no navbar/sidebar)
+  // After register: show profile page only (no sidebar)
   if (profileOnly) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'var(--bg-default)' }}>
@@ -16,31 +15,21 @@ export default function DashboardLayout() {
     );
   }
 
-  // Login / normal: full dashboard with navbar and sidebar
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'var(--bg-default)' }}>
-      <Navbar />
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'var(--bg-default)' }}>
+      <Sidebar />
       <Box
+        component="main"
         sx={{
+          flex: 1,
+          marginLeft: 'var(--sidebar-width)',
+          minHeight: '100vh',
+          overflow: 'auto',
           display: 'flex',
-          marginTop: 'var(--navbar-height)',
-          height: 'calc(100vh - var(--navbar-height))',
-          minHeight: 0,
+          flexDirection: 'column',
         }}
       >
-        <Sidebar />
-        <Box
-          component="main"
-          sx={{
-            flex: 1,
-            overflow: 'auto',
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <Outlet />
-        </Box>
+        <Outlet />
       </Box>
     </Box>
   );

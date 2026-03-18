@@ -14,6 +14,7 @@ export {
 
 export {
   listJobsAPI,
+  getJobAPI,
   updateJobStatusAPI,
   createJobAPI,
 } from './jobsService';
@@ -26,15 +27,36 @@ export {
 export {
   getProfileDataAPI,
   patchProfileAPI,
+  invalidateFieldAnswersAPI,
 } from './profileService';
+
+export {
+  getAdminOverviewAPI,
+  getAdminUsersAPI,
+  getAdminUserUsageAPI,
+  getAdminCompaniesViewedAPI,
+  getAdminCareerPageLinksAPI,
+  getAdminLearningFormStructuresAPI,
+  getAdminLearningUserAnswersAPI,
+  getAdminLearningSubmissionsAPI,
+  getAdminExtensionErrorsAPI,
+  getAdminSubmissionLogsAPI,
+  getAdminSubmissionLogDetailAPI,
+} from './adminService';
 
 export {
   getResumeWorkspaceAPI,
   listResumesAPI,
   generateResumeAPI,
+  previewResumeAPI,
+  previewResumeHtmlAPI,
   updateResumeAPI,
   deleteResumeAPI,
   uploadResumeAPI,
+  atsScanResumeAPI,
+  analyzeResumeAPI,
+  analyzeKeywordsAPI,
+  saveResumeSnapshotAPI,
 } from './resumeService';
 
 export { default as axiosClient } from './axiosClient';

@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Typography,
   Button,
   Card,
-  CardContent,
+  Grid,
   LinearProgress,
   CircularProgress,
   Tabs,
@@ -31,6 +31,7 @@ import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 
 /* ── helpers ─────────────────────────────────── */
 function ImpactBadge({ label }) {
@@ -473,8 +474,9 @@ function SkillSection({ title, badge, desc, tip, rows }) {
 }
 
 /* ── Job Description Tab ─────────────────────── */
-function JobDescriptionTab() {
-  const paragraphs = JOB_DESCRIPTION_TEXT.split('\n\n');
+function JobDescriptionTab({ jobDescriptionPreview }) {
+  const text = (jobDescriptionPreview || JOB_DESCRIPTION_TEXT).trim() || JOB_DESCRIPTION_TEXT;
+  const paragraphs = text.split('\n\n').filter(Boolean);
 
   function highlightText(text) {
     let parts = [text];
@@ -522,7 +524,13 @@ function JobDescriptionTab() {
 }
 
 /* ── Resume Report Tab ───────────────────────── */
-function ResumeReportTab() {
+function ResumeReportTab({ report }) {
+  const searchabilityRows = report?.searchability_rows ?? SEARCHABILITY_ROWS;
+  const hardSkillsRows = report?.hard_skills_rows ?? HARD_SKILLS_ROWS;
+  const softSkillsRows = report?.soft_skills_rows ?? SOFT_SKILLS_ROWS;
+  const recruiterTipsRows = report?.recruiter_tips_rows ?? RECRUITER_TIPS_ROWS;
+  const formattingRows = report?.formatting_rows ?? FORMATTING_ROWS;
+
   return (
     <Box>
       {/* ATS Tip Banner */}
@@ -531,7 +539,7 @@ function ResumeReportTab() {
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          bgcolor: '#fffbeb',
+          bgcolor: 'var(--warning-bg)',
           border: '1px solid #fde68a',
           borderRadius: 1.5,
           px: 2,
@@ -573,7 +581,7 @@ function ResumeReportTab() {
         </SectionDesc>
         <TipText>Fix the red Xs to ensure your resume is easily searchable by recruiters and parsed correctly by the ATS.</TipText>
         <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
-          {SEARCHABILITY_ROWS.map((row, i) => (
+          {searchabilityRows.map((row, i) => (
             <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? 'var(--bg-default)' : 'var(--bg-light)' }}>
               <CheckRow label={row.label} items={row.items} />
             </Box>
@@ -587,7 +595,7 @@ function ResumeReportTab() {
         badge="HIGH SCORE IMPACT"
         desc="Hard skills enable you to perform job-specific duties and responsibilities. You can learn hard skills in the classroom, training courses, and on the job. These skills are typically focused on teachable tasks and measurable abilities such as the use of tools, equipment, or software. Hard skills have a high impact on your match score."
         tip="Match the skills in your resume to the exact spelling in the job description. Prioritize skills that appear most frequently in the job description."
-        rows={HARD_SKILLS_ROWS}
+        rows={hardSkillsRows}
       />
 
       {/* Soft Skills */}
@@ -596,14 +604,14 @@ function ResumeReportTab() {
         badge="MEDIUM SCORE IMPACT"
         desc="Soft skills are your traits and abilities that are not unique to any job. Your soft skills are part of your personality, and can be learned also. These skills are the traits that typically make you a good employee for any company such as time management and communication. Soft skills have a medium impact on your match score."
         tip="Prioritize hard skills in your resume to get interviews, and then showcase your soft skills in the interview to get jobs."
-        rows={SOFT_SKILLS_ROWS}
+        rows={softSkillsRows}
       />
 
       {/* Recruiter Tips */}
       <Box sx={{ mb: 4 }}>
         <SectionHeader title="Recruiter tips" badge="IMPORTANT" />
         <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
-          {RECRUITER_TIPS_ROWS.map((row, i) => (
+          {recruiterTipsRows.map((row, i) => (
             <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? 'var(--bg-default)' : 'var(--bg-light)' }}>
               <CheckRow label={row.label} items={row.items} />
             </Box>
@@ -615,7 +623,7 @@ function ResumeReportTab() {
       <Box sx={{ mb: 4 }}>
         <SectionHeader title="Formatting" />
         <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
-          {FORMATTING_ROWS.map((row, i) => (
+          {formattingRows.map((row, i) => (
             <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? 'var(--bg-default)' : 'var(--bg-light)' }}>
               <CheckRow label={row.label} items={row.items} />
             </Box>
@@ -627,7 +635,9 @@ function ResumeReportTab() {
 }
 
 /* ── ATS Score Card ───────────────────────────── */
-function AtsScoreCard({ score }) {
+function AtsScoreCard({ score, scoreCategories }) {
+  const navigate = useNavigate();
+  const categories = scoreCategories ?? SCORE_CATEGORIES;
   return (
     <Card
       sx={{
@@ -638,11 +648,11 @@ function AtsScoreCard({ score }) {
         boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
         alignSelf: 'flex-start',
         position: { md: 'sticky' },
-        top: { md: 0 },
-        minHeight: { md: '100vh' },
+        top: { md: 16 },
       }}
     >
-      <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+      <Grid container sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+        <Grid item xs={12}>
         {/* Circular score */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2.5 }}>
           <Typography
@@ -693,6 +703,7 @@ function AtsScoreCard({ score }) {
           variant="contained"
           fullWidth
           startIcon={<FileUploadRoundedIcon />}
+          onClick={() => navigate('/job-scan')}
           sx={{
             fontFamily: 'var(--font-family)',
             fontWeight: 600,
@@ -712,6 +723,7 @@ function AtsScoreCard({ score }) {
           variant="outlined"
           fullWidth
           startIcon={<AutoFixHighRoundedIcon />}
+          onClick={() => navigate('/resume-generator')}
           sx={{
             fontFamily: 'var(--font-family)',
             fontWeight: 600,
@@ -729,7 +741,7 @@ function AtsScoreCard({ score }) {
 
         {/* Category scores */}
         <Box sx={{ mt: 3.5 }}>
-          {SCORE_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Box key={cat.label} sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
                 <Typography
@@ -760,7 +772,8 @@ function AtsScoreCard({ score }) {
             </Box>
           ))}
         </Box>
-      </CardContent>
+        </Grid>
+      </Grid>
     </Card>
   );
 }
@@ -769,6 +782,11 @@ function AtsScoreCard({ score }) {
 export default function ScanReport() {
   const navigate = useNavigate();
   const [mainTab, setMainTab] = useState(0);
+  const location = useLocation();
+  const stateReport = location.state?.report;
+  const fileName = location.state?.fileName;
+  const score = stateReport?.score ?? 32;
+  const scoreCategories = stateReport?.score_categories;
 
   return (
     <Box sx={{ minHeight: '100%', background: 'var(--bg-app)', fontFamily: 'var(--font-family)' }}>
@@ -786,25 +804,32 @@ export default function ScanReport() {
           gap: 1,
         }}
       >
-        <Box>
-          <Typography
-            variant="caption"
-            sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-muted)', display: 'block', mb: 0.25, fontSize: '0.78rem' }}
-          >
-            Resume scan results
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title="Back to ATS Scanner">
+            <IconButton size="small" onClick={() => navigate('/job-scan')} sx={{ color: 'var(--text-secondary)' }}>
+              <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+          <Box>
             <Typography
-              variant="h6"
-              sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}
+              variant="caption"
+              sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-muted)', display: 'block', mb: 0.25, fontSize: '0.78rem' }}
             >
-              Company - React.js Developer
+              Resume scan results
             </Typography>
-            <Tooltip title="Edit title">
-              <IconButton size="small" sx={{ color: 'var(--text-secondary)', p: 0.5 }}>
-                <EditRoundedIcon sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Tooltip>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}
+              >
+                {fileName ? `${fileName} – ATS Report` : 'Company - React.js Developer'}
+              </Typography>
+              <Tooltip title="Edit title">
+                <IconButton size="small" sx={{ color: 'var(--text-secondary)', p: 0.5 }}>
+                  <EditRoundedIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -857,7 +882,7 @@ export default function ScanReport() {
         }}
       >
         {/* Left: ATS Score Card */}
-        <AtsScoreCard score={32} />
+        <AtsScoreCard score={score} scoreCategories={scoreCategories} />
 
         {/* Right: Details Card */}
         <Card
@@ -892,10 +917,12 @@ export default function ScanReport() {
             <Tab label="Job Description" />
           </Tabs>
 
-          <CardContent sx={{ p: { xs: 2, sm: 3 }, '&:last-child': { pb: 3 } }}>
-            {mainTab === 0 && <ResumeReportTab />}
-            {mainTab === 1 && <JobDescriptionTab />}
-          </CardContent>
+          <Grid container sx={{ p: { xs: 2, sm: 3 }, '&:last-child': { pb: 3 } }}>
+            <Grid item xs={12}>
+              {mainTab === 0 && <ResumeReportTab report={stateReport} />}
+              {mainTab === 1 && <JobDescriptionTab jobDescriptionPreview={stateReport?.job_description_preview} />}
+            </Grid>
+          </Grid>
         </Card>
       </Box>
     </Box>

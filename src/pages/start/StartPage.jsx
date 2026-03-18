@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import CustomButton from '../../components/common/CustomButton';
 
@@ -45,7 +45,8 @@ export default function StartPage() {
           overflow: 'hidden',
         }}
       >
-        <CardContent sx={{ p: { xs: 3, sm: 5 }, '&:last-child': { pb: { xs: 3, sm: 5 } } }}>
+        <Grid container sx={{ p: { xs: 3, sm: 5 }, '&:last-child': { pb: { xs: 3, sm: 5 } } }}>
+          <Grid item xs={12}>
           <Typography
             component="h1"
             sx={{
@@ -149,7 +150,8 @@ export default function StartPage() {
                   background: 'linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%)',
                 }}
               />
-              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
+              <Grid container sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
+                <Grid item xs={12} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Typography
                   component="h2"
                   sx={{
@@ -211,11 +213,13 @@ export default function StartPage() {
                 >
                   {card.buttonText}
                 </CustomButton>
-              </CardContent>
+                </Grid>
+              </Grid>
             </Card>
           ))}
           </Box>
-        </CardContent>
+          </Grid>
+        </Grid>
       </Card>
     </Box>
   );

@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Card, CardContent, Typography, Box, Link, IconButton, Menu, MenuItem } from '@mui/material';
+import { Card, Grid, Typography, Box, Link, IconButton, Menu, MenuItem } from '@mui/material';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
@@ -81,8 +81,9 @@ function JobCard({ job, isDragging, onEdit, onDelete, index = 0 }) {
         aria-grabbed={isDragging}
         onKeyDown={handleKeyDown}
       >
-        <CardContent sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
+        <Grid container sx={{ p: 2 }}>
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
             <Box
               sx={{
                 width: 40,
@@ -194,7 +195,8 @@ function JobCard({ job, isDragging, onEdit, onDelete, index = 0 }) {
               )}
             </Box>
           </Box>
-        </CardContent>
+          </Grid>
+        </Grid>
       </Card>
     </motion.div>
   );

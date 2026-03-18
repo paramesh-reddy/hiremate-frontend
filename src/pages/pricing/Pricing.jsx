@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, Button, Card, CardContent, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Card, Grid, Alert, CircularProgress } from '@mui/material';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
@@ -219,7 +219,8 @@ export default function Pricing() {
                   {plan.badge}
                 </Box>
               )}
-              <CardContent sx={{ p: 3, pt: plan.badge ? 4 : 3 }}>
+              <Grid container sx={{ p: 3, pt: plan.badge ? 4 : 3 }}>
+                <Grid item xs={12}>
                 <Typography
                   sx={{
                     fontSize: 'var(--font-size-section-header)',
@@ -290,7 +291,8 @@ export default function Pricing() {
                     'Subscribe Now'
                   )}
                 </Button>
-              </CardContent>
+                </Grid>
+              </Grid>
             </Card>
           ))}
         </Box>

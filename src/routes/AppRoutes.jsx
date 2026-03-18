@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthLayout from '../components/layout/AuthLayout';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
+import AdminRoute from '../components/layout/AdminRoute';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Home from '../pages/dashboard/Home';
@@ -20,6 +21,13 @@ import Pricing from '../pages/pricing/Pricing';
 import Settings from '../pages/Settings';
 import StartPage from '../pages/start/StartPage';
 import ApplicationTrackerPage from '../pages/application-tracker';
+import AdminLayout from '../pages/admin/AdminLayout';
+import AdminOverview from '../pages/admin/AdminOverview';
+import AdminUsers from '../pages/admin/AdminUsers';
+import AdminUserDetail from '../pages/admin/AdminUserDetail';
+import AdminCompaniesViewed from '../pages/admin/AdminCompaniesViewed';
+import AdminCareerPages from '../pages/admin/AdminCareerPages';
+import AdminLearning from '../pages/admin/AdminLearning';
 
 export default function AppRoutes() {
   return (
@@ -31,6 +39,16 @@ export default function AppRoutes() {
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/start" element={<StartPage />} />
+          <Route path="/admin" element={<AdminRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route index element={<AdminOverview />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="users/:id" element={<AdminUserDetail />} />
+              <Route path="companies" element={<AdminCompaniesViewed />} />
+              <Route path="career-pages" element={<AdminCareerPages />} />
+              <Route path="learning" element={<AdminLearning />} />
+            </Route>
+          </Route>
           <Route element={<DashboardLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<Profile />} />

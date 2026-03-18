@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160">
+  <rect fill="#fff" stroke="#e0e0e0" stroke-width="1" width="120" height="160" rx="2"/>
+  <!-- Name + teal underline accent -->
+  <text x="60" y="13" fill="#111" font-size="9" font-weight="300" font-family="Helvetica,Arial,sans-serif" text-anchor="middle" letter-spacing="2">JOHN DOE</text>
+  <rect fill="#0D9488" x="45" y="15" width="30" height="1.2" rx="0.5"/>
+  <text x="60" y="21" fill="#666" font-size="3.8" font-family="Helvetica,Arial,sans-serif" text-anchor="middle">email · phone · linkedin · github</text>
+  <!-- Section with teal left border -->
+  <rect fill="#0D9488" x="8" y="26" width="2.5" height="8" rx="0.5"/>
+  <text x="13" y="32" fill="#0D9488" font-size="5" font-weight="bold" font-family="Helvetica,Arial,sans-serif" letter-spacing="0.8">PROFESSIONAL SUMMARY</text>
+  <rect fill="#d1d5db" x="8" y="36" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#d1d5db" x="8" y="40" width="90" height="1.8" rx="0.5"/>
+  <!-- Skills section -->
+  <rect fill="#0D9488" x="8" y="46" width="2.5" height="8" rx="0.5"/>
+  <text x="13" y="52" fill="#0D9488" font-size="5" font-weight="bold" font-family="Helvetica,Arial,sans-serif" letter-spacing="0.8">SKILLS</text>
+  <rect fill="#d1d5db" x="8" y="56" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#d1d5db" x="8" y="60" width="80" height="1.8" rx="0.5"/>
+  <!-- Work Experience section -->
+  <rect fill="#0D9488" x="8" y="66" width="2.5" height="8" rx="0.5"/>
+  <text x="13" y="72" fill="#0D9488" font-size="5" font-weight="bold" font-family="Helvetica,Arial,sans-serif" letter-spacing="0.8">WORK EXPERIENCE</text>
+  <rect fill="#333" x="8" y="76" width="60" height="2.5" rx="0.5"/>
+  <rect fill="#888" x="8" y="80" width="38" height="1.8" rx="0.5"/>
+  <rect fill="#ccc" x="8" y="84" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#ccc" x="12" y="88" width="96" height="1.8" rx="0.5"/>
+  <rect fill="#ccc" x="12" y="92" width="86" height="1.8" rx="0.5"/>
+  <!-- Education section -->
+  <rect fill="#0D9488" x="8" y="98" width="2.5" height="8" rx="0.5"/>
+  <text x="13" y="104" fill="#0D9488" font-size="5" font-weight="bold" font-family="Helvetica,Arial,sans-serif" letter-spacing="0.8">EDUCATION</text>
+  <rect fill="#333" x="8" y="108" width="70" height="2.5" rx="0.5"/>
+  <rect fill="#ccc" x="8" y="113" width="55" height="1.8" rx="0.5"/>
+  <!-- Projects section -->
+  <rect fill="#0D9488" x="8" y="119" width="2.5" height="8" rx="0.5"/>
+  <text x="13" y="125" fill="#0D9488" font-size="5" font-weight="bold" font-family="Helvetica,Arial,sans-serif" letter-spacing="0.8">PROJECTS</text>
+  <rect fill="#333" x="8" y="129" width="64" height="2.5" rx="0.5"/>
+  <rect fill="#ccc" x="8" y="134" width="104" height="1.8" rx="0.5"/>
+  <rect fill="#ccc" x="8" y="138" width="88" height="1.8" rx="0.5"/>
+</svg>

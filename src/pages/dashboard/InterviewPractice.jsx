@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
-  CardContent,
+  Grid,
   Typography,
   Button,
   Box,
@@ -117,8 +117,9 @@ export default function InterviewPractice() {
             border: '1px solid #e0e0e0',
           }}
         >
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+          <Grid container sx={{ p: 3 }}>
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
               Interview practice
             </Typography>
             <Typography
@@ -251,7 +252,8 @@ export default function InterviewPractice() {
                 ))
               )}
             </Box>
-          </CardContent>
+            </Grid>
+          </Grid>
         </Card>
       </Box>
 
@@ -296,32 +298,34 @@ export default function InterviewPractice() {
               },
             }}
           >
-            <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(108, 78, 227, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-              >
-                <AutoAwesomeRoundedIcon sx={{ fontSize: 28, color: '#6C4EE3' }} />
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
-                AI Questions and Answers Generator
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#6b7280', mb: 2 }}>
-                Generate practice questions and sample answers tailored to this role.
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', color: '#6C4EE3', fontWeight: 600, fontSize: '0.875rem' }}>
-                Get started
-                <ChevronRightRoundedIcon sx={{ fontSize: 20, ml: 0.5 }} />
-              </Box>
-            </CardContent>
+            <Grid container sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(108, 78, 227, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 2,
+                  }}
+                >
+                  <AutoAwesomeRoundedIcon sx={{ fontSize: 28, color: '#6C4EE3' }} />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                  AI Questions and Answers Generator
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#6b7280', mb: 2 }}>
+                  Generate practice questions and sample answers tailored to this role.
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', color: '#6C4EE3', fontWeight: 600, fontSize: '0.875rem' }}>
+                  Get started
+                  <ChevronRightRoundedIcon sx={{ fontSize: 20, ml: 0.5 }} />
+                </Box>
+              </Grid>
+            </Grid>
           </Card>
           <Card
             sx={{
@@ -338,32 +342,34 @@ export default function InterviewPractice() {
               },
             }}
           >
-            <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(108, 78, 227, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-              >
-                <MicRoundedIcon sx={{ fontSize: 28, color: '#6C4EE3' }} />
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
-                AI Mock Interview
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#6b7280', mb: 2 }}>
-                Practice with an AI interviewer and get real-time feedback on your responses.
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', color: '#6C4EE3', fontWeight: 600, fontSize: '0.875rem' }}>
-                Start mock interview
-                <ChevronRightRoundedIcon sx={{ fontSize: 20, ml: 0.5 }} />
-              </Box>
-            </CardContent>
+            <Grid container sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(108, 78, 227, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: 2,
+                  }}
+                >
+                  <MicRoundedIcon sx={{ fontSize: 28, color: '#6C4EE3' }} />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                  AI Mock Interview
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#6b7280', mb: 2 }}>
+                  Practice with an AI interviewer and get real-time feedback on your responses.
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', color: '#6C4EE3', fontWeight: 600, fontSize: '0.875rem' }}>
+                  Start mock interview
+                  <ChevronRightRoundedIcon sx={{ fontSize: 20, ml: 0.5 }} />
+                </Box>
+              </Grid>
+            </Grid>
           </Card>
         </Box>
       )}
