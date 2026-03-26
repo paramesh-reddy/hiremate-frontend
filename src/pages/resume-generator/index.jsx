@@ -750,8 +750,9 @@ export default function ResumeGenerator() {
     // PDF download uses profile_override: profileRef.current directly, so no global sync needed.
     const selId = selectedResumeIdRef.current;
     if (selId && selId !== 0) {
-      saveResumeSnapshotAPI(selId, payload).catch(() => {});
+      return saveResumeSnapshotAPI(selId, payload).catch(() => {});
     }
+    return Promise.resolve();
   }, []);
 
   const scheduleProfilePatch = useCallback(() => {
@@ -869,42 +870,25 @@ export default function ResumeGenerator() {
     if (!selectedResume) return;
     setDownloading(true);
     try {
-      if (jobDescription?.trim()) {
-        // Generate WeasyPrint PDF using same profile_override as the live preview —
-        // this guarantees the downloaded PDF is pixel-perfect identical to what the user sees.
-        const { data: blob } = await previewResumeAPI({
-          job_title: jobRole?.trim() || 'Resume',
-          job_description: jobDescription.trim(),
-          template_id: templateId || 'classic',
-          font_family: fontFamily,
-          font_size: fontSize,
-          line_height: lineHeight,
-          profile_override: profileRef.current,
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = (selectedResume.resume_name?.replace(/\s/g, '_') || 'resume') + '.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } else {
-        // No JD — download the stored PDF
-        const url = `${BASE_URL}/resume/${selectedResume.id}/file`;
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(url, { headers });
-        if (!res.ok) throw new Error('Download failed');
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = (selectedResume.resume_name?.replace(/\s/g, '_') || 'resume') + '.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      }
+      // Always generate a fresh PDF using the current editor profile so the download
+      // matches exactly what the user sees in the live preview, even without a JD.
+      const { data: blob } = await previewResumeAPI({
+        job_title: jobRole?.trim() || selectedResume.resume_name || 'Resume',
+        job_description: jobDescription?.trim() || '',
+        template_id: templateId || 'classic',
+        font_family: fontFamily,
+        font_size: fontSize,
+        line_height: lineHeight,
+        profile_override: profileRef.current,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (selectedResume.resume_name?.replace(/\s/g, '_') || 'resume') + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download failed:', err);
     } finally {
@@ -914,6 +898,12 @@ export default function ResumeGenerator() {
 
   const handleSaveAndUse = async () => {
     if (!selectedResume) return;
+    // Flush any pending debounce — persist edits to the snapshot before download/close.
+    if (profilePatchTimeoutRef.current) {
+      clearTimeout(profilePatchTimeoutRef.current);
+      profilePatchTimeoutRef.current = null;
+    }
+    await saveAndRefreshPreview();
     await handleDownload();
     if (fromPopup) {
       try {
