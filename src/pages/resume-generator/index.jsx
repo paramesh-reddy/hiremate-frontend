@@ -713,12 +713,17 @@ export default function ResumeGenerator() {
       setKeywordMatch(null);
       return;
     }
-    analyzeKeywordsAPI({ job_description: jobDescription.trim(), resume_id: selectedResume.id })
+    const resumeText = (selectedResume?.resume_text || '').trim();
+    analyzeKeywordsAPI({
+      job_description: jobDescription.trim(),
+      resume_id: selectedResume.id,
+      ...(resumeText.length > 0 ? { resume_text: resumeText } : {}),
+    })
       .then(({ data }) => setKeywordMatch({ matched_count: data?.matched_count ?? 0, total_keywords: data?.total_keywords ?? 0, percent: data?.percent ?? 0 }))
       .catch(() => setKeywordMatch(null));
-  // keywordRefreshTick: incremented by handleTailorMore to force re-analysis after AI re-tailoring
+  // keywordRefreshTick: force re-analysis after AI re-tailoring; resume_text dep picks up workspace refresh
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, jobDescription, selectedResume?.id, keywordRefreshTick]);
+  }, [view, jobDescription, selectedResume?.id, selectedResume?.resume_text, keywordRefreshTick]);
 
   profileRef.current = profile;
 
@@ -951,7 +956,7 @@ export default function ResumeGenerator() {
     if (!jobDescription?.trim() || !selectedResume) return;
     setTailoring(true);
     try {
-      await generateResumeAPI({
+      const { data: gen } = await generateResumeAPI({
         job_title: jobRole?.trim() || 'Resume',
         job_description: jobDescription.trim(),
         template_id: templateId || 'classic',
@@ -961,15 +966,17 @@ export default function ResumeGenerator() {
         resume_id: selectedResume.id,
         profile_override: profileRef.current,
       });
-      // Reload workspace to pick up the new snapshot
+      // Reload workspace to pick up updated resume_text / snapshot (same id when updating in place)
       const { data: ws } = await getResumeWorkspaceAPI();
       const list = Array.isArray(ws?.resumes) ? ws.resumes : [];
       setResumes(list);
-      const updated = list.find((r) => r.id === selectedResume.id);
+      const newId = gen?.resume_id ?? selectedResume.id;
+      if (newId != null) setSelectedResumeId(newId);
+      const updated = list.find((r) => r.id === newId);
       if (updated?.resume_profile_snapshot) {
         setProfile(updated.resume_profile_snapshot);
       }
-      // Force keyword match to re-analyze against the newly tailored resume content
+      // Re-run keyword analysis (also covered by resume_text dependency after setResumes)
       setKeywordRefreshTick((t) => t + 1);
     } catch (err) {
       console.error('Tailor more failed:', err);

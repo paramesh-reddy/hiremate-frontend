@@ -19,7 +19,16 @@ export const getResumeWorkspaceAPI = () => dedupGet('/resume/workspace');
 
 export const listResumesAPI = () => axiosClient.get('/resume/list');
 
-export const generateResumeAPI = ({ job_title, job_description, template_id, font_family, font_size, line_height }) =>
+export const generateResumeAPI = ({
+  job_title,
+  job_description,
+  template_id,
+  font_family,
+  font_size,
+  line_height,
+  profile_override,
+  resume_id,
+}) =>
   axiosClient.post('/resume/generate', {
     job_title,
     job_description,
@@ -27,6 +36,8 @@ export const generateResumeAPI = ({ job_title, job_description, template_id, fon
     font_family: font_family || undefined,
     font_size: font_size || undefined,
     line_height: line_height || undefined,
+    profile_override: profile_override || undefined,
+    resume_id: resume_id && resume_id > 0 ? resume_id : undefined,
   });
 
 /**
@@ -67,8 +78,14 @@ export const previewResumeAPI = ({ job_title, job_description, template_id, font
     { responseType: 'blob', ...config }
   );
 
-export const analyzeKeywordsAPI = ({ job_description, resume_id }) =>
-  axiosClient.post('/chrome-extension/keywords/analyze', { job_description, resume_id });
+export const analyzeKeywordsAPI = ({ job_description, resume_id, resume_text, url, page_html }) =>
+  axiosClient.post('/chrome-extension/keywords/analyze', {
+    job_description,
+    resume_id,
+    resume_text: resume_text || undefined,
+    url: url || undefined,
+    page_html: page_html || undefined,
+  });
 
 export const updateResumeAPI = (id, { resume_name, resume_text }) =>
   axiosClient.patch(`/resume/${id}`, { resume_name, resume_text });
