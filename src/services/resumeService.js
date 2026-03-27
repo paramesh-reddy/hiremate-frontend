@@ -45,7 +45,7 @@ export const generateResumeAPI = ({
  * profile_override: current editor state passed directly so preview reflects unsaved edits instantly.
  * Returns the rendered HTML string.
  */
-export const previewResumeHtmlAPI = ({ job_title, job_description, template_id, font_family, font_size, line_height, profile_override }, config = {}) =>
+export const previewResumeHtmlAPI = ({ job_title, job_description, template_id, font_family, font_size, line_height, design_config, profile_override }, config = {}) =>
   axiosClient.post(
     '/resume/preview-html',
     {
@@ -55,6 +55,7 @@ export const previewResumeHtmlAPI = ({ job_title, job_description, template_id, 
       font_family: font_family || undefined,
       font_size: font_size || undefined,
       line_height: line_height || undefined,
+      design_config: design_config || undefined,
       profile_override: profile_override || undefined,
     },
     config
@@ -63,7 +64,7 @@ export const previewResumeHtmlAPI = ({ job_title, job_description, template_id, 
 /**
  * Download PDF — uses profile_override so the PDF matches the live preview exactly.
  */
-export const previewResumeAPI = ({ job_title, job_description, template_id, font_family, font_size, line_height, profile_override }, config = {}) =>
+export const previewResumeAPI = ({ job_title, job_description, template_id, font_family, font_size, line_height, design_config, profile_override }, config = {}) =>
   axiosClient.post(
     '/resume/preview',
     {
@@ -73,10 +74,20 @@ export const previewResumeAPI = ({ job_title, job_description, template_id, font
       font_family: font_family || undefined,
       font_size: font_size || undefined,
       line_height: line_height || undefined,
+      design_config: design_config || undefined,
       profile_override: profile_override || undefined,
     },
     { responseType: 'blob', ...config }
   );
+
+export const getResumeTemplatesAPI = () => axiosClient.get('/resume/templates');
+
+export const updateResumeDesignAPI = (resumeId, designConfig, templateId) =>
+  axiosClient.patch(`/resume/${resumeId}/design`, {
+    design_config: designConfig,
+    template_id: templateId,
+  });
+
 
 export const analyzeKeywordsAPI = ({ job_description, resume_id, resume_text, url, page_html }) =>
   axiosClient.post('/chrome-extension/keywords/analyze', {
@@ -89,6 +100,9 @@ export const analyzeKeywordsAPI = ({ job_description, resume_id, resume_text, ur
 
 export const updateResumeAPI = (id, { resume_name, resume_text }) =>
   axiosClient.patch(`/resume/${id}`, { resume_name, resume_text });
+
+export const renameResumeAPI = (id, name) =>
+  axiosClient.patch(`/resume/${id}/rename`, { resume_name: name });
 
 /**
  * Save per-JD profile snapshot for a specific generated resume.
@@ -128,3 +142,24 @@ export const analyzeResumeAPI = (file) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
+
+/**
+ * Trigger AI generation for a single resume section.
+ * Note: streaming (SSE) must be done via the native fetch API in SectionEditor.jsx
+ * because axios does not support server-sent events.
+ * Use this only for non-streaming (stream: false) calls.
+ */
+export const generateSectionAPI = (resumeId, { section, tone, context, stream = false }) =>
+  axiosClient.post(`/resume/${resumeId}/section/generate`, {
+    section,
+    tone: tone || undefined,
+    context: context || undefined,
+    stream,
+  });
+
+/**
+ * Extract ranked keywords from a job description via LLM (server-side).
+ * Returns { keywords: [{ term, importance, category }] }
+ */
+export const extractKeywordsAPI = (jobDescription) =>
+  axiosClient.post('/resume/keywords/extract', { job_description: jobDescription });

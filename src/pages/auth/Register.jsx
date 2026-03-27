@@ -27,7 +27,7 @@ export default function Register() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/profile', { replace: true, state: { fromRegister: true } });
+      navigate('/onboarding/profile', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 

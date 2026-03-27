@@ -12,6 +12,7 @@ import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded';
 import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded';
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
 import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded';
+import BugReportRoundedIcon from '@mui/icons-material/BugReportRounded';
 import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettingsRounded';
 import Navbar from '../../components/common/Navbar';
 
@@ -21,6 +22,7 @@ const ADMIN_NAV = [
   { label: 'Companies Viewed', path: '/admin/companies', icon: BusinessRoundedIcon },
   { label: 'Career Page Links', path: '/admin/career-pages', icon: LinkRoundedIcon },
   { label: 'Learning', path: '/admin/learning', icon: SchoolRoundedIcon },
+  { label: 'Issues', path: '/admin/issues', icon: BugReportRoundedIcon },
 ];
 
 export default function AdminLayout() {

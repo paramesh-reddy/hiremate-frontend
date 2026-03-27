@@ -17,6 +17,7 @@ import ScanReport from '../pages/job-scan/ScanReport';
 import ResumeAnalyzer from '../pages/ai-resume-studio/ResumeAnalyzer';
 import ResumeAnalyzeScore from '../pages/ai-resume-studio/ResumeAnalyzeScore';
 import Profile from '../pages/profile/Profile';
+import OnboardingProfile from '../pages/profile/OnboardingProfile';
 import Pricing from '../pages/pricing/Pricing';
 import Settings from '../pages/Settings';
 import StartPage from '../pages/start/StartPage';
@@ -28,17 +29,24 @@ import AdminUserDetail from '../pages/admin/AdminUserDetail';
 import AdminCompaniesViewed from '../pages/admin/AdminCompaniesViewed';
 import AdminCareerPages from '../pages/admin/AdminCareerPages';
 import AdminLearning from '../pages/admin/AdminLearning';
+import AdminIssues from '../pages/admin/AdminIssues';
+import PrivacyPolicy from '../pages/legal/PrivacyPolicy';
+import ReportIssuePage from '../pages/report-issue/ReportIssuePage';
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes — no auth required */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/start" element={<StartPage />} />
+          <Route path="/onboarding/profile" element={<OnboardingProfile />} />
           <Route path="/admin" element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
               <Route index element={<AdminOverview />} />
@@ -47,6 +55,7 @@ export default function AppRoutes() {
               <Route path="companies" element={<AdminCompaniesViewed />} />
               <Route path="career-pages" element={<AdminCareerPages />} />
               <Route path="learning" element={<AdminLearning />} />
+              <Route path="issues" element={<AdminIssues />} />
             </Route>
           </Route>
           <Route element={<DashboardLayout />}>
@@ -65,6 +74,7 @@ export default function AppRoutes() {
             <Route path="/job-recommendations" element={<JobRecommendations />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/report-issue" element={<ReportIssuePage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

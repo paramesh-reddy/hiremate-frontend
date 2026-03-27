@@ -31,7 +31,7 @@ export default function ProfileHeader() {
             mb: 0.5,
           }}
         >
-          Profile Builder
+          Edit Profile
         </Typography>
         <Typography
           variant="body2"
@@ -41,7 +41,7 @@ export default function ProfileHeader() {
             lineHeight: 1.5,
           }}
         >
-          Complete your profile across all tabs. Fields marked are used for ATS matching.
+          Keep your profile up to date. Changes are used for ATS matching and resume generation.
         </Typography>
       </Box>
 

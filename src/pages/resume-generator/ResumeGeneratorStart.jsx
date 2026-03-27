@@ -9,6 +9,11 @@ import {
   TextField,
   CircularProgress,
   Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
 import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
@@ -17,7 +22,8 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import { listResumesAPI } from '../../services';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import { listResumesAPI, deleteResumeAPI } from '../../services';
 import { BASE_URL } from '../../utilities/const';
 
 const RESUME_GEN_STORAGE_KEY = 'resumeGeneratorView';
@@ -46,6 +52,9 @@ export default function ResumeGeneratorStart() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [resumeToDelete, setResumeToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
   useEffect(() => {
@@ -88,6 +97,32 @@ export default function ResumeGeneratorStart() {
       window.open(blobUrl, '_blank');
       setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
     } catch { /* ignore */ }
+  };
+
+  const handleDeleteClick = (e, resume) => {
+    e.stopPropagation();
+    setResumeToDelete(resume);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!resumeToDelete) return;
+    setDeleting(true);
+    try {
+      await deleteResumeAPI(resumeToDelete.id);
+      setResumes((prev) => prev.filter((r) => r.id !== resumeToDelete.id));
+      setDeleteDialogOpen(false);
+      setResumeToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete resume:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setResumeToDelete(null);
   };
 
   return (
@@ -430,6 +465,19 @@ export default function ResumeGeneratorStart() {
 
                     {/* Actions */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleDeleteClick(e, r)}
+                        sx={{
+                          color: '#94a3b8',
+                          '&:hover': {
+                            color: '#ef4444',
+                            bgcolor: 'rgba(239, 68, 68, 0.06)',
+                          },
+                        }}
+                      >
+                        <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
                       <Button
                         size="small"
                         onClick={(e) => handleViewResume(e, r)}
@@ -477,6 +525,75 @@ export default function ResumeGeneratorStart() {
           </Box>
         </Box>
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            fontFamily: 'var(--font-family)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1.125rem', color: '#0f172a' }}>
+          Delete Resume
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9375rem', color: '#64748b', lineHeight: 1.6 }}>
+            Are you sure you want to delete "{resumeToDelete?.resume_name}"? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button
+            onClick={handleDeleteCancel}
+            disabled={deleting}
+            sx={{
+              textTransform: 'none',
+              fontFamily: 'var(--font-family)',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#64748b',
+              px: 2.5,
+              py: 0.875,
+              borderRadius: '8px',
+              '&:hover': { bgcolor: '#f8fafc' },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            disabled={deleting}
+            variant="contained"
+            sx={{
+              textTransform: 'none',
+              fontFamily: 'var(--font-family)',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              bgcolor: '#ef4444',
+              color: 'white',
+              px: 2.5,
+              py: 0.875,
+              borderRadius: '8px',
+              boxShadow: 'none',
+              '&:hover': {
+                bgcolor: '#dc2626',
+                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
+              },
+              '&:disabled': {
+                bgcolor: '#fca5a5',
+                color: 'white',
+              },
+            }}
+          >
+            {deleting ? <CircularProgress size={16} sx={{ color: 'white' }} /> : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

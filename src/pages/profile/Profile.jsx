@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Link, Button, Typography, CircularProgress } from '@mui/material';
+import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import PageContainer from '../../components/common/PageContainer';
 import { getProfile } from '../../store/auth/authSlice';
@@ -19,11 +18,8 @@ import ReviewTab from './tabs/ReviewTab';
 
 export default function Profile() {
   const dispatch = useDispatch();
-  const location = useLocation();
-  const navigate = useNavigate();
   const parsedData = useSelector((state) => state.resume?.parsedData);
   const [activeTab, setActiveTab] = useState(0);
-  const fromRegister = location.state?.fromRegister === true;
   const submitLoading = useSelector((state) => state.profile?.submitLoading);
   const submitError = useSelector((state) => state.profile?.submitError);
 
@@ -72,77 +68,118 @@ export default function Profile() {
         px: { xs: 2, sm: 3, md: 4 },
         bgcolor: 'rgba(0,0,0,0.02)',
         minHeight: '100%',
+        pb: 12,
       }}
     >
-      {fromRegister && (
-        <Box sx={{ mb: 2 }}>
-          <Link
-            component="button"
-            variant="body2"
-            onClick={() => navigate('/', { replace: true })}
-            sx={{
-              fontSize: 14,
-              color: 'var(--primary)',
-              fontWeight: 600,
-              textDecoration: 'none',
-              '&:hover': { textDecoration: 'underline' },
-            }}
-          >
-            ← Continue to Dashboard
-          </Link>
-        </Box>
-      )}
-
       <ProfileHeader />
 
       <ProfileTabs value={activeTab} onChange={handleTabChange}>
         {renderTabPanel(activeTab)}
       </ProfileTabs>
 
-      {/* Save changes bar - visible on all tabs */}
+      {/* Fixed Save Bar - SaaS Level */}
       <Box
         sx={{
-          position: 'sticky',
+          position: 'fixed',
           bottom: 0,
-          left: 0,
+          left: 'var(--sidebar-width)',
           right: 0,
-          mt: 3,
-          py: 2,
-          px: { xs: 2, sm: 3, md: 4 },
-          mx: { xs: -2, sm: -3, md: -4 },
-          bgcolor: 'var(--bg-paper)',
-          borderTop: '1px solid var(--border-color)',
-          boxShadow: '0 -2px 12px rgba(0,0,0,0.06)',
+          height: 72,
           display: 'flex',
-          flexWrap: 'wrap',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
+          justifyContent: 'center',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(12px)',
+          borderTop: '1px solid var(--border-color)',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
+          zIndex: 1100,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
-          {submitError && (
-            <Typography variant="body2" color="error" sx={{ flex: 1, minWidth: 0 }}>
-              {typeof submitError === 'object' ? (submitError.message || JSON.stringify(submitError)) : submitError}
-            </Typography>
-          )}
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={submitLoading ? <CircularProgress size={18} color="inherit" /> : <SaveRoundedIcon />}
-          onClick={handleSaveChanges}
-          disabled={submitLoading}
+        <Box
           sx={{
-            bgcolor: 'var(--primary)',
-            '&:hover': { bgcolor: 'var(--primary-dark)' },
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 3,
-            py: 1.25,
+            maxWidth: 1200,
+            width: '100%',
+            px: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 3,
           }}
         >
-          {submitLoading ? 'Saving…' : 'Save changes'}
-        </Button>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {submitError ? (
+              <Typography
+                variant="body2"
+                color="error"
+                sx={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                {typeof submitError === 'object' ? (submitError.message || JSON.stringify(submitError)) : submitError}
+              </Typography>
+            ) : (
+              <Typography
+                sx={{
+                  fontSize: 13,
+                  color: 'var(--text-muted)',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: '#10b981',
+                    display: 'inline-block',
+                  }}
+                />
+                Changes saved automatically
+              </Typography>
+            )}
+          </Box>
+
+          <Button
+            variant="contained"
+            startIcon={submitLoading ? <CircularProgress size={16} color="inherit" /> : <SaveRoundedIcon sx={{ fontSize: 18 }} />}
+            onClick={handleSaveChanges}
+            disabled={submitLoading}
+            sx={{
+              bgcolor: 'var(--primary)',
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: 14,
+              px: 5,
+              py: 1.5,
+              height: 44,
+              borderRadius: 2.5,
+              boxShadow: '0 4px 16px rgba(37,99,235,0.3)',
+              minWidth: 160,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                bgcolor: 'var(--primary-dark)',
+                boxShadow: '0 6px 24px rgba(37,99,235,0.45)',
+                transform: 'translateY(-2px)',
+              },
+              '&:disabled': {
+                bgcolor: 'rgba(37,99,235,0.6)',
+                color: '#fff',
+                boxShadow: 'none',
+              },
+            }}
+          >
+            {submitLoading ? 'Saving…' : 'Save Changes'}
+          </Button>
+        </Box>
       </Box>
     </PageContainer>
   );

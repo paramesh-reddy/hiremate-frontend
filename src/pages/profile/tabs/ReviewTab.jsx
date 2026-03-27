@@ -113,10 +113,6 @@ export default function ReviewTab() {
             'Generate Resume'
           )}
         </CustomButton>
-        <CustomButton variant="outlined">Preview auto-filled job form</CustomButton>
-        <CustomButton variant="outlined" color="secondary">
-          Lock profile for auto-apply
-        </CustomButton>
       </Box>
     </Box>
   );

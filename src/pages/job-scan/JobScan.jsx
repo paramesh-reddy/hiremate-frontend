@@ -5,27 +5,40 @@ import {
   Typography,
   Button,
   Card,
-  Grid,
   Chip,
   IconButton,
   LinearProgress,
-  Divider,
+  Container,
 } from '@mui/material';
 import TrackChangesRoundedIcon from '@mui/icons-material/TrackChangesRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
-import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import FileUploadCustom from '../../components/uploadFiles';
 import JobDescriptionField from '../../components/inputs/JobDescriptionField';
+import CustomStepper from '../../components/common/CustomStepper';
 import { atsScanResumeAPI } from '../../services';
 
 const HERO_GRADIENT =
   'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #2d2b8a 70%, #3b5ae4 100%)';
 
+const STEPS = [
+  {
+    label: 'Upload Resume',
+    description: 'PDF format, max 10MB',
+  },
+  {
+    label: 'Job Description',
+    description: 'Paste the full job posting',
+  },
+];
+
 export default function JobScan() {
   const navigate = useNavigate();
+  const [activeStep, setActiveStep] = useState(0);
   const [resumeFile, setResumeFile] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -33,7 +46,10 @@ export default function JobScan() {
   const [scanError, setScanError] = useState('');
   const progressIntervalRef = useRef(null);
 
-  const canScan = resumeFile && jobDescription.trim().length >= 50;
+  const isStep0Complete = resumeFile !== null;
+  const isStep1Complete = jobDescription.trim().length >= 50;
+  const canScan = isStep0Complete && isStep1Complete;
+  const hasJobDescError = jobDescription.trim().length > 0 && jobDescription.trim().length < 50;
 
   useEffect(() => {
     if (!scanning) {
@@ -81,34 +97,52 @@ export default function JobScan() {
     }
   };
 
+  const handleNext = () => {
+    if (activeStep === 0 && isStep0Complete) {
+      setActiveStep(1);
+    }
+  };
+
+  const handleBack = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1);
+    }
+  };
+
   return (
-    <Box
-      sx={{
-        minHeight: '100%',
-        bgcolor: '#f1f5f9',
-        fontFamily: 'var(--font-family)',
-      }}
-    >
+    <Box sx={{ minHeight: '100vh', bgcolor: '#fafbfc', fontFamily: 'var(--font-family)' }}>
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <Box sx={{ p: { xs: 2, sm: 3 }, pb: 0 }}>
+      <Box sx={{ pt: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
         <Box
           sx={{
             background: HERO_GRADIENT,
             borderRadius: 3,
             color: 'white',
-            py: { xs: 4, sm: 5 },
-            px: { xs: 3, sm: 5 },
+            py: { xs: 5, sm: 6 },
+            px: { xs: 3, sm: 4 },
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          {/* Subtle radial glow */}
+          {/* Decorative background elements */}
           <Box
             sx={{
               position: 'absolute',
               inset: 0,
               background:
-                'radial-gradient(ellipse 60% 70% at 50% 120%, rgba(99,102,241,0.35) 0%, transparent 70%)',
+                'radial-gradient(ellipse 60% 70% at 50% 120%, rgba(99,102,241,0.4) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -100,
+              right: -100,
+              width: 300,
+              height: 300,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
@@ -116,97 +150,113 @@ export default function JobScan() {
           {/* Back button */}
           <IconButton
             onClick={() => navigate(-1)}
+            aria-label="Go back"
             sx={{
               position: 'absolute',
               left: { xs: 16, sm: 24 },
               top: { xs: 16, sm: 24 },
               color: 'white',
               bgcolor: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              width: 36,
-              height: 36,
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' },
+              border: '1px solid rgba(255,255,255,0.2)',
+              width: 38,
+              height: 38,
+              backdropFilter: 'blur(8px)',
+              transition: 'all 0.2s',
+              '&:hover': { 
+                bgcolor: 'rgba(255,255,255,0.24)',
+                transform: 'translateX(-2px)',
+              },
             }}
           >
-            <ArrowBackRoundedIcon sx={{ fontSize: 18 }} />
+            <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
           </IconButton>
 
           {/* Content */}
-          <Box sx={{ position: 'relative', textAlign: 'center', maxWidth: 600, mx: 'auto' }}>
+          <Box sx={{ position: 'relative', textAlign: 'center', maxWidth: 640, mx: 'auto' }}>
             <Typography
+              component="h1"
               sx={{
                 fontFamily: 'var(--font-family)',
                 fontWeight: 800,
-                fontSize: { xs: '1.625rem', sm: '2rem' },
+                fontSize: { xs: '1.75rem', sm: '2.125rem' },
                 lineHeight: 1.2,
-                mb: 1.25,
-                letterSpacing: '-0.01em',
+                mb: 1.5,
+                letterSpacing: '-0.03em',
               }}
             >
-              No More ATS Resume Rejections
+              Beat the ATS & Get Interviews
             </Typography>
             <Typography
               sx={{
                 fontFamily: 'var(--font-family)',
-                fontSize: { xs: '0.9rem', sm: '0.9375rem' },
-                opacity: 0.85,
+                fontSize: { xs: '1rem', sm: '1.0625rem' },
+                opacity: 0.92,
                 mb: 0.75,
+                fontWeight: 500,
+                lineHeight: 1.5,
               }}
             >
-              Ensure an ATS Score of more than 80% and get more interview calls
+              Analyze your resume's ATS compatibility in seconds
             </Typography>
             <Typography
               sx={{
                 fontFamily: 'var(--font-family)',
-                fontSize: '0.875rem',
+                fontSize: '0.9375rem',
                 opacity: 0.7,
                 mb: 3,
-                maxWidth: 480,
+                maxWidth: 520,
                 mx: 'auto',
+                lineHeight: 1.6,
               }}
             >
-              Upload your resume and paste the job description to instantly see how well
-              you match — and how to improve.
+              Get instant feedback on match score, keyword optimization, and actionable improvements
             </Typography>
 
             {/* Feature chips */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1.25 }}>
               {[
                 { icon: TrackChangesRoundedIcon, label: 'ATS Score Analysis' },
                 { icon: BoltRoundedIcon, label: 'Instant Results' },
-                { icon: AutoAwesomeRoundedIcon, label: 'Keyword Match' },
-              ].map(({ icon: Icon, label }) => (
-                <Chip
-                  key={label}
-                  icon={<Icon sx={{ fontSize: '15px !important', color: 'rgba(255,255,255,0.8) !important' }} />}
-                  label={label}
-                  size="small"
-                  sx={{
-                    fontFamily: 'var(--font-family)',
-                    fontWeight: 500,
-                    fontSize: '0.8125rem',
-                    bgcolor: 'rgba(255,255,255,0.1)',
-                    border: '1px solid rgba(255,255,255,0.18)',
-                    color: 'rgba(255,255,255,0.9)',
-                    backdropFilter: 'blur(8px)',
-                    px: 0.5,
-                    '& .MuiChip-label': { px: 1 },
-                  }}
-                />
-              ))}
+                { icon: AutoAwesomeRoundedIcon, label: 'AI-Powered' },
+              ].map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Chip
+                    key={item.label}
+                    icon={<IconComponent sx={{ fontSize: '15px !important', color: 'rgba(255,255,255,0.85) !important' }} />}
+                    label={item.label}
+                    size="small"
+                    sx={{
+                      fontFamily: 'var(--font-family)',
+                      fontWeight: 500,
+                      fontSize: '0.8125rem',
+                      bgcolor: 'rgba(255,255,255,0.14)',
+                      border: '1px solid rgba(255,255,255,0.24)',
+                      color: 'rgba(255,255,255,0.95)',
+                      backdropFilter: 'blur(12px)',
+                      px: 0.75,
+                      py: 0.25,
+                      height: 30,
+                      '& .MuiChip-label': { px: 1.25 },
+                      '& .MuiChip-icon': { ml: 0.75 },
+                    }}
+                  />
+                );
+              })}
             </Box>
           </Box>
         </Box>
       </Box>
 
-      {/* ── Form card ────────────────────────────────────────── */}
-      <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2.5, pb: 4 }}>
+      {/* ── Form area ─────────────────────────────────────────── */}
+      <Container maxWidth="lg" sx={{ pt: { xs: 3, sm: 4 }, pb: 6, px: { xs: 2, sm: 3 } }}>
         <Card
           sx={{
             borderRadius: 3,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.05)',
-            border: '1px solid rgba(0,0,0,0.06)',
-            overflow: 'visible',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 10px 36px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(0,0,0,0.08)',
+            overflow: 'hidden',
+            bgcolor: '#ffffff',
           }}
         >
           {scanning ? (
@@ -217,333 +267,611 @@ export default function JobScan() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                py: 10,
+                py: { xs: 10, sm: 14 },
                 px: 4,
-                minHeight: 360,
+                minHeight: 420,
               }}
             >
               <Box
                 sx={{
-                  width: 68,
-                  height: 68,
+                  width: 80,
+                  height: 80,
                   borderRadius: '50%',
                   bgcolor: '#eff6ff',
-                  border: '2px solid #bfdbfe',
+                  border: '3px solid #dbeafe',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  mb: 2.5,
+                  mb: 3,
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { opacity: 1 },
+                    '50%': { opacity: 0.7 },
+                  },
                 }}
               >
-                <TrackChangesRoundedIcon sx={{ color: '#2563eb', fontSize: 34 }} />
+                <TrackChangesRoundedIcon sx={{ color: '#3b82f6', fontSize: 40 }} />
               </Box>
               <Typography
                 sx={{
                   fontFamily: 'var(--font-family)',
                   fontWeight: 700,
-                  fontSize: '1.25rem',
+                  fontSize: '1.375rem',
                   color: 'var(--text-primary)',
-                  mb: 0.5,
+                  mb: 1,
+                  letterSpacing: '-0.01em',
                 }}
               >
-                Scanning Your Resume
+                Analyzing Your Resume
               </Typography>
               <Typography
                 sx={{
                   fontFamily: 'var(--font-family)',
-                  fontSize: '0.9rem',
+                  fontSize: '0.9375rem',
                   color: 'var(--text-secondary)',
-                  mb: 3,
+                  mb: 4,
+                  textAlign: 'center',
+                  maxWidth: 400,
                 }}
               >
-                Analyzing ATS match and keyword coverage…
+                Running ATS compatibility check and keyword analysis
               </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={Math.min(progress, 100)}
-                sx={{
-                  width: '100%',
-                  maxWidth: 340,
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: '#e0e7ff',
-                  '& .MuiLinearProgress-bar': { borderRadius: 3, bgcolor: '#2563eb' },
-                }}
-              />
-              <Typography
-                sx={{
-                  fontFamily: 'var(--font-family)',
-                  fontSize: '0.8rem',
-                  color: 'var(--text-muted)',
-                  mt: 1,
-                }}
-              >
-                {Math.round(Math.min(progress, 100))}% complete
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ p: { xs: 3, sm: 4 } }}>
-              {/* Card header */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
-                <Box
+              <Box sx={{ width: '100%', maxWidth: 400, px: 2 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={Math.min(progress, 100)}
                   sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 2,
-                    bgcolor: '#4f46e5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
+                    width: '100%',
+                    height: 8,
+                    borderRadius: 4,
+                    bgcolor: '#e0e7ff',
+                    '& .MuiLinearProgress-bar': { 
+                      borderRadius: 4, 
+                      bgcolor: '#4f46e5',
+                      transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    },
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontFamily: 'var(--font-family)',
+                    fontSize: '0.875rem',
+                    color: '#4f46e5',
+                    mt: 1.5,
+                    textAlign: 'center',
+                    fontWeight: 600,
                   }}
                 >
-                  <TrackChangesRoundedIcon sx={{ color: 'white', fontSize: 22 }} />
-                </Box>
-                <Box>
-                  <Typography
+                  {Math.round(Math.min(progress, 100))}% complete
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+              {/* ── Card header ── */}
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <Box
                     sx={{
-                      fontFamily: 'var(--font-family)',
-                      fontWeight: 700,
-                      fontSize: '1.0625rem',
-                      color: 'var(--text-primary)',
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2.5,
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      boxShadow: '0 4px 12px rgba(79,70,229,0.25)',
                     }}
                   >
-                    ATS Scanner
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: 'var(--font-family)',
-                      fontSize: '0.84rem',
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
-                    Upload your resume and paste the job description to check your ATS match score
-                  </Typography>
+                    <TrackChangesRoundedIcon sx={{ color: 'white', fontSize: 26 }} />
+                  </Box>
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontFamily: 'var(--font-family)',
+                        fontWeight: 700,
+                        fontSize: '1.25rem',
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.3,
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      ATS Scanner
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: 'var(--font-family)',
+                        fontSize: '0.9375rem',
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Analyze your resume's compatibility with any job posting
+                    </Typography>
+                  </Box>
                 </Box>
+
+                {/* Stepper */}
+                <CustomStepper 
+                  steps={STEPS} 
+                  activeStep={isStep0Complete && isStep1Complete ? 2 : activeStep} 
+                />
               </Box>
 
-              <Divider sx={{ mb: 3 }} />
-
-              {/* Two-column layout */}
-              <Grid container spacing={3}>
-                {/* Left: Upload */}
-                <Grid item xs={12} md={5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.75 }}>
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        bgcolor: '#4f46e5',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: 'var(--font-family)',
-                          fontSize: '0.7rem',
-                          fontWeight: 800,
-                          color: 'white',
-                          lineHeight: 1,
-                        }}
-                      >
-                        1
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontFamily: 'var(--font-family)',
-                        fontWeight: 600,
-                        fontSize: '0.9375rem',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      Upload Your Resume
-                    </Typography>
-                    <UploadFileRoundedIcon sx={{ fontSize: 17, color: 'var(--text-muted)' }} />
+              {/* ── Error Alert ── */}
+              {scanError && (
+                <Box
+                  role="alert"
+                  sx={{
+                    mb: 4,
+                    p: 2.5,
+                    bgcolor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      bgcolor: '#dc2626',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      mt: 0.25,
+                    }}
+                  >
+                    <Typography sx={{ color: 'white', fontSize: '0.75rem', fontWeight: 700 }}>!</Typography>
                   </Box>
-
-                  <FileUploadCustom
-                    id="job-scan-resume-upload"
-                    label=""
-                    title="Choose your resume or drag & drop it here"
-                    subtitle="PDF only · Max 10MB"
-                    accept=".pdf"
-                    allowedExtensions={['.pdf']}
-                    maxSizeMB={10}
-                    onFileUpload={(file) => setResumeFile(file)}
-                    sx={{ width: '100%' }}
-                  />
-
-                  {resumeFile && (
-                    <Box
-                      sx={{
-                        mt: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        px: 1.5,
-                        py: 0.875,
-                        bgcolor: '#eff6ff',
-                        borderRadius: 1.5,
-                        border: '1px solid #bfdbfe',
-                      }}
-                    >
-                      <DescriptionRoundedIcon sx={{ fontSize: 15, color: '#2563eb', flexShrink: 0 }} />
-                      <Typography
-                        sx={{
-                          fontFamily: 'var(--font-family)',
-                          fontSize: '0.8rem',
-                          color: '#2563eb',
-                          fontWeight: 500,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          flex: 1,
-                          minWidth: 0,
-                        }}
-                      >
-                        {resumeFile.name}
-                      </Typography>
-                    </Box>
-                  )}
-                </Grid>
-
-                {/* Divider */}
-                <Grid item xs={12} md="auto" sx={{ display: { xs: 'block', md: 'flex' }, alignItems: 'stretch' }}>
-                  <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' }, mx: 0.5 }} />
-                  <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
-                </Grid>
-
-                {/* Right: Job Description */}
-                <Grid item xs={12} md>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.75 }}>
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        bgcolor: '#4f46e5',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: 'var(--font-family)',
-                          fontSize: '0.7rem',
-                          fontWeight: 800,
-                          color: 'white',
-                          lineHeight: 1,
-                        }}
-                      >
-                        2
-                      </Typography>
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontFamily: 'var(--font-family)',
-                        fontWeight: 600,
-                        fontSize: '0.9375rem',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      Paste Job Description
-                    </Typography>
-                  </Box>
-
-                  <JobDescriptionField
-                    value={jobDescription}
-                    onChange={setJobDescription}
-                    minRows={9}
-                    maxRows={18}
-                  />
-
-                  {jobDescription.trim().length > 0 && jobDescription.trim().length < 50 && (
-                    <Typography
-                      sx={{
-                        fontFamily: 'var(--font-family)',
-                        fontSize: '0.8rem',
-                        color: '#d97706',
-                        display: 'block',
-                        mt: 0.75,
-                      }}
-                    >
-                      {50 - jobDescription.trim().length} more characters needed for accurate analysis
-                    </Typography>
-                  )}
-                </Grid>
-              </Grid>
-
-              {/* CTA */}
-              <Box sx={{ mt: 3.5, borderTop: '1px solid var(--divider)', pt: 3 }}>
-                {scanError && (
                   <Typography
                     sx={{
                       fontFamily: 'var(--font-family)',
                       fontSize: '0.875rem',
                       color: '#dc2626',
-                      mb: 1.5,
+                      fontWeight: 500,
+                      lineHeight: 1.6,
                     }}
                   >
                     {scanError}
                   </Typography>
+                </Box>
+              )}
+
+              {/* ── Step Content ── */}
+              <Box sx={{ minHeight: 400 }}>
+                {/* Step 0: Upload Resume */}
+                {activeStep === 0 && (
+                  <Box>
+                    <Box sx={{ mb: 3, textAlign: 'center' }}>
+                      <Typography
+                        sx={{
+                          fontFamily: 'var(--font-family)',
+                          fontWeight: 700,
+                          fontSize: '1.125rem',
+                          color: 'var(--text-primary)',
+                          mb: 0.75,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        Upload Your Resume
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: 'var(--font-family)',
+                          fontSize: '0.9375rem',
+                          color: 'var(--text-secondary)',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        We'll analyze it against the job requirements
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ maxWidth: 580, mx: 'auto' }}>
+                      <FileUploadCustom
+                        id="job-scan-resume-upload"
+                        label=""
+                        title="Choose your resume or drag & drop it here"
+                        subtitle="PDF only · Max 10MB"
+                        accept=".pdf"
+                        allowedExtensions={['.pdf']}
+                        maxSizeMB={10}
+                        onFileUpload={(file) => setResumeFile(file)}
+                        sx={{
+                          width: '100%',
+                          minHeight: 260,
+                          transition: 'all 0.2s',
+                        }}
+                      />
+
+                      {resumeFile && (
+                        <Box
+                          sx={{
+                            mt: 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            px: 3,
+                            py: 2,
+                            bgcolor: '#f0fdf4',
+                            borderRadius: 2.5,
+                            border: '1.5px solid #86efac',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2,
+                              bgcolor: '#10b981',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <DescriptionRoundedIcon sx={{ fontSize: 22, color: 'white' }} />
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography
+                              sx={{
+                                fontFamily: 'var(--font-family)',
+                                fontSize: '0.9375rem',
+                                color: '#065f46',
+                                fontWeight: 600,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                mb: 0.25,
+                              }}
+                            >
+                              {resumeFile.name}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: 'var(--font-family)',
+                                fontSize: '0.8125rem',
+                                color: '#059669',
+                                fontWeight: 500,
+                              }}
+                            >
+                              {(resumeFile.size / 1024 / 1024).toFixed(2)} MB
+                            </Typography>
+                          </Box>
+                          <CheckCircleRoundedIcon sx={{ fontSize: 28, color: '#10b981' }} />
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
                 )}
 
-                <Button
-                  variant="contained"
-                  fullWidth
-                  startIcon={<TrackChangesRoundedIcon />}
-                  onClick={handleScan}
-                  disabled={!canScan}
-                  sx={{
-                    py: 1.625,
-                    background: canScan
-                      ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)'
-                      : undefined,
-                    bgcolor: canScan ? undefined : 'rgba(0,0,0,0.08)',
-                    color: canScan ? 'white' : 'rgba(0,0,0,0.3)',
-                    fontFamily: 'var(--font-family)',
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    fontSize: '1rem',
-                    textTransform: 'none',
-                    boxShadow: canScan ? '0 4px 14px rgba(79,70,229,0.35)' : 'none',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)',
-                      boxShadow: '0 4px 18px rgba(79,70,229,0.45)',
-                    },
-                    '&:disabled': {
-                      background: 'rgba(0,0,0,0.08)',
-                      color: 'rgba(0,0,0,0.3)',
-                    },
-                  }}
-                >
-                  Scan My Resume
-                </Button>
+                {/* Step 1: Job Description */}
+                {activeStep === 1 && (
+                  <Box>
+                    <Box sx={{ mb: 3, textAlign: 'center' }}>
+                      <Typography
+                        sx={{
+                          fontFamily: 'var(--font-family)',
+                          fontWeight: 700,
+                          fontSize: '1.125rem',
+                          color: 'var(--text-primary)',
+                          mb: 0.75,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        Paste the Job Description
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: 'var(--font-family)',
+                          fontSize: '0.9375rem',
+                          color: 'var(--text-secondary)',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Include responsibilities, requirements, and qualifications for best results
+                      </Typography>
+                    </Box>
 
-                <Typography
-                  sx={{
-                    fontFamily: 'var(--font-family)',
-                    fontSize: '0.8rem',
-                    color: 'var(--text-muted)',
-                    display: 'block',
-                    textAlign: 'center',
-                    mt: 1,
+                    <Box sx={{ maxWidth: 680, mx: 'auto' }}>
+                      <JobDescriptionField
+                        value={jobDescription}
+                        onChange={setJobDescription}
+                        minRows={12}
+                        maxRows={20}
+                      />
+
+                      {hasJobDescError && (
+                        <Box
+                          sx={{
+                            mt: 2,
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5,
+                            px: 2.5,
+                            py: 2,
+                            bgcolor: '#fffbeb',
+                            borderRadius: 2,
+                            border: '1px solid #fde68a',
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: 'var(--font-family)',
+                              fontSize: '0.875rem',
+                              color: '#d97706',
+                              fontWeight: 500,
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            Need {50 - jobDescription.trim().length} more characters for accurate analysis (minimum 50 characters required)
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {isStep1Complete && (
+                        <Box
+                          sx={{
+                            mt: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.5,
+                            px: 2.5,
+                            py: 1.75,
+                            bgcolor: '#f0fdf4',
+                            borderRadius: 2,
+                            border: '1.5px solid #86efac',
+                          }}
+                        >
+                          <CheckCircleRoundedIcon sx={{ fontSize: 24, color: '#10b981' }} />
+                          <Typography
+                            sx={{
+                              fontFamily: 'var(--font-family)',
+                              fontSize: '0.875rem',
+                              color: '#065f46',
+                              fontWeight: 600,
+                            }}
+                          >
+                            Job description ready for analysis ({jobDescription.trim().length} characters)
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+
+              {/* ── Bottom Actions ── */}
+              <Box
+                sx={{
+                  mt: 5,
+                  pt: 4,
+                  borderTop: '1.5px solid rgba(0,0,0,0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                }}
+              >
+                {/* Left: Back button */}
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, order: { xs: 2, sm: 1 } }}>
+                  {activeStep > 0 && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<ArrowBackRoundedIcon />}
+                      onClick={handleBack}
+                      sx={{
+                        borderColor: '#e2e8f0',
+                        color: '#64748b',
+                        fontFamily: 'var(--font-family)',
+                        fontWeight: 600,
+                        fontSize: '0.9375rem',
+                        textTransform: 'none',
+                        py: 1.25,
+                        px: 3,
+                        borderRadius: 2,
+                        '&:hover': {
+                          borderColor: '#cbd5e1',
+                          bgcolor: '#f8fafc',
+                        },
+                      }}
+                    >
+                      Back
+                    </Button>
+                  )}
+                </Box>
+
+                {/* Right: Next/Scan button */}
+                <Box 
+                  sx={{ 
+                    flex: { xs: '1 1 100%', sm: '1 1 auto' }, 
+                    order: { xs: 1, sm: 2 },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: { xs: 'stretch', sm: 'flex-end' },
+                    gap: 1.5,
                   }}
                 >
-                  PDF required · Paste at least 50 characters of the job description to scan
-                </Typography>
+                  {activeStep === 0 && (
+                    <Button
+                      variant="contained"
+                      endIcon={<ArrowForwardRoundedIcon />}
+                      onClick={handleNext}
+                      disabled={!isStep0Complete}
+                      sx={{
+                        py: 1.75,
+                        px: 4,
+                        background: isStep0Complete
+                          ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)'
+                          : 'rgba(0,0,0,0.08)',
+                        fontFamily: 'var(--font-family)',
+                        fontWeight: 700,
+                        borderRadius: 2.5,
+                        fontSize: '1.0625rem',
+                        textTransform: 'none',
+                        boxShadow: isStep0Complete ? '0 4px 16px rgba(79,70,229,0.4)' : 'none',
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                        letterSpacing: '-0.01em',
+                        minWidth: { xs: 'auto', sm: 240 },
+                        '&:hover': {
+                          background: isStep0Complete 
+                            ? 'linear-gradient(135deg, #4338ca 0%, #5b21b6 100%)'
+                            : 'rgba(0,0,0,0.08)',
+                          boxShadow: isStep0Complete ? '0 6px 24px rgba(79,70,229,0.5)' : 'none',
+                          transform: isStep0Complete ? 'translateY(-2px)' : 'none',
+                        },
+                        '&:active': { transform: isStep0Complete ? 'translateY(0)' : 'none' },
+                        '&:disabled': {
+                          background: 'rgba(0,0,0,0.08)',
+                          color: 'rgba(0,0,0,0.35)',
+                          boxShadow: 'none',
+                        },
+                      }}
+                    >
+                      Continue to Job Description
+                    </Button>
+                  )}
+
+                  {activeStep === 1 && (
+                    <>
+                      <Button
+                        variant="contained"
+                        startIcon={<TrackChangesRoundedIcon sx={{ fontSize: 20 }} />}
+                        onClick={handleScan}
+                        disabled={!canScan}
+                        aria-label="Scan my resume against the job description"
+                        sx={{
+                          py: 1.75,
+                          px: 4,
+                          background: canScan
+                            ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)'
+                            : 'rgba(0,0,0,0.08)',
+                          fontFamily: 'var(--font-family)',
+                          fontWeight: 700,
+                          borderRadius: 2.5,
+                          fontSize: '1.0625rem',
+                          textTransform: 'none',
+                          boxShadow: canScan ? '0 4px 16px rgba(79,70,229,0.4)' : 'none',
+                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                          letterSpacing: '-0.01em',
+                          minWidth: { xs: 'auto', sm: 240 },
+                          '&:hover': {
+                            background: canScan 
+                              ? 'linear-gradient(135deg, #4338ca 0%, #5b21b6 100%)'
+                              : 'rgba(0,0,0,0.08)',
+                            boxShadow: canScan ? '0 6px 24px rgba(79,70,229,0.5)' : 'none',
+                            transform: canScan ? 'translateY(-2px)' : 'none',
+                          },
+                          '&:active': { transform: canScan ? 'translateY(0)' : 'none' },
+                          '&:disabled': {
+                            background: 'rgba(0,0,0,0.08)',
+                            color: 'rgba(0,0,0,0.35)',
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        Scan My Resume
+                      </Button>
+
+                      {!canScan && (
+                        <Typography
+                          sx={{
+                            fontFamily: 'var(--font-family)',
+                            fontSize: '0.8125rem',
+                            color: '#dc2626',
+                            textAlign: { xs: 'center', sm: 'right' },
+                            fontWeight: 500,
+                          }}
+                        >
+                          Add at least 50 characters to continue
+                        </Typography>
+                      )}
+                    </>
+                  )}
+
+                  {activeStep === 0 && !isStep0Complete && (
+                    <Typography
+                      sx={{
+                        fontFamily: 'var(--font-family)',
+                        fontSize: '0.8125rem',
+                        color: '#94a3b8',
+                        textAlign: { xs: 'center', sm: 'right' },
+                        fontWeight: 500,
+                      }}
+                    >
+                      Upload your resume to continue
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </Box>
           )}
         </Card>
-      </Box>
+
+        {/* ── Summary Progress Card (when all steps complete) ── */}
+        {!scanning && isStep0Complete && isStep1Complete && (
+          <Card
+            sx={{
+              mt: 3,
+              borderRadius: 3,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06)',
+              border: '1.5px solid #86efac',
+              overflow: 'hidden',
+              bgcolor: '#f0fdf4',
+            }}
+          >
+            <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 2.5,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                }}
+              >
+                <CheckCircleRoundedIcon sx={{ color: 'white', fontSize: 32 }} />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontFamily: 'var(--font-family)',
+                    fontWeight: 700,
+                    fontSize: '1.0625rem',
+                    color: '#065f46',
+                    lineHeight: 1.3,
+                    mb: 0.5,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Ready to Scan
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: 'var(--font-family)',
+                    fontSize: '0.875rem',
+                    color: '#047857',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  All requirements met. Click "Scan My Resume" to analyze your ATS compatibility
+                </Typography>
+              </Box>
+            </Box>
+          </Card>
+        )}
+      </Container>
     </Box>
   );
 }

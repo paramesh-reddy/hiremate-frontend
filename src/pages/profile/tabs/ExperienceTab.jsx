@@ -15,7 +15,7 @@ const WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
 
 const defaultExperience = {
   jobTitle: '', companyName: '', employmentType: '', startDate: '', endDate: '',
-  location: '', workMode: '', description: '', techStack: '',
+  location: '', workMode: '', description: '', techStack: '', noticePeriod: '',
 };
 
 export default function ExperienceTab() {
@@ -65,10 +65,10 @@ export default function ExperienceTab() {
 
           <Box sx={FORM_GRID_SX}>
             <Box sx={{ gridColumn: '1 / -1' }}>
-              <CustomInput label="Job Title *" required fullWidth value={exp.jobTitle} onChange={(e) => updateAt(idx, 'jobTitle', e.target.value)} />
+              <CustomInput label="Job Title *" fullWidth value={exp.jobTitle} onChange={(e) => updateAt(idx, 'jobTitle', e.target.value)} />
             </Box>
             <Box sx={{ gridColumn: '1 / -1' }}>
-              <CustomInput label="Company Name *" required fullWidth value={exp.companyName} onChange={(e) => updateAt(idx, 'companyName', e.target.value)} />
+              <CustomInput label="Company Name *" fullWidth value={exp.companyName} onChange={(e) => updateAt(idx, 'companyName', e.target.value)} />
             </Box>
             <Box sx={{ gridColumn: '1 / -1' }}>
               <CustomSelect label="Employment Type" value={exp.employmentType} onChange={(e) => updateAt(idx, 'employmentType', e.target.value)}>
@@ -79,6 +79,16 @@ export default function ExperienceTab() {
             </Box>
             <CustomInput label="Start Date (MM/YYYY)" placeholder="01/2022" value={exp.startDate} onChange={(e) => updateAt(idx, 'startDate', e.target.value)} />
             <CustomInput label="End Date (MM/YYYY) or Present" placeholder="Present" value={exp.endDate} onChange={(e) => updateAt(idx, 'endDate', e.target.value)} />
+            {(exp.endDate.trim().toLowerCase() === 'present' || exp.endDate.trim() === '') && (
+              <Box sx={{ gridColumn: '1 / -1' }}>
+                <CustomInput
+                  label="Notice Period"
+                  placeholder="e.g. 30 days, 2 months, Immediate"
+                  value={exp.noticePeriod ?? ''}
+                  onChange={(e) => updateAt(idx, 'noticePeriod', e.target.value)}
+                />
+              </Box>
+            )}
             <Box sx={{ gridColumn: '1 / -1' }}>
               <CustomInput label="Location (City, Country)" value={exp.location} onChange={(e) => updateAt(idx, 'location', e.target.value)} />
             </Box>

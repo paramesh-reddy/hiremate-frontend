@@ -4,7 +4,7 @@ import WorkOutlineRoundedIcon from '@mui/icons-material/WorkOutlineRounded';
 import { Link } from 'react-router-dom';
 
 import PageContainer from '../../components/common/PageContainer';
-import { getDashboardSummaryAPI, getSavedJobsAPI } from '../../services';
+import { getDashboardSummaryAPI, listJobsAPI } from '../../services';
 
 import CareerHealthScore from '../../components/dashboard/CareerHealthScore';
 import StatCards from '../../components/dashboard/StatCards';
@@ -45,7 +45,7 @@ export default function Home() {
         : p;
       const [summaryRes, jobsRes] = await Promise.all([
         getDashboardSummaryAPI(summaryOpts),
-        getSavedJobsAPI(jobsOpts),
+        listJobsAPI(jobsOpts),
       ]);
       setSummary(summaryRes?.data || null);
       setJobs(jobsRes?.data || []);

@@ -13,6 +13,8 @@
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Box, Skeleton } from '@mui/material';
+
+const LETTER_PAGE_HEIGHT = 1056; // Letter page @ 96dpi (11 inches * 96)
 import { previewResumeHtmlAPI } from '../../services';
 
 const DEBOUNCE_MS = 400;
@@ -25,13 +27,27 @@ export default function ResumeHtmlPreview({
   lineHeight,
   jobTitle = '',
   jobDescription = '',
+  designConfig,
 }) {
   const [htmlContent, setHtmlContent] = useState('');
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [contentHeight, setContentHeight] = useState(LETTER_PAGE_HEIGHT);
 
   const timerRef = useRef(null);
   const abortRef = useRef(null);
+  const iframeRef = useRef(null);
+
+  const measureContent = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc?.body) return;
+      const h = doc.body.scrollHeight;
+      if (h > 0) setContentHeight(Math.max(LETTER_PAGE_HEIGHT, h));
+    } catch { /* ignore */ }
+  }, []);
 
   const fetchHtml = useCallback(async (params) => {
     // Cancel any in-flight request
@@ -61,6 +77,7 @@ export default function ResumeHtmlPreview({
       font_family: fontFamily || undefined,
       font_size: fontSize || undefined,
       line_height: lineHeight || undefined,
+      design_config: designConfig || undefined,
       profile_override: profile,
     };
 
@@ -81,7 +98,7 @@ export default function ResumeHtmlPreview({
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, templateId, fontFamily, fontSize, lineHeight, jobTitle, jobDescription]);
+  }, [profile, templateId, fontFamily, fontSize, lineHeight, jobTitle, jobDescription, designConfig]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -112,20 +129,25 @@ export default function ResumeHtmlPreview({
     );
   }
 
-  // ── Live iframe: HTML is the exact same output WeasyPrint uses for PDF ──
+  // ── Live iframe: Render at full content height, no internal scrolling ──
+  // Parent container (in index.jsx) handles scrolling so preview matches PDF layout exactly
   return (
     <Box sx={{ position: 'relative', width: '100%', bgcolor: 'white' }}>
       <iframe
+        ref={iframeRef}
         srcDoc={htmlContent}
         title="Resume Preview"
         sandbox="allow-same-origin"
+        scrolling="no"
+        onLoad={measureContent}
         style={{
           width: '100%',
-          minHeight: '1056px',
+          height: `${contentHeight}px`,
           border: 'none',
           display: 'block',
           opacity: refreshing ? 0.5 : 1,
           transition: 'opacity 0.2s ease',
+          overflow: 'hidden',
         }}
       />
       {/* Loading overlay — centered spinner + label, shown while preview is updating */}

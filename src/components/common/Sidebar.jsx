@@ -23,11 +23,13 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettingsRounded';
 import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
+import BugReportRoundedIcon from '@mui/icons-material/BugReportRounded';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import ExtensionRoundedIcon from '@mui/icons-material/ExtensionRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 import { logout } from '../../store/auth/authSlice';
 import { toggleTheme } from '../../store/theme/themeSlice';
+import { getProfileCompletion } from '../../pages/profile/utils/profileCompletion';
 import SignOutConfirmDialog from './SignOutConfirmDialog';
 import logoImg from '../../assets/logo.png';
 
@@ -84,7 +86,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function NavItem({ label, path, icon: Icon, location, badge }) {
+function NavItem({ label, path, icon: Icon, location, badge, incomplete }) {
   const exact = path === '/';
   const isActive = exact ? location.pathname === '/' : location.pathname.startsWith(path);
   const iconColor = ICON_COLORS[path] || 'var(--primary)';
@@ -167,6 +169,19 @@ function NavItem({ label, path, icon: Icon, location, badge }) {
           {badge}
         </Box>
       )}
+
+      {incomplete && !isActive && (
+        <Box
+          sx={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            bgcolor: '#f59e0b',
+            flexShrink: 0,
+            boxShadow: '0 0 0 2px rgba(245,158,11,0.2)',
+          }}
+        />
+      )}
     </Box>
   );
 }
@@ -178,6 +193,9 @@ export default function Sidebar() {
   const darkMode = useSelector((state) => state.theme.darkMode);
   const isAdmin = useSelector((state) => state.auth?.user?.is_admin) === true;
   const user = useSelector((state) => state.auth.user);
+  const profileForm = useSelector((state) => state.profile?.form);
+  const { percent: profilePercent } = getProfileCompletion(profileForm);
+  const profileIncomplete = profileForm != null && profilePercent < 100;
 
   const displayName = user
     ? [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email
@@ -240,9 +258,76 @@ export default function Sidebar() {
 
         <SectionLabel>Account</SectionLabel>
         {ACCOUNT_NAV.map((item) => (
-          <NavItem key={item.path} {...item} location={location} />
+          <NavItem
+            key={item.path}
+            {...item}
+            location={location}
+            incomplete={item.path === '/profile' ? profileIncomplete : undefined}
+          />
         ))}
         {isAdmin && <NavItem {...ADMIN_NAV} location={location} />}
+
+        {/* Report an Issue */}
+        {(() => {
+          const isActive = location.pathname === '/report-issue';
+          const activeColor = '#f59e0b';
+          return (
+            <Box
+              onClick={() => navigate('/report-issue')}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.25,
+                px: 1,
+                py: 0.875,
+                borderRadius: '10px',
+                mt: 0.375,
+                cursor: 'pointer',
+                color: isActive ? activeColor : 'var(--text-secondary)',
+                bgcolor: isActive ? `${activeColor}14` : 'transparent',
+                transition: 'all 0.15s ease',
+                '&:hover': {
+                  bgcolor: isActive ? `${activeColor}1a` : 'rgba(245,158,11,0.07)',
+                  color: activeColor,
+                  '& .report-icon-wrap': { bgcolor: `${activeColor}1f`, borderColor: `${activeColor}28` },
+                  '& .report-icon': { color: activeColor },
+                },
+              }}
+            >
+              <Box
+                className="report-icon-wrap"
+                sx={{
+                  width: 33,
+                  height: 33,
+                  borderRadius: '9px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  bgcolor: isActive ? `${activeColor}1f` : 'rgba(0,0,0,0.03)',
+                  border: isActive ? `1px solid ${activeColor}28` : '1px solid transparent',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <BugReportRoundedIcon
+                  className="report-icon"
+                  sx={{ fontSize: 17, color: isActive ? activeColor : 'var(--text-muted)', transition: 'color 0.15s' }}
+                />
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: '0.875rem',
+                  fontWeight: isActive ? 600 : 500,
+                  fontFamily: 'var(--font-family)',
+                  color: 'inherit',
+                  userSelect: 'none',
+                }}
+              >
+                Report an Issue
+              </Typography>
+            </Box>
+          );
+        })()}
 
         {/* Sign Out */}
         <Box

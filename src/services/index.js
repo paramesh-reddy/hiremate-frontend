@@ -9,7 +9,6 @@ export {
 
 export {
   getDashboardSummaryAPI,
-  getSavedJobsAPI,
 } from './dashboardService';
 
 export {
@@ -51,12 +50,31 @@ export {
   previewResumeAPI,
   previewResumeHtmlAPI,
   updateResumeAPI,
+  renameResumeAPI,
   deleteResumeAPI,
   uploadResumeAPI,
   atsScanResumeAPI,
   analyzeResumeAPI,
   analyzeKeywordsAPI,
   saveResumeSnapshotAPI,
+  generateSectionAPI,
+  extractKeywordsAPI,
+  getResumeTemplatesAPI,
+  updateResumeDesignAPI,
 } from './resumeService';
+
+export {
+  getPrivacyPolicyAPI,
+  getPrivacyPolicyHistoryAPI,
+  updatePrivacyPolicyAPI,
+} from './legalService';
+
+export {
+  createIssueAPI,
+  uploadIssueScreenshotAPI,
+  listIssuesAPI,
+  getIssueAPI,
+  updateIssueStatusAPI,
+} from './issueService';
 
 export { default as axiosClient } from './axiosClient';

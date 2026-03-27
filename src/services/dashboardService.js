@@ -1,5 +1,4 @@
 import { dedupGet } from './axiosClient';
-import axiosClient from './axiosClient';
 
 export const getDashboardSummaryAPI = (options = {}) => {
   const { limit = 5, days = 7, from_date, to_date } = options;
@@ -11,12 +10,4 @@ export const getDashboardSummaryAPI = (options = {}) => {
     params.days = days;
   }
   return dedupGet('/dashboard/summary', { params });
-};
-
-export const getSavedJobsAPI = (options = {}) => {
-  const { from_date, to_date } = options;
-  const params = {};
-  if (from_date) params.from_date = from_date;
-  if (to_date) params.to_date = to_date;
-  return axiosClient.get('/chrome-extension/jobs', { params });
 };
