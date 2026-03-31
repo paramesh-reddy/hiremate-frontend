@@ -13,10 +13,16 @@ import {
   LinearProgress,
   CircularProgress,
   Backdrop,
+  Avatar,
+  InputAdornment,
 } from '@mui/material';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import GetAppRoundedIcon from '@mui/icons-material/GetAppRounded';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import JobDescriptionInput from './JobDescriptionInput';
 import { getResumeWorkspaceAPI, generateResumeAPI, previewResumeAPI, updateResumeAPI, renameResumeAPI, deleteResumeAPI, getProfileDataAPI, saveResumeSnapshotAPI, analyzeKeywordsAPI, getJobAPI, getResumeTemplatesAPI, updateResumeDesignAPI } from '../../services';
 import { BASE_URL } from '../../utilities/const';
@@ -47,6 +53,17 @@ const computeDefaultResumeName = (profile) => {
   return years > 0 ? `${firstName}_${years}Years` : firstName;
 };
 const HERO_GRADIENT = 'linear-gradient(90deg, rgba(51, 94, 222, 1) 0%, rgba(39, 39, 125, 1) 35%, rgba(54, 94, 214, 1) 100%)';
+
+const AVATAR_COLORS = [
+  ['#dbeafe', '#2563eb'],
+  ['#ede9fe', '#7c3aed'],
+  ['#dcfce7', '#16a34a'],
+  ['#fef3c7', '#d97706'],
+  ['#fce7f3', '#be185d'],
+];
+
+const getResumeInitials = (name = '') =>
+  (name || '').split(/[_\s]+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase() || 'R';
 const RESUME_GEN_PANEL_WIDTH_KEY = 'resumeGeneratorLeftPanelWidth';
 
 const getResumeFullUrl = (url) =>
@@ -179,10 +196,15 @@ export default function ResumeGenerator() {
   const selectedResumeIdRef = useRef(selectedResumeId);
   const tailorContextRef = useRef(null);
   const tailorJobIdRef = useRef(null);
+  const tailorBaseResumeIdRef = useRef(null);
+  const workspaceFetchedRef = useRef(false);
+  const [tailorSelectSearch, setTailorSelectSearch] = useState('');
 
   const selectedResume = resumes.find((r) => r.id === selectedResumeId) || resumes[0];
 
   useEffect(() => {
+    if (workspaceFetchedRef.current) return;
+    workspaceFetchedRef.current = true;
     getResumeWorkspaceAPI()
       .then(({ data }) => {
         const list = Array.isArray(data?.resumes) ? data.resumes : [];
@@ -204,7 +226,7 @@ export default function ResumeGenerator() {
               setView('preview');
             } else {
               tailorJobIdRef.current = currentJobId;
-              setView('generating');
+              setView('tailor-select');
             }
           } else if (urlJobId && /^\d+$/.test(urlJobId)) {
             const jobId = parseInt(urlJobId, 10);
@@ -220,7 +242,7 @@ export default function ResumeGenerator() {
                   } else {
                     tailorJobIdRef.current = jobId;
                     tailorContextRef.current = { job_description: jd, job_title: job?.position_title || '' };
-                    setView('generating');
+                    setView('tailor-select');
                   }
                 } else {
                   setJdDialogMode('error');
@@ -238,7 +260,7 @@ export default function ResumeGenerator() {
         // No else — new users (no resumes, no tailor) stay in 'preview' and see the "Tailor to a Job" card
         // Handle ?resume_id= URL param (from ResumeGeneratorStart "Select" button)
         const urlResumeId = urlSearchParams.get('resume_id');
-        if (urlResumeId && /^\d+$/.test(urlResumeId)) {
+        if (urlResumeId && /^\d+$/.test(urlResumeId) && urlSearchParams.get('tailor') !== '1') {
           const id = parseInt(urlResumeId, 10);
           if (list.some((r) => r.id === id)) {
             setSelectedResumeId(id);
@@ -254,8 +276,9 @@ export default function ResumeGenerator() {
 
   useEffect(() => {
     if (resumes.length === 0) return;
-    // Prefer URL param resume_id, then current selectedResumeId, then first resume
-    if (params.resumeId) {
+    // Prefer URL param resume_id, then current selectedResumeId, then first resume.
+    // Skip URL-based sync when in tailor-select or generating — user selection takes priority.
+    if (params.resumeId && view !== 'tailor-select' && view !== 'generating') {
       const id = parseInt(params.resumeId, 10);
       if (resumes.some((r) => r.id === id)) {
         setSelectedResumeId(id);
@@ -266,7 +289,7 @@ export default function ResumeGenerator() {
       ? selectedResumeId
       : resumes[0].id;
     setSelectedResumeId(validId);
-  }, [resumes, params.resumeId, selectedResumeId]);
+  }, [resumes, params.resumeId, selectedResumeId, view]);
 
   useEffect(() => {
     const tc = tailorContextRef.current;
@@ -277,6 +300,8 @@ export default function ResumeGenerator() {
       setProgress((p) => (p >= 90 ? p : p + Math.random() * 6 + 3));
     }, 400);
     const jobTitle = (tc.job_title || '').trim() || 'Resume';
+    const baseResumeId = tailorBaseResumeIdRef.current;
+    tailorBaseResumeIdRef.current = null;
     generateResumeAPI({
       job_title: jobTitle,
       job_description: tc.job_description.trim(),
@@ -284,6 +309,7 @@ export default function ResumeGenerator() {
       font_family: designConfigRef.current?.font_family,
       font_size: designConfigRef.current?.font_size,
       line_height: designConfigRef.current?.line_height,
+      ...(baseResumeId != null ? { resume_id: baseResumeId } : {}),
     })
       .then(({ data }) => {
         setProgress(100);
@@ -546,6 +572,17 @@ export default function ResumeGenerator() {
     }
   }, [jobDescription, jobRole]);
 
+  const handleTailorFromProfile = useCallback(() => {
+    tailorBaseResumeIdRef.current = null;
+    setView('generating');
+  }, []);
+
+  const handleTailorFromExistingResume = useCallback((resume) => {
+    tailorBaseResumeIdRef.current = resume.id;
+    setSelectedResumeId(resume.id);
+    setView('generating');
+  }, []);
+
   const handleDownload = async () => {
     if (!workspaceLoaded) return;
     setDownloading(true);
@@ -732,6 +769,184 @@ export default function ResumeGenerator() {
   const goToInput = () => navigate('/ai-resume-studio');
   const handleGenerateNew = () => navigate('/resume-generator');
 
+  const tailorSelectView = (
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', fontFamily: 'var(--font-family)', display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar */}
+      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid #e5e7eb', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+        <Button
+          onClick={() => navigate('/ai-resume-studio')}
+          size="small"
+          sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', fontWeight: 500, color: '#6b7280', fontSize: '0.875rem', '&:hover': { color: 'var(--primary)', bgcolor: 'transparent' } }}
+        >
+          AI Resume Studio
+        </Button>
+        <ChevronRightRoundedIcon sx={{ fontSize: 14, color: '#d1d5db' }} />
+        <Typography sx={{ fontSize: '0.875rem', color: '#374151', fontFamily: 'var(--font-family)', fontWeight: 500 }}>
+          Tailor Resume
+        </Typography>
+      </Box>
+
+      <Box sx={{ flex: 1, maxWidth: 860, width: '100%', mx: 'auto', px: 3, pt: 5, pb: 10 }}>
+        {/* JD banner */}
+        <Box sx={{ mb: 4, p: 2.5, bgcolor: 'rgba(37,99,235,0.05)', border: '1.5px solid rgba(37,99,235,0.15)', borderRadius: '14px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+            <AutoAwesomeRoundedIcon sx={{ fontSize: 17, color: 'var(--primary)' }} />
+            <Chip
+              label="Job from Chrome Extension"
+              size="small"
+              sx={{ height: 20, bgcolor: 'rgba(37,99,235,0.1)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.65rem', fontFamily: 'var(--font-family)', '& .MuiChip-label': { px: 1 } }}
+            />
+          </Box>
+          {jobRole && (
+            <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1rem', color: '#0f172a', mb: 0.5 }}>
+              {jobRole}
+            </Typography>
+          )}
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.5 }}>
+            {jobDescription.length > 220 ? `${jobDescription.slice(0, 220)}…` : jobDescription}
+          </Typography>
+        </Box>
+
+        {/* Page header */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" sx={{ fontFamily: 'var(--font-family)', fontWeight: 800, fontSize: { xs: '1.5rem', sm: '1.875rem' }, color: '#0f172a', letterSpacing: '-0.02em', mb: 0.75 }}>
+            Create a tailored resume
+          </Typography>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '1rem', color: '#64748b' }}>
+            Choose how to start — we'll tailor it to the job description above.
+          </Typography>
+        </Box>
+
+        {/* Option 1 — Start from profile */}
+        <Box
+          onClick={handleTailorFromProfile}
+          sx={{
+            display: 'flex', alignItems: 'center', gap: 3, p: 3, mb: 2.5,
+            bgcolor: 'white', border: '1.5px solid #e5e7eb', borderRadius: '16px',
+            cursor: 'pointer', transition: 'all 0.18s',
+            '&:hover': {
+              borderColor: 'var(--primary)', boxShadow: '0 0 0 4px rgba(37,99,235,0.06)',
+              '& .ts-profile-arrow': { transform: 'translateX(4px)', color: 'var(--primary)' },
+              '& .ts-profile-icon': { bgcolor: 'rgba(37,99,235,0.1)' },
+            },
+          }}
+        >
+          <Box className="ts-profile-icon" sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: 'rgba(37,99,235,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.18s' }}>
+            <PersonOutlineRoundedIcon sx={{ fontSize: 26, color: 'var(--primary)' }} />
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.375 }}>
+              <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
+                Start from my profile
+              </Typography>
+              <Chip label="Recommended" size="small" sx={{ height: 20, bgcolor: 'rgba(37,99,235,0.08)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.65rem', fontFamily: 'var(--font-family)', '& .MuiChip-label': { px: 1 } }} />
+            </Box>
+            <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5 }}>
+              Generate a fresh resume from your profile, tailored to this job.
+            </Typography>
+          </Box>
+          <ChevronRightRoundedIcon className="ts-profile-arrow" sx={{ fontSize: 22, color: '#9ca3af', flexShrink: 0, transition: 'all 0.18s' }} />
+        </Box>
+
+        {/* Divider */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2.5 }}>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: '#e5e7eb' }} />
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', fontFamily: 'var(--font-family)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            or tailor from existing
+          </Typography>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: '#e5e7eb' }} />
+        </Box>
+
+        {/* Option 2 — Existing resumes */}
+        <Box sx={{ bgcolor: 'white', border: '1.5px solid #e5e7eb', borderRadius: '16px', overflow: 'hidden' }}>
+          <Box sx={{ px: 3, pt: 2.5, pb: 2, borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ width: 32, height: 32, borderRadius: '8px', bgcolor: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <DescriptionOutlinedIcon sx={{ fontSize: 17, color: '#7c3aed' }} />
+              </Box>
+              <Box>
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a', lineHeight: 1.2 }}>
+                  Tailor an existing resume
+                </Typography>
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.2 }}>
+                  Select a base resume to retailor for this job
+                </Typography>
+              </Box>
+            </Box>
+            {resumes.length > 0 && (
+              <Chip label={`${resumes.length} resume${resumes.length !== 1 ? 's' : ''}`} size="small" sx={{ height: 22, bgcolor: '#f1f5f9', color: '#64748b', fontWeight: 600, fontSize: '0.72rem', fontFamily: 'var(--font-family)' }} />
+            )}
+          </Box>
+
+          {/* Search */}
+          <Box sx={{ px: 3, py: 1.75, borderBottom: '1px solid #f8fafc' }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by name…"
+              value={tailorSelectSearch}
+              onChange={(e) => setTailorSelectSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchRoundedIcon sx={{ fontSize: 17, color: '#94a3b8' }} />
+                  </InputAdornment>
+                ),
+                sx: { fontFamily: 'var(--font-family)', fontSize: '0.875rem', borderRadius: '10px', bgcolor: '#f8fafc', '& fieldset': { borderColor: '#e5e7eb' }, '&:hover fieldset': { borderColor: '#cbd5e1' }, '&.Mui-focused fieldset': { borderColor: 'var(--primary)' } },
+              }}
+            />
+          </Box>
+
+          {/* Resume list */}
+          <Box sx={{ maxHeight: 380, overflowY: 'auto' }}>
+            {resumes.length === 0 ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <AutoAwesomeRoundedIcon sx={{ fontSize: 32, color: '#d1d5db', mb: 1 }} />
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9rem', color: '#94a3b8', fontWeight: 500 }}>
+                  No generated resumes yet
+                </Typography>
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8rem', color: '#cbd5e1', mt: 0.5 }}>
+                  Use "Start from my profile" above to create one
+                </Typography>
+              </Box>
+            ) : (
+              resumes
+                .filter((r) => (r.resume_name || '').toLowerCase().includes(tailorSelectSearch.toLowerCase()))
+                .map((r, idx) => {
+                  const [bgColor, textColor] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+                  const initials = getResumeInitials(r.resume_name);
+                  return (
+                    <Box
+                      key={r.id}
+                      sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1.75, borderBottom: idx < resumes.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.12s', '&:hover': { bgcolor: '#f8fafc' } }}
+                    >
+                      <Avatar sx={{ width: 38, height: 38, borderRadius: '10px', bgcolor: bgColor, color: textColor, fontSize: '0.8rem', fontWeight: 700, fontFamily: 'var(--font-family)', flexShrink: 0 }}>
+                        {initials}
+                      </Avatar>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography noWrap sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.875rem', color: '#0f172a', lineHeight: 1.3 }}>
+                          {r.resume_name}
+                        </Typography>
+                        <Chip label="Generated" size="small" sx={{ height: 17, bgcolor: '#ecfdf5', color: '#059669', fontWeight: 700, fontSize: '0.6rem', fontFamily: 'var(--font-family)', '& .MuiChip-label': { px: 0.75 } }} />
+                      </Box>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => handleTailorFromExistingResume(r)}
+                        sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', fontSize: '0.8125rem', fontWeight: 600, bgcolor: '#0f172a', color: 'white', borderRadius: '8px', px: 1.75, py: 0.625, boxShadow: 'none', '&:hover': { bgcolor: '#1e293b', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' } }}
+                      >
+                        Tailor this →
+                      </Button>
+                    </Box>
+                  );
+                })
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+
   const generatingView = (
     <Box sx={{ minHeight: '100%', background: 'var(--bg-app)', overflowX: 'hidden', fontFamily: 'var(--font-family)' }}>
       <Box sx={{ background: HERO_GRADIENT, color: 'white', py: 3.5, px: { xs: 2.5, sm: 4 } }}>
@@ -848,6 +1063,7 @@ export default function ResumeGenerator() {
 
   return (
     <>
+      {view === 'tailor-select' && tailorSelectView}
       {view === 'generating' && generatingView}
       {view === 'preview' && previewView}
       <Dialog
