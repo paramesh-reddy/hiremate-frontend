@@ -6,9 +6,9 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 // Use a consistent set of MUI icons (20px) for a cohesive look.
 export const STATUSES = [
   { id: 'saved', label: 'Saved', icon: WorkOutlineIcon, color: 'var(--primary)', bgTint: 'var(--light-blue-bg-08)' },
-  { id: 'applied', label: 'Applied', icon: CheckCircleOutlineIcon, color: 'var(--success)', bgTint: 'var(--success-bg)' },
-  { id: 'interview', label: 'Interview', icon: ScheduleIcon, color: 'var(--warning)', bgTint: 'var(--warning-bg)' },
-  { id: 'closed', label: 'Closed', icon: DoneAllIcon, color: 'var(--text-muted)', bgTint: 'var(--light-blue-bg-02)' },
+  { id: 'applied', label: 'Applied', icon: CheckCircleOutlineIcon, color: 'var(--primary)', bgTint: 'var(--light-blue-bg-08)' },
+  { id: 'interview', label: 'Interview', icon: ScheduleIcon, color: 'var(--primary)', bgTint: 'var(--light-blue-bg-08)' },
+  { id: 'closed', label: 'Closed', icon: DoneAllIcon, color: 'var(--primary)', bgTint: 'var(--light-blue-bg-08)' },
 ];
 
 export const PRIORITIES = [

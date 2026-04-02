@@ -5,9 +5,14 @@ import ProtectedRoute from '../components/layout/ProtectedRoute';
 import AdminRoute from '../components/layout/AdminRoute';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
+import GoogleCallback from '../pages/auth/GoogleCallback';
 import Home from '../pages/dashboard/Home';
 import InterviewPractice from '../pages/dashboard/InterviewPractice';
 import InterviewQnAGenerator from '../pages/dashboard/InterviewQnAGenerator';
+import MockInterviewSession from '../pages/dashboard/MockInterviewSession';
+import CompanyBriefing from '../pages/dashboard/CompanyBriefing';
+import StarCoach from '../pages/dashboard/StarCoach';
+import OfferNegotiation from '../pages/dashboard/OfferNegotiation';
 import ResumeGenerator from '../pages/resume-generator';
 import ResumeGeneratorStart from '../pages/resume-generator/ResumeGeneratorStart';
 import JobRecommendations from '../pages/dashboard/JobRecommendations';
@@ -22,6 +27,7 @@ import Pricing from '../pages/pricing/Pricing';
 import Settings from '../pages/Settings';
 import StartPage from '../pages/start/StartPage';
 import ApplicationTrackerPage from '../pages/application-tracker';
+import ApplicationDetail from '../pages/application-tracker/ApplicationDetail';
 import AdminLayout from '../pages/admin/AdminLayout';
 import AdminOverview from '../pages/admin/AdminOverview';
 import AdminUsers from '../pages/admin/AdminUsers';
@@ -44,6 +50,7 @@ export default function AppRoutes() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/start" element={<StartPage />} />
           <Route path="/onboarding/profile" element={<OnboardingProfile />} />
@@ -62,8 +69,13 @@ export default function AppRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/application-tracker" element={<ApplicationTrackerPage />} />
+            <Route path="/application-tracker/:id" element={<ApplicationDetail />} />
             <Route path="/interview-practice" element={<InterviewPractice />} />
             <Route path="/interview-practice/:interviewId/questions" element={<InterviewQnAGenerator />} />
+            <Route path="/interview-practice/:interviewId/session" element={<MockInterviewSession />} />
+            <Route path="/interview-practice/:interviewId/briefing" element={<CompanyBriefing />} />
+            <Route path="/interview-practice/:interviewId/star-coach" element={<StarCoach />} />
+            <Route path="/interview-practice/:interviewId/negotiation" element={<OfferNegotiation />} />
             <Route path="/resume-generator" element={<ResumeGeneratorStart />} />
             <Route path="/resume-generator/build" element={<ResumeGenerator />} />
             <Route path="/ai-resume-studio" element={<AiResumeStudio />} />

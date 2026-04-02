@@ -1,203 +1,111 @@
 import { memo, useState } from 'react';
-import { Card, Grid, Typography, Box, Link, IconButton, Menu, MenuItem } from '@mui/material';
-import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
-import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
-import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
-import { useDraggable } from '@dnd-kit/core';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ExternalLink, MoreVertical, Edit2, 
+  Trash2, Briefcase, Calendar, 
+  ChevronRight, AlertCircle 
+} from 'lucide-react';
 import { format } from 'date-fns';
-import { motion } from 'framer-motion';
+import clsx from 'clsx';
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.03, duration: 0.25, ease: 'easeOut' },
-  }),
+const STATUS_CONFIG = {
+  applied: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  acknowledged: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  in_review: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  interview_scheduled: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  interview_completed: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  offer_received: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  rejected: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  ghosted: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
+  withdrawn: { bg: "bg-[var(--light-blue-bg-08)]", text: "text-[var(--primary)]", dot: "bg-[var(--primary)]" },
 };
 
-function JobCard({ job, isDragging, onEdit, onDelete, index = 0 }) {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [hovered, setHovered] = useState(false);
+function JobCard({ job, onEdit, onDelete, index = 0 }) {
+  const appliedDate = job.applied_date || job.created_at
+    ? format(new Date(job.applied_date || job.created_at), 'MMM d, yyyy')
+    : 'Unknown Date';
 
-  const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `job-${job.id}`,
-    data: { job },
-  });
-
-  const appliedDate = job.created_at
-    ? format(new Date(job.created_at), 'MMM d, yyyy')
-    : null;
-
-  const handleMenuClose = () => setAnchorEl(null);
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onEdit?.(job);
-    }
-  };
+  const status = STATUS_CONFIG[job.current_status] || STATUS_CONFIG.applied;
 
   return (
     <motion.div
-      custom={index}
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
       layout
-      style={{ width: '100%' }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5 }}
+      className="card p-6 flex flex-col justify-between gap-6 cursor-pointer group relative overflow-hidden transition-all hover:shadow-xl hover:shadow-[var(--brand)]/5"
+      onClick={() => onEdit?.(job)}
     >
-      <Card
-        ref={setNodeRef}
-        variant="outlined"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        sx={{
-          borderRadius: '14px',
-          borderColor: 'transparent',
-          bgcolor: 'var(--white)',
-          cursor: isDragging ? 'grabbing' : 'grab',
-          opacity: isDragging ? 0.6 : 1,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          transform: 'translateY(0)',
-          transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-          '&:hover': {
-            transform: 'translateY(-3px)',
-            boxShadow: '0 10px 24px rgba(0,0,0,0.08)',
-          },
-          '&:focus-visible': {
-            outline: '3px solid rgba(37,99,235,0.12)',
-            outlineOffset: 2,
-          },
-        }}
-        {...attributes}
-        {...listeners}
-        role="button"
-        tabIndex={0}
-        aria-label={`${job.position_title || 'Untitled'} at ${job.company || 'Unknown company'}. ${job.location ? `Location: ${job.location}.` : ''} ${appliedDate ? `Applied ${appliedDate}.` : ''} Press Enter to edit, or drag to move.`}
-        aria-pressed={false}
-        aria-grabbed={isDragging}
-        onKeyDown={handleKeyDown}
-      >
-        <Grid container sx={{ p: 2 }}>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'flex-start' }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 2,
-                bgcolor: 'var(--light-blue-bg-08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-              aria-hidden
+      <div className="flex items-start justify-between">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black text-[var(--brand)] shadow-sm" style={{ backgroundColor: "var(--brand-tint)" }}>
+          {(job.company || '?')[0].toUpperCase()}
+        </div>
+        
+        <div className="flex flex-col items-end gap-2">
+          <div className={clsx("status-badge", status.bg, status.text)}>
+            <div className={clsx("status-dot", status.dot)} />
+            {job.current_status?.replace(/_/g, ' ') || 'applied'}
+          </div>
+          {job.low_confidence && (
+            <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 uppercase tracking-widest">
+              <AlertCircle size={10} /> Low Confidence
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+           <h3 className="text-xl font-black text-[var(--text-primary)] tracking-tight group-hover:text-[var(--primary)] transition-colors line-clamp-1">
+            {job.company || 'Unknown Company'}
+          </h3>
+          {job.job_url && (
+            <a 
+              href={job.job_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="p-1.5 hover:bg-[var(--grey-5)] rounded-lg text-[var(--text-muted)] hover:text-[var(--primary)] transition-all flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Typography variant="caption" fontWeight={700} color="var(--primary)" sx={{ fontSize: 14 }}>
-                {(job.company || '?')[0].toUpperCase()}
-              </Typography>
-            </Box>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-                {job.position_title || 'Untitled'}
-              </Typography>
-              <Typography sx={{ fontSize: 13, color: 'var(--text-secondary)', mt: 0.5 }}>
-                {job.company || '—'}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1 }}>
-                {appliedDate && <Typography sx={{ fontSize: 12, color: 'var(--text-muted)' }}>{appliedDate}</Typography>}
-                <Box
-                  sx={{
-                    ml: 'auto',
-                    px: 1.25,
-                    py: 0.25,
-                    borderRadius: 999,
-                    bgcolor: 'var(--grey-5)',
-                  }}
-                >
-                  <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-                    {job.application_status || 'saved'}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-              {job.job_posting_url && (
-                <IconButton
-                  size="small"
-                  component="a"
-                  href={job.job_posting_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label={`Open ${job.position_title || 'job'} at ${job.company || 'company'} in new tab`}
-                  sx={{ color: 'var(--text-muted)', p: 0.5 }}
-                >
-                  <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              )}
-              {(hovered || anchorEl) && (
-                <>
-                  <IconButton
-                    size="small"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAnchorEl(e.currentTarget);
-                    }}
-                    aria-label="Open job card menu"
-                    aria-haspopup="menu"
-                    aria-expanded={Boolean(anchorEl)}
-                    aria-controls={anchorEl ? `job-menu-${job.id}` : undefined}
-                    sx={{ color: 'var(--text-muted)', p: 0.5 }}
-                  >
-                    <MoreVertRoundedIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                  <Menu
-                    id={`job-menu-${job.id}`}
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                    PaperProps={{ sx: { borderRadius: 2, mt: 1.5, minWidth: 140 } }}
-                    role="menu"
-                    aria-label="Job card actions"
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        onEdit?.(job);
-                        handleMenuClose();
-                      }}
-                      role="menuitem"
-                    >
-                      <EditRoundedIcon sx={{ fontSize: 18, mr: 1 }} />
-                      Edit
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        onDelete?.(job);
-                        handleMenuClose();
-                      }}
-                      sx={{ color: 'var(--error)' }}
-                      role="menuitem"
-                    >
-                      <DeleteOutlineRoundedIcon sx={{ fontSize: 18, mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </Menu>
-                </>
-              )}
-            </Box>
-          </Box>
-          </Grid>
-        </Grid>
-      </Card>
+              <ExternalLink size={14} />
+            </a>
+          )}
+        </div>
+        <p className="text-sm font-bold text-[var(--text-secondary)] line-clamp-1">
+          {job.role || 'Untitled Role'}
+        </p>
+      </div>
+
+      <div className="pt-4 border-t border-[var(--divider)] flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">
+            <Calendar size={12} />
+            {appliedDate}
+          </div>
+          {job.location && (
+             <div className="flex items-center gap-1.5 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">
+                <Briefcase size={12} />
+                {job.location}
+             </div>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+           <button 
+             onClick={(e) => {
+               e.stopPropagation();
+               onDelete?.(job.id);
+             }}
+             className="p-2 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-[var(--text-muted)] transition-all opacity-0 group-hover:opacity-100"
+             title="Remove Tracker"
+           >
+             <Trash2 size={16} />
+           </button>
+           <div className="p-2 bg-[var(--grey-5)] group-hover:bg-[var(--primary)] group-hover:text-white rounded-xl transition-all text-[var(--text-muted)]">
+             <ChevronRight size={16} />
+           </div>
+        </div>
+      </div>
     </motion.div>
   );
 }
