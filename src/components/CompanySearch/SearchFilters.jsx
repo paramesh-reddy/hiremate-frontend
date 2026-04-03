@@ -31,7 +31,7 @@ export default function SearchFilters({ filters, onChange }) {
         onChange={(e) => onChange({ ...filters, location: e.target.value })}
         size="small"
         sx={{ flex: 1, ...inputSx }}
-        placeholder="e.g. San Francisco, CA"
+        placeholder="e.g. India — filters scraped listing locations"
       />
       <Autocomplete
         multiple

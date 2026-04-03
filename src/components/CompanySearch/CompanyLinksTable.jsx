@@ -92,8 +92,8 @@ export default function CompanyLinksTable({ rows = [], loading = false }) {
           <TableHead>
             <TableRow sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
               <TableCell sx={headCellSx}>Company</TableCell>
-              <TableCell sx={headCellSx}>Careers Page</TableCell>
-              <TableCell sx={headCellSx}>LinkedIn Jobs</TableCell>
+              <TableCell sx={headCellSx}>Careers (scraped)</TableCell>
+              <TableCell sx={headCellSx}>LinkedIn (manual)</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -104,10 +104,10 @@ export default function CompanyLinksTable({ rows = [], loading = false }) {
               >
                 <TableCell sx={cellSx}>{row.name}</TableCell>
                 <TableCell sx={cellSx}>
-                  <LinkCell href={row.career_url} label="Careers" />
+                  <LinkCell href={row.career_url} label="Open careers" />
                 </TableCell>
                 <TableCell sx={cellSx}>
-                  <LinkCell href={row.linkedin_search_url} label="LinkedIn" />
+                  <LinkCell href={row.linkedin_search_url} label="Search & apply" />
                 </TableCell>
               </TableRow>
             ))}

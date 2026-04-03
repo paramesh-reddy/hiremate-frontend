@@ -1,35 +1,47 @@
+import { useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 export function useResumeGeneratorParams() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  return {
-    // Getters - read from URL
-    tailor:   searchParams.get('tailor') === '1',
-    jobId:    searchParams.get('job_id') || null,
-    resumeId: searchParams.get('resume_id') || null,
-    view:     searchParams.get('view') || 'inputs',
-    source:   searchParams.get('source') || 'app',
+  // Functional updates + stable callbacks so consumers can safely list this hook in useEffect deps.
+  const setResumeId = useCallback((id) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (id != null && id !== '') next.set('resume_id', String(id));
+      else next.delete('resume_id');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
-    // Setters - update URL (source of truth for resume selection and view)
-    setResumeId: (id) => {
-      const newParams = new URLSearchParams(searchParams);
-      if (id) newParams.set('resume_id', String(id));
-      else newParams.delete('resume_id');
-      setSearchParams(newParams, { replace: true });
-    },
+  const setView = useCallback((v) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('view', v);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
-    setView: (v) => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set('view', v);
-      setSearchParams(newParams, { replace: true });
-    },
+  const clearTailorParams = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('tailor');
+      next.delete('job_id');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
-    clearTailorParams: () => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete('tailor');
-      newParams.delete('job_id');
-      setSearchParams(newParams, { replace: true });
-    },
-  };
+  return useMemo(
+    () => ({
+      tailor: searchParams.get('tailor') === '1',
+      jobId: searchParams.get('job_id') || null,
+      resumeId: searchParams.get('resume_id') || null,
+      view: searchParams.get('view') || 'inputs',
+      source: searchParams.get('source') || 'app',
+      setResumeId,
+      setView,
+      clearTailorParams,
+    }),
+    [searchParams, setResumeId, setView, clearTailorParams]
+  );
 }

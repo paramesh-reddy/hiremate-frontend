@@ -11,8 +11,10 @@ import {
   Box,
   Button,
   Container,
+  Divider,
   LinearProgress,
   Snackbar,
+  TextField,
   Typography,
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
@@ -29,7 +31,7 @@ import { resolveLinks, streamJobs } from '../../services/companySearchService';
 
 const STEPS = [
   { label: 'Upload Companies', description: 'PDF or DOCX company list' },
-  { label: 'Resolve Links', description: 'Find careers & LinkedIn URLs' },
+  { label: 'Resolve Links', description: 'Careers site + LinkedIn for manual apply' },
   { label: 'Search Jobs', description: 'Stream open roles per company' },
 ];
 
@@ -43,11 +45,41 @@ function chunkArray(arr, size) {
   return chunks;
 }
 
+/** Split on commas, semicolons, or newlines; trim; dedupe case-insensitively within the paste. */
+function parseCommaSeparatedCompanies(text) {
+  if (!text?.trim()) return [];
+  const parts = text.split(/[,;\n]+/);
+  const seen = new Set();
+  const out = [];
+  for (const part of parts) {
+    const name = part.trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ name });
+  }
+  return out;
+}
+
+function mergeCompanyLists(existing, incoming) {
+  const seen = new Set(existing.map((c) => c.name.toLowerCase()));
+  const out = [...existing];
+  for (const item of incoming) {
+    const key = item.name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
 export default function CompanySearchPage() {
   const [activeStep, setActiveStep] = useState(0);
 
   // Step 1
   const [companies, setCompanies] = useState([]);
+  const [manualCompaniesText, setManualCompaniesText] = useState('');
 
   // Step 2
   const [filters, setFilters] = useState({ role: '', location: '', skills: [] });
@@ -107,7 +139,6 @@ export default function CompanySearchPage() {
     setEvents(links.map((l) => ({ company: l.name, jobs: [], status: 'pending', message: null })));
 
     const chunks = chunkArray(links, CHUNK_SIZE);
-    let total = 0;
 
     for (const chunk of chunks) {
       await new Promise((resolve) => {
@@ -119,7 +150,6 @@ export default function CompanySearchPage() {
             location: filters.location || undefined,
           },
           (event) => {
-            total += 1;
             setCompletedCount((c) => c + 1);
             setEvents((prev) => {
               const idx = prev.findIndex((e) => e.company === event.company);
@@ -171,7 +201,7 @@ export default function CompanySearchPage() {
             Company Job Search
           </Typography>
           <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontFamily: 'var(--font-family)' }}>
-            Upload your target company list and find open roles in bulk
+            Upload a list, or paste company names — then find open roles in bulk
           </Typography>
         </Box>
       </Box>
@@ -184,7 +214,74 @@ export default function CompanySearchPage() {
       {/* ── Step 1: Upload ── */}
       {activeStep === 0 && (
         <Box>
-          <CompanyUpload onCompaniesReady={setCompanies} />
+          <CompanyUpload companies={companies} onCompaniesChange={setCompanies} />
+
+          <Box sx={{ my: 3 }}>
+            <Divider sx={{ borderColor: 'var(--border-color)' }}>
+              <Typography
+                sx={{
+                  px: 1.5,
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted)',
+                  fontFamily: 'var(--font-family)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                Or paste names
+              </Typography>
+            </Divider>
+          </Box>
+
+          <Box>
+            <Typography
+              sx={{
+                fontSize: '0.8125rem',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-family)',
+                mb: 1,
+              }}
+            >
+              Enter companies separated by commas (or new lines). New names are merged with your list above.
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              minRows={4}
+              placeholder="Acme Inc, Beta Corp, Contoso…"
+              value={manualCompaniesText}
+              onChange={(e) => setManualCompaniesText(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  fontFamily: 'var(--font-family)',
+                  fontSize: '0.875rem',
+                  borderRadius: 2,
+                },
+              }}
+            />
+            <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="outlined"
+                disabled={!manualCompaniesText.trim()}
+                onClick={() => {
+                  const parsed = parseCommaSeparatedCompanies(manualCompaniesText);
+                  if (parsed.length === 0) return;
+                  setCompanies((prev) => mergeCompanyLists(prev, parsed));
+                  setManualCompaniesText('');
+                }}
+                sx={{
+                  fontFamily: 'var(--font-family)',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  borderRadius: 1.5,
+                  px: 2.5,
+                }}
+              >
+                Add to list
+              </Button>
+            </Box>
+          </Box>
 
           {companies.length > 0 && (
             <Box sx={{ mt: 3 }}>

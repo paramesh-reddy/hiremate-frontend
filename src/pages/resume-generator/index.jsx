@@ -272,7 +272,7 @@ export default function ResumeGenerator() {
       })
       .catch(() => setResumes([]))
       .finally(() => setWorkspaceLoaded(true));
-  }, [dispatch, params]);
+  }, [dispatch, params.setResumeId]);
 
   useEffect(() => {
     if (resumes.length === 0) return;
@@ -324,11 +324,13 @@ export default function ResumeGenerator() {
   }, [view]);
 
   useEffect(() => {
-    if (selectedResumeId != null) {
-      selectedResumeIdRef.current = selectedResumeId;
-      params.setResumeId(selectedResumeId);
-    }
-  }, [selectedResumeId, params]);
+    if (selectedResumeId == null) return;
+    selectedResumeIdRef.current = selectedResumeId;
+    const raw = params.resumeId;
+    const urlNum = raw && /^\d+$/.test(String(raw)) ? parseInt(raw, 10) : null;
+    if (urlNum === selectedResumeId) return;
+    params.setResumeId(selectedResumeId);
+  }, [selectedResumeId, params.resumeId, params.setResumeId]);
 
   // Sync URL resume_id changes back into local state (e.g. browser back/forward)
   useEffect(() => {

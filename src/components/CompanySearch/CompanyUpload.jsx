@@ -10,12 +10,11 @@ import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { parseFile } from '../../services/companySearchService';
 
-export default function CompanyUpload({ onCompaniesReady }) {
+export default function CompanyUpload({ companies = [], onCompaniesChange }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [companies, setCompanies] = useState([]);
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -28,8 +27,7 @@ export default function CompanyUpload({ onCompaniesReady }) {
     setLoading(true);
     try {
       const { data } = await parseFile(file);
-      setCompanies(data.companies);
-      onCompaniesReady(data.companies);
+      onCompaniesChange(data.companies);
     } catch (err) {
       setError(err?.response?.data?.detail || 'Failed to parse file. Please try again.');
     } finally {
@@ -45,9 +43,7 @@ export default function CompanyUpload({ onCompaniesReady }) {
   };
 
   const removeCompany = (idx) => {
-    const updated = companies.filter((_, i) => i !== idx);
-    setCompanies(updated);
-    onCompaniesReady(updated);
+    onCompaniesChange(companies.filter((_, i) => i !== idx));
   };
 
   return (
