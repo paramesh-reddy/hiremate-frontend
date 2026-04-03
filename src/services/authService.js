@@ -1,4 +1,5 @@
 import axiosClient from './axiosClient';
+import { BASE_URL } from '../utilities/const';
 
 // login API
 export const loginAPI = (data) =>
@@ -11,3 +12,8 @@ export const registerAPI = (data) =>
 // get profile
 export const getProfileAPI = () =>
   axiosClient.get('/auth/profile');
+
+// Redirect to Google OAuth
+export const startGoogleLogin = () => {
+  window.location.href = `${BASE_URL}/auth/google`;
+};

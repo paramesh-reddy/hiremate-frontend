@@ -11,15 +11,15 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
-import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
-import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
+import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import PhoneAndroidRoundedIcon from '@mui/icons-material/PhoneAndroidRounded';
-import RecordVoiceOverRoundedIcon from '@mui/icons-material/RecordVoiceOverRounded';
+import ViewKanbanRoundedIcon from '@mui/icons-material/ViewKanbanRounded';
+import MicRoundedIcon from '@mui/icons-material/MicRounded';
 import WbSunnyRoundedIcon from '@mui/icons-material/WbSunnyRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettingsRounded';
 import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
@@ -35,24 +35,24 @@ import SignOutConfirmDialog from './SignOutConfirmDialog';
 import logoImg from '../../assets/logo.png';
 
 const MAIN_NAV = [
-  { label: 'Dashboard', path: '/', icon: DashboardRoundedIcon },
-  { label: 'Application Tracker', path: '/application-tracker', icon: PhoneAndroidRoundedIcon },
-  { label: 'AI Resume Studio', path: '/ai-resume-studio', icon: AutoAwesomeIcon, badge: 'AI' },
-  { label: 'Interview Practice', path: '/interview-practice', icon: RecordVoiceOverRoundedIcon },
+  { label: 'Dashboard', path: '/', icon: SpaceDashboardRoundedIcon },
+  { label: 'Application Tracker', path: '/application-tracker', icon: ViewKanbanRoundedIcon },
+  { label: 'AI Resume Studio', path: '/ai-resume-studio', icon: AutoFixHighRoundedIcon, badge: 'AI' },
+  { label: 'Interview Practice', path: '/interview-practice', icon: MicRoundedIcon },
   { label: 'Company Search', path: '/company-search', icon: BusinessCenterRoundedIcon },
 ];
 
 const ACCOUNT_NAV = [
-  { label: 'Profile', path: '/profile', icon: PersonRoundedIcon },
-  { label: 'Settings', path: '/settings', icon: SettingsRoundedIcon },
+  { label: 'Profile', path: '/profile', icon: AccountCircleRoundedIcon },
+  { label: 'Settings', path: '/settings', icon: TuneRoundedIcon },
 ];
 
 const ADMIN_NAV = { label: 'Admin', path: '/admin', icon: AdminPanelSettingsRoundedIcon };
 
 const USER_MENU = [
-  { label: 'Profile', path: '/profile', icon: PersonRoundedIcon },
+  { label: 'Profile', path: '/profile', icon: AccountCircleRoundedIcon },
   { label: 'Subscription & Billing', path: '/pricing', icon: CreditCardRoundedIcon },
-  { label: 'Settings', path: '/settings', icon: SettingsRoundedIcon },
+  { label: 'Settings', path: '/settings', icon: TuneRoundedIcon },
   { label: 'Help & Support', path: '/help', icon: HelpOutlineRoundedIcon },
 ];
 

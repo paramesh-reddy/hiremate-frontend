@@ -7,7 +7,7 @@ const PRESETS = [
   { label: '30d', days: 30 },
 ];
 
-export default function DateFilter({ value, onChange }) {
+export default function DateFilter({ value, onChange, isInline = false }) {
   const [showCustom, setShowCustom] = useState(false);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
@@ -28,14 +28,14 @@ export default function DateFilter({ value, onChange }) {
   const isCustomActive = !!value?.from;
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center',justifyContent: 'end', gap: 1.5 }}>
+    <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
       <ButtonGroup
         size="small"
         variant="outlined"
         sx={{
-          borderRadius: '12px',
+          borderRadius: '10px',
           overflow: 'hidden',
-          border: '1px solid var(--dashboard-border-subtle, var(--border-color))',
+          border: '1px solid var(--border-color)',
           bgcolor: 'var(--bg-paper)',
           '& .MuiButton-root': {
             border: 'none',
@@ -43,10 +43,10 @@ export default function DateFilter({ value, onChange }) {
             fontSize: '13px',
             fontWeight: 700,
             px: 2,
-            py: 0.9,
+            height: 36,
             color: 'var(--text-secondary)',
             transition: 'all 0.2s ease',
-            '&:not(:last-of-type)': { borderRight: '1px solid var(--dashboard-border-subtle, var(--border-color))' },
+            '&:not(:last-of-type)': { borderRight: '1px solid var(--border-color)' },
             '&:active': { transform: 'scale(0.98)' },
           },
         }}
@@ -81,21 +81,25 @@ export default function DateFilter({ value, onChange }) {
           {isCustomActive ? `${value.from} → ${value.to}` : 'Custom'}
         </Button>
       </ButtonGroup>
-      <Collapse in={showCustom} timeout={220} sx={{ width: '100%' }}>
+
+      {/* Custom date panel — absolute dropdown, doesn't affect row height */}
+      <Collapse in={showCustom} timeout={200}>
         <Box
           sx={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            right: 0,
+            zIndex: 10,
             display: 'flex',
+            flexWrap: isInline ? 'wrap' : 'nowrap',
             alignItems: 'center',
-            gap: 2,
-            mt: 1.5,
+            gap: 1.5,
             p: 2,
             borderRadius: '12px',
             bgcolor: 'var(--bg-paper)',
-            border: '1px solid var(--dashboard-border-subtle, var(--border-color))',
-            boxShadow: '0 12px 30px rgba(16, 24, 40, 0.08)',
-            transform: showCustom ? 'translateY(0)' : 'translateY(-4px)',
-            opacity: showCustom ? 1 : 0,
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
+            border: '1px solid var(--border-color)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            whiteSpace: 'nowrap',
           }}
         >
           <TextField
@@ -105,10 +109,7 @@ export default function DateFilter({ value, onChange }) {
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{
-              width: 160,
-              '& .MuiOutlinedInput-root': { borderRadius: '10px', bgcolor: 'rgba(16, 24, 40, 0.01)' },
-            }}
+            sx={{ width: 150, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
           />
           <TextField
             type="date"
@@ -117,25 +118,15 @@ export default function DateFilter({ value, onChange }) {
             value={customTo}
             onChange={(e) => setCustomTo(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{
-              width: 160,
-              '& .MuiOutlinedInput-root': { borderRadius: '10px', bgcolor: 'rgba(16, 24, 40, 0.01)' },
-            }}
+            sx={{ width: 150, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
           />
           <Button
             size="small"
             variant="contained"
             onClick={handleCustomApply}
             sx={{
-              textTransform: 'none',
-              borderRadius: '10px',
-              px: 2,
-              py: 0.95,
-              fontWeight: 800,
-              boxShadow: 'none',
-              transition: 'all 0.2s ease',
-              '&:hover': { boxShadow: '0 10px 20px rgba(37, 99, 235, 0.18)', transform: 'translateY(-1px)' },
-              '&:active': { transform: 'scale(0.98)' },
+              textTransform: 'none', borderRadius: '8px',
+              px: 2, height: 36, fontWeight: 700, boxShadow: 'none',
             }}
           >
             Apply
