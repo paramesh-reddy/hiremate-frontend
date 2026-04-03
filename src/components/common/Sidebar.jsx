@@ -27,6 +27,7 @@ import BugReportRoundedIcon from '@mui/icons-material/BugReportRounded';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import ExtensionRoundedIcon from '@mui/icons-material/ExtensionRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
+import BusinessCenterRoundedIcon from '@mui/icons-material/BusinessCenterRounded';
 import { logout } from '../../store/auth/authSlice';
 import { toggleTheme } from '../../store/theme/themeSlice';
 import { getProfileCompletion } from '../../pages/profile/utils/profileCompletion';
@@ -38,6 +39,7 @@ const MAIN_NAV = [
   { label: 'Application Tracker', path: '/application-tracker', icon: PhoneAndroidRoundedIcon },
   { label: 'AI Resume Studio', path: '/ai-resume-studio', icon: AutoAwesomeIcon, badge: 'AI' },
   { label: 'Interview Practice', path: '/interview-practice', icon: RecordVoiceOverRoundedIcon },
+  { label: 'Company Search', path: '/company-search', icon: BusinessCenterRoundedIcon },
 ];
 
 const ACCOUNT_NAV = [
@@ -60,6 +62,7 @@ const ICON_COLORS = {
   '/application-tracker': '#0ea5e9',
   '/ai-resume-studio': '#8b5cf6',
   '/interview-practice': '#10b981',
+  '/company-search': '#f59e0b',
   '/profile': '#f59e0b',
   '/settings': '#64748b',
   '/admin': '#ef4444',

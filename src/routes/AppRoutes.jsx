@@ -32,6 +32,7 @@ import AdminLearning from '../pages/admin/AdminLearning';
 import AdminIssues from '../pages/admin/AdminIssues';
 import PrivacyPolicy from '../pages/legal/PrivacyPolicy';
 import ReportIssuePage from '../pages/report-issue/ReportIssuePage';
+import CompanySearchPage from '../pages/CompanySearch/CompanySearchPage';
 
 export default function AppRoutes() {
   return (
@@ -75,6 +76,7 @@ export default function AppRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/report-issue" element={<ReportIssuePage />} />
+            <Route path="/company-search" element={<CompanySearchPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

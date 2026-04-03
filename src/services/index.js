@@ -77,4 +77,10 @@ export {
   updateIssueStatusAPI,
 } from './issueService';
 
+export {
+  parseFile,
+  resolveLinks,
+  streamJobs,
+} from './companySearchService';
+
 export { default as axiosClient } from './axiosClient';
