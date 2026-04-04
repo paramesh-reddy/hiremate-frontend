@@ -28,8 +28,9 @@ export const generateResumeAPI = ({
   line_height,
   profile_override,
   resume_id,
-}) =>
-  axiosClient.post('/resume/generate', {
+}) => {
+  const hasBaseResume = resume_id && resume_id > 0;
+  return axiosClient.post('/resume/generate', {
     job_title,
     job_description,
     template_id: template_id || 'classic',
@@ -37,8 +38,11 @@ export const generateResumeAPI = ({
     font_size: font_size || undefined,
     line_height: line_height || undefined,
     profile_override: profile_override || undefined,
-    resume_id: resume_id && resume_id > 0 ? resume_id : undefined,
+    resume_id: hasBaseResume ? resume_id : undefined,
+    /** New generation → `generated`; re-gen / tailor with existing resume → `generator`. */
+    resume_source: hasBaseResume ? 'generator' : 'generated',
   });
+};
 
 /**
  * Live HTML preview — same Jinja2 templates as PDF, no WeasyPrint (~50ms).
@@ -98,8 +102,12 @@ export const analyzeKeywordsAPI = ({ job_description, resume_id, resume_text, ur
     page_html: page_html || undefined,
   });
 
-export const updateResumeAPI = (id, { resume_name, resume_text }) =>
-  axiosClient.patch(`/resume/${id}`, { resume_name, resume_text });
+export const updateResumeAPI = (id, { resume_name, resume_text, resume_source } = {}) =>
+  axiosClient.patch(`/resume/${id}`, {
+    ...(resume_name !== undefined ? { resume_name } : {}),
+    ...(resume_text !== undefined ? { resume_text } : {}),
+    ...(resume_source !== undefined ? { resume_source } : {}),
+  });
 
 export const renameResumeAPI = (id, name) =>
   axiosClient.patch(`/resume/${id}/rename`, { resume_name: name });
