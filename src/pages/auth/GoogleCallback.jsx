@@ -19,6 +19,8 @@ export default function GoogleCallback() {
           email: payload.email,
           first_name: payload.first_name || payload.name?.split(' ')[0] || '',
           last_name: payload.last_name || payload.name?.split(' ').slice(1).join(' ') || '',
+          gmail_sync_enabled: !!payload.gmail_sync_enabled,
+          is_admin: !!payload.is_admin,
         };
         dispatch(loginWithGoogle({ token, user }));
         navigate('/', { replace: true });

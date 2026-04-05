@@ -28,6 +28,8 @@ import {
   stopSyncAPI,
 } from '../../services/applicationsService';
 import ChatWidget from './ChatWidget';
+import PermissionGuard from '../../components/application-tracker/PermissionGuard';
+import { useSelector } from 'react-redux';
 
 const COLUMNS = [
   {
@@ -201,6 +203,18 @@ export default function ApplicationTrackerPage() {
     });
   };
 
+  const user = useSelector((state) => state.auth.user);
+  console.log(user);
+  const hasGmailPermission = user?.gmail_sync_enabled;
+
+  if (!hasGmailPermission) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <PermissionGuard />
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -299,8 +313,8 @@ export default function ApplicationTrackerPage() {
                 </InputAdornment>
               ),
               sx: {
-                height: 34, borderRadius: 2,
-                bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC', fontSize: 13,
+                height: 38, borderRadius: '10px',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#F8FAFC', fontSize: 13,
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                 '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#93C5FD' },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#2563EB' },
@@ -315,12 +329,16 @@ export default function ApplicationTrackerPage() {
         <TextField
           size="small"
           type="date"
-          label="From"
           value={appliedFrom}
           onChange={(e) => setAppliedFrom(e.target.value)}
-          sx={{ width: 145, flexShrink: 0, display: { xs: 'none', sm: 'flex' } }}
+          sx={{ width: 140, flexShrink: 0, display: { xs: 'none', sm: 'flex' } }}
           slotProps={{
             input: {
+              startAdornment: (
+                <InputAdornment position="start" sx={{ mr: 1 }}>
+                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase' }}>From</Typography>
+                </InputAdornment>
+              ),
               endAdornment: appliedFrom && (
                 <InputAdornment position="end">
                   <IconButton size="small" onClick={() => setAppliedFrom('')} sx={{ mr: -0.5 }}>
@@ -329,17 +347,13 @@ export default function ApplicationTrackerPage() {
                 </InputAdornment>
               ),
               sx: {
-                height: 34, borderRadius: 2,
-                bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC', fontSize: 13,
+                height: 38, borderRadius: '10px',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#F8FAFC', fontSize: 13,
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                 '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#93C5FD' },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#2563EB' },
                 '& input::-webkit-calendar-picker-indicator': { cursor: 'pointer' }
               },
-            },
-            inputLabel: {
-              shrink: true,
-              sx: { fontSize: 12, fontWeight: 700, color: '#94A3B8', transform: 'translate(14px, -8px) scale(0.85)' }
             }
           }}
         />
@@ -348,12 +362,16 @@ export default function ApplicationTrackerPage() {
         <TextField
           size="small"
           type="date"
-          label="Until"
           value={appliedUntil}
           onChange={(e) => setAppliedUntil(e.target.value)}
-          sx={{ width: 145, flexShrink: 0, display: { xs: 'none', sm: 'flex' } }}
+          sx={{ width: 140, flexShrink: 0, display: { xs: 'none', sm: 'flex' } }}
           slotProps={{
             input: {
+              startAdornment: (
+                <InputAdornment position="start" sx={{ mr: 1 }}>
+                  <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase' }}>Until</Typography>
+                </InputAdornment>
+              ),
               endAdornment: appliedUntil && (
                 <InputAdornment position="end">
                   <IconButton size="small" onClick={() => setAppliedUntil('')} sx={{ mr: -0.5 }}>
@@ -362,17 +380,13 @@ export default function ApplicationTrackerPage() {
                 </InputAdornment>
               ),
               sx: {
-                height: 34, borderRadius: 2,
-                bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC', fontSize: 13,
+                height: 38, borderRadius: '10px',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#F8FAFC', fontSize: 13,
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                 '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#93C5FD' },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#2563EB' },
                 '& input::-webkit-calendar-picker-indicator': { cursor: 'pointer' }
               },
-            },
-            inputLabel: {
-              shrink: true,
-              sx: { fontSize: 12, fontWeight: 700, color: '#94A3B8', transform: 'translate(14px, -8px) scale(0.85)' }
             }
           }}
         />
@@ -380,14 +394,14 @@ export default function ApplicationTrackerPage() {
         {/* Secondary Filters (Desktop) */}
         {!isTablet && (
           <>
-            <FormControl size="small" sx={{ minWidth: 130 }}>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
               <Select
                 value={jobTypeFilter}
                 onChange={(e) => setJobTypeFilter(e.target.value)}
                 displayEmpty
                 sx={{
-                  height: 34, borderRadius: 2, fontSize: 13, fontWeight: 600,
-                  bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC', 
+                  height: 38, borderRadius: '10px', fontSize: 13, fontWeight: 600,
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#F8FAFC', 
                   color: jobTypeFilter === 'all' ? 'text.disabled' : 'text.primary',
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#93C5FD' },
@@ -403,14 +417,14 @@ export default function ApplicationTrackerPage() {
               </Select>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 130 }}>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 displayEmpty
                 sx={{
-                  height: 34, borderRadius: 2, fontSize: 13, fontWeight: 600,
-                  bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC', 
+                  height: 38, borderRadius: '10px', fontSize: 13, fontWeight: 600,
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#F8FAFC', 
                   color: statusFilter === 'all' ? 'text.disabled' : 'text.primary',
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#93C5FD' },
@@ -443,9 +457,9 @@ export default function ApplicationTrackerPage() {
               endIcon={<ExpandMoreRoundedIcon sx={{ fontSize: 18 }} />}
               onClick={handleMoreOpen}
               sx={{
-                height: 34, px: 2, borderRadius: 2,
+                height: 38, px: 2, borderRadius: '10px',
                 textTransform: 'none', fontWeight: 700, fontSize: 13,
-                color: 'text.secondary', bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC', border: '1px solid', borderColor: 'divider',
+                color: 'text.secondary', bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#F8FAFC', border: '1px solid', borderColor: 'divider',
                 '&:hover': { bgcolor: 'background.paper', borderColor: '#CBD5E1' },
               }}
             >
@@ -508,7 +522,7 @@ export default function ApplicationTrackerPage() {
           onClick={() => syncMutation.mutate()}
           disabled={isSyncing}
           sx={{
-            height: 34, px: 2, borderRadius: 2, whiteSpace: 'nowrap',
+            height: 38, px: 2, borderRadius: '10px', whiteSpace: 'nowrap',
             textTransform: 'none', fontWeight: 700, fontSize: 13,
             borderColor: 'divider', color: 'text.secondary',
             '&:hover': { borderColor: '#2563EB', color: '#2563EB', bgcolor: 'rgba(37,99,235,0.08)' },
