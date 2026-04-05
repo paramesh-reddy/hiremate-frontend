@@ -6,9 +6,8 @@ import {
   Button,
   Card,
   Chip,
-  IconButton,
   LinearProgress,
-  Container,
+  Alert,
 } from '@mui/material';
 import TrackChangesRoundedIcon from '@mui/icons-material/TrackChangesRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
@@ -20,10 +19,17 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import FileUploadCustom from '../../components/uploadFiles';
 import JobDescriptionField from '../../components/inputs/JobDescriptionField';
 import CustomStepper from '../../components/common/CustomStepper';
+import PageBreadcrumb from '../../components/common/PageBreadcrumb';
 import { atsScanResumeAPI } from '../../services';
 
-const HERO_GRADIENT =
-  'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #2d2b8a 70%, #3b5ae4 100%)';
+/** Matches `AiResumeStudio` tool cards and documents panel */
+const THEME = {
+  primary: 'var(--primary, #335ede)',
+  primarySoft: 'var(--light-blue-bg, rgba(51, 94, 222, 0.08))',
+  border: 'var(--divider, rgba(0,0,0,0.08))',
+  textPrimary: 'var(--text-primary)',
+  textSecondary: 'var(--text-secondary)',
+};
 
 const STEPS = [
   {
@@ -110,153 +116,106 @@ export default function JobScan() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#fafbfc', fontFamily: 'var(--font-family)' }}>
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <Box sx={{ pt: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
-        <Box
+    <Box
+      sx={{
+        minHeight: '100%',
+        width: '100%',
+        bgcolor: '#fafbfc',
+        fontFamily: 'var(--font-family)',
+        display: 'flex',
+        flexDirection: 'column',
+        pb: 5,
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: '100%',
+          mx: 0,
+          px: { xs: 2, sm: 3, md: 4, lg: 5 },
+          pt: { xs: 3, sm: 4 },
+        }}
+      >
+        <PageBreadcrumb
+          items={[
+            { label: 'AI Resume Studio', to: '/ai-resume-studio', showBackIcon: true },
+            { label: 'ATS Scanner' },
+          ]}
+        />
+
+        <Typography
           sx={{
-            background: HERO_GRADIENT,
-            borderRadius: 3,
-            color: 'white',
-            py: { xs: 5, sm: 6 },
-            px: { xs: 3, sm: 4 },
-            position: 'relative',
-            overflow: 'hidden',
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            letterSpacing: 0.8,
+            color: THEME.primary,
+            textTransform: 'uppercase',
+            mb: 0.75,
           }}
         >
-          {/* Decorative background elements */}
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                'radial-gradient(ellipse 60% 70% at 50% 120%, rgba(99,102,241,0.4) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -100,
-              right: -100,
-              width: 300,
-              height: 300,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* Back button */}
-          <IconButton
-            onClick={() => navigate(-1)}
-            aria-label="Go back"
-            sx={{
-              position: 'absolute',
-              left: { xs: 16, sm: 24 },
-              top: { xs: 16, sm: 24 },
-              color: 'white',
-              bgcolor: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              width: 38,
-              height: 38,
-              backdropFilter: 'blur(8px)',
-              transition: 'all 0.2s',
-              '&:hover': { 
-                bgcolor: 'rgba(255,255,255,0.24)',
-                transform: 'translateX(-2px)',
-              },
-            }}
-          >
-            <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
-          </IconButton>
-
-          {/* Content */}
-          <Box sx={{ position: 'relative', textAlign: 'center', maxWidth: 640, mx: 'auto' }}>
-            <Typography
-              component="h1"
-              sx={{
-                fontFamily: 'var(--font-family)',
-                fontWeight: 800,
-                fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                lineHeight: 1.2,
-                mb: 1.5,
-                letterSpacing: '-0.03em',
-              }}
-            >
-              Beat the ATS & Get Interviews
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: 'var(--font-family)',
-                fontSize: { xs: '1rem', sm: '1.0625rem' },
-                opacity: 0.92,
-                mb: 0.75,
-                fontWeight: 500,
-                lineHeight: 1.5,
-              }}
-            >
-              Analyze your resume's ATS compatibility in seconds
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: 'var(--font-family)',
-                fontSize: '0.9375rem',
-                opacity: 0.7,
-                mb: 3,
-                maxWidth: 520,
-                mx: 'auto',
-                lineHeight: 1.6,
-              }}
-            >
-              Get instant feedback on match score, keyword optimization, and actionable improvements
-            </Typography>
-
-            {/* Feature chips */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1.25 }}>
-              {[
-                { icon: TrackChangesRoundedIcon, label: 'ATS Score Analysis' },
-                { icon: BoltRoundedIcon, label: 'Instant Results' },
-                { icon: AutoAwesomeRoundedIcon, label: 'AI-Powered' },
-              ].map((item) => {
-                const IconComponent = item.icon;
-                return (
-                  <Chip
-                    key={item.label}
-                    icon={<IconComponent sx={{ fontSize: '15px !important', color: 'rgba(255,255,255,0.85) !important' }} />}
-                    label={item.label}
-                    size="small"
-                    sx={{
-                      fontFamily: 'var(--font-family)',
-                      fontWeight: 500,
-                      fontSize: '0.8125rem',
-                      bgcolor: 'rgba(255,255,255,0.14)',
-                      border: '1px solid rgba(255,255,255,0.24)',
-                      color: 'rgba(255,255,255,0.95)',
-                      backdropFilter: 'blur(12px)',
-                      px: 0.75,
-                      py: 0.25,
-                      height: 30,
-                      '& .MuiChip-label': { px: 1.25 },
-                      '& .MuiChip-icon': { ml: 0.75 },
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* ── Form area ─────────────────────────────────────────── */}
-      <Container maxWidth="lg" sx={{ pt: { xs: 3, sm: 4 }, pb: 6, px: { xs: 2, sm: 3 } }}>
-        <Card
+          ATS Analysis
+        </Typography>
+        <Typography
+          component="h1"
           sx={{
-            borderRadius: 3,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 10px 36px rgba(0,0,0,0.08)',
-            border: '1px solid rgba(0,0,0,0.08)',
+            fontWeight: 800,
+            fontSize: { xs: '1.5rem', sm: '1.75rem' },
+            color: THEME.textPrimary,
+            mb: 0.5,
+          }}
+        >
+          Run an ATS scan
+        </Typography>
+        <Typography sx={{ color: THEME.textSecondary, fontSize: '0.95rem', mb: 2, maxWidth: 720 }}>
+          Know your ATS score before you apply — match score, keywords, and fixes in one pass.
+        </Typography>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            mb: 3,
+          }}
+        >
+          {[
+            { icon: TrackChangesRoundedIcon, label: 'ATS score analysis' },
+            { icon: BoltRoundedIcon, label: 'Instant results' },
+            { icon: AutoAwesomeRoundedIcon, label: 'AI-powered' },
+          ].map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <Chip
+                key={item.label}
+                icon={
+                  <IconComponent sx={{ fontSize: '15px !important', color: `${THEME.primary} !important` }} />
+                }
+                label={item.label}
+                size="small"
+                sx={{
+                  fontFamily: 'var(--font-family)',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  bgcolor: THEME.primarySoft,
+                  border: `1px solid ${THEME.border}`,
+                  color: THEME.textPrimary,
+                  height: 28,
+                  '& .MuiChip-label': { px: 1 },
+                  '& .MuiChip-icon': { ml: 0.75 },
+                }}
+              />
+            );
+          })}
+        </Box>
+
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+            border: `1px solid ${THEME.border}`,
             overflow: 'hidden',
-            bgcolor: '#ffffff',
+            bgcolor: '#fff',
           }}
         >
           {scanning ? (
@@ -277,8 +236,8 @@ export default function JobScan() {
                   width: 80,
                   height: 80,
                   borderRadius: '50%',
-                  bgcolor: '#eff6ff',
-                  border: '3px solid #dbeafe',
+                  bgcolor: THEME.primarySoft,
+                  border: '3px solid rgba(51, 94, 222, 0.22)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -290,7 +249,7 @@ export default function JobScan() {
                   },
                 }}
               >
-                <TrackChangesRoundedIcon sx={{ color: '#3b82f6', fontSize: 40 }} />
+                <TrackChangesRoundedIcon sx={{ color: THEME.primary, fontSize: 40 }} />
               </Box>
               <Typography
                 sx={{
@@ -324,10 +283,10 @@ export default function JobScan() {
                     width: '100%',
                     height: 8,
                     borderRadius: 4,
-                    bgcolor: '#e0e7ff',
-                    '& .MuiLinearProgress-bar': { 
-                      borderRadius: 4, 
-                      bgcolor: '#4f46e5',
+                    bgcolor: THEME.primarySoft,
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                      bgcolor: THEME.primary,
                       transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     },
                   }}
@@ -336,7 +295,7 @@ export default function JobScan() {
                   sx={{
                     fontFamily: 'var(--font-family)',
                     fontSize: '0.875rem',
-                    color: '#4f46e5',
+                    color: THEME.primary,
                     mt: 1.5,
                     textAlign: 'center',
                     fontWeight: 600,
@@ -347,101 +306,69 @@ export default function JobScan() {
               </Box>
             </Box>
           ) : (
-            <Box sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
-              {/* ── Card header ── */}
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Box>
+              <Box
+                sx={{
+                  px: { xs: 2, sm: 2.5 },
+                  py: 2,
+                  borderBottom: `1px solid ${THEME.border}`,
+                  bgcolor: '#fff',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
                   <Box
                     sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 2.5,
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+                      width: 44,
+                      height: 44,
+                      borderRadius: 2,
+                      bgcolor: THEME.primary,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      boxShadow: '0 4px 12px rgba(79,70,229,0.25)',
+                      boxShadow: '0 4px 14px rgba(51, 94, 222, 0.2)',
                     }}
                   >
-                    <TrackChangesRoundedIcon sx={{ color: 'white', fontSize: 26 }} />
+                    <TrackChangesRoundedIcon sx={{ color: '#fff', fontSize: 24 }} />
                   </Box>
-                  <Box>
+                  <Box sx={{ minWidth: 0 }}>
                     <Typography
                       sx={{
-                        fontFamily: 'var(--font-family)',
                         fontWeight: 700,
-                        fontSize: '1.25rem',
-                        color: 'var(--text-primary)',
-                        lineHeight: 1.3,
-                        letterSpacing: '-0.01em',
+                        fontSize: '1rem',
+                        color: THEME.textPrimary,
+                        lineHeight: 1.25,
                       }}
                     >
-                      ATS Scanner
+                      Scan setup
                     </Typography>
                     <Typography
                       sx={{
-                        fontFamily: 'var(--font-family)',
-                        fontSize: '0.9375rem',
-                        color: 'var(--text-secondary)',
-                        lineHeight: 1.4,
+                        fontSize: '0.8rem',
+                        color: THEME.textSecondary,
+                        lineHeight: 1.45,
+                        mt: 0.35,
                       }}
                     >
-                      Analyze your resume's compatibility with any job posting
+                      Upload your resume, then paste the job description.
                     </Typography>
                   </Box>
                 </Box>
-
-                {/* Stepper */}
-                <CustomStepper 
-                  steps={STEPS} 
-                  activeStep={isStep0Complete && isStep1Complete ? 2 : activeStep} 
-                />
               </Box>
 
-              {/* ── Error Alert ── */}
-              {scanError && (
-                <Box
-                  role="alert"
-                  sx={{
-                    mb: 4,
-                    p: 2.5,
-                    bgcolor: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 1.5,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: '50%',
-                      bgcolor: '#dc2626',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      mt: 0.25,
-                    }}
-                  >
-                    <Typography sx={{ color: 'white', fontSize: '0.75rem', fontWeight: 700 }}>!</Typography>
-                  </Box>
-                  <Typography
-                    sx={{
-                      fontFamily: 'var(--font-family)',
-                      fontSize: '0.875rem',
-                      color: '#dc2626',
-                      fontWeight: 500,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {scanError}
-                  </Typography>
+              <Box sx={{ p: { xs: 2.5, sm: 3, md: 3.5 } }}>
+                <Box sx={{ mb: 3 }}>
+                  <CustomStepper
+                    steps={STEPS}
+                    activeStep={isStep0Complete && isStep1Complete ? 2 : activeStep}
+                  />
                 </Box>
-              )}
+
+                {scanError && (
+                  <Alert severity="error" onClose={() => setScanError('')} sx={{ mb: 3 }}>
+                    {scanError}
+                  </Alert>
+                )}
 
               {/* ── Step Content ── */}
               <Box sx={{ minHeight: 400 }}>
@@ -651,8 +578,8 @@ export default function JobScan() {
               <Box
                 sx={{
                   mt: 5,
-                  pt: 4,
-                  borderTop: '1.5px solid rgba(0,0,0,0.08)',
+                  pt: 3,
+                  borderTop: `1px solid ${THEME.border}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -668,18 +595,19 @@ export default function JobScan() {
                       startIcon={<ArrowBackRoundedIcon />}
                       onClick={handleBack}
                       sx={{
-                        borderColor: '#e2e8f0',
-                        color: '#64748b',
+                        borderColor: THEME.border,
+                        color: THEME.textSecondary,
                         fontFamily: 'var(--font-family)',
                         fontWeight: 600,
-                        fontSize: '0.9375rem',
+                        fontSize: '0.8125rem',
                         textTransform: 'none',
-                        py: 1.25,
-                        px: 3,
-                        borderRadius: 2,
+                        height: 36,
+                        minHeight: 36,
+                        px: 2,
+                        borderRadius: 1,
                         '&:hover': {
-                          borderColor: '#cbd5e1',
-                          bgcolor: '#f8fafc',
+                          borderColor: 'rgba(51, 94, 222, 0.35)',
+                          bgcolor: THEME.primarySoft,
                         },
                       }}
                     >
@@ -702,36 +630,29 @@ export default function JobScan() {
                   {activeStep === 0 && (
                     <Button
                       variant="contained"
-                      endIcon={<ArrowForwardRoundedIcon />}
+                      disableElevation
+                      endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: '18px !important' }} />}
                       onClick={handleNext}
                       disabled={!isStep0Complete}
                       sx={{
-                        py: 1.75,
-                        px: 4,
-                        background: isStep0Complete
-                          ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)'
-                          : 'rgba(0,0,0,0.08)',
+                        py: 1,
+                        px: 2.5,
+                        bgcolor: isStep0Complete ? THEME.primary : 'rgba(15, 23, 42, 0.12)',
                         fontFamily: 'var(--font-family)',
-                        fontWeight: 700,
-                        borderRadius: 2.5,
-                        fontSize: '1.0625rem',
+                        fontWeight: 600,
+                        borderRadius: 1,
+                        fontSize: '0.8125rem',
                         textTransform: 'none',
-                        boxShadow: isStep0Complete ? '0 4px 16px rgba(79,70,229,0.4)' : 'none',
-                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                        letterSpacing: '-0.01em',
-                        minWidth: { xs: 'auto', sm: 240 },
+                        minHeight: 36,
+                        boxShadow: 'none',
+                        minWidth: { xs: 'auto', sm: 220 },
                         '&:hover': {
-                          background: isStep0Complete 
-                            ? 'linear-gradient(135deg, #4338ca 0%, #5b21b6 100%)'
-                            : 'rgba(0,0,0,0.08)',
-                          boxShadow: isStep0Complete ? '0 6px 24px rgba(79,70,229,0.5)' : 'none',
-                          transform: isStep0Complete ? 'translateY(-2px)' : 'none',
-                        },
-                        '&:active': { transform: isStep0Complete ? 'translateY(0)' : 'none' },
-                        '&:disabled': {
-                          background: 'rgba(0,0,0,0.08)',
-                          color: 'rgba(0,0,0,0.35)',
+                          bgcolor: isStep0Complete ? 'var(--primary-dark, #2a4bc4)' : undefined,
                           boxShadow: 'none',
+                        },
+                        '&:disabled': {
+                          bgcolor: 'rgba(15, 23, 42, 0.12)',
+                          color: 'rgba(15, 23, 42, 0.26)',
                         },
                       }}
                     >
@@ -743,37 +664,30 @@ export default function JobScan() {
                     <>
                       <Button
                         variant="contained"
-                        startIcon={<TrackChangesRoundedIcon sx={{ fontSize: 20 }} />}
+                        disableElevation
+                        startIcon={<TrackChangesRoundedIcon sx={{ fontSize: 18 }} />}
                         onClick={handleScan}
                         disabled={!canScan}
                         aria-label="Scan my resume against the job description"
                         sx={{
-                          py: 1.75,
-                          px: 4,
-                          background: canScan
-                            ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)'
-                            : 'rgba(0,0,0,0.08)',
+                          py: 1,
+                          px: 2.5,
+                          bgcolor: canScan ? THEME.primary : 'rgba(15, 23, 42, 0.12)',
                           fontFamily: 'var(--font-family)',
-                          fontWeight: 700,
-                          borderRadius: 2.5,
-                          fontSize: '1.0625rem',
+                          fontWeight: 600,
+                          borderRadius: 1,
+                          fontSize: '0.8125rem',
                           textTransform: 'none',
-                          boxShadow: canScan ? '0 4px 16px rgba(79,70,229,0.4)' : 'none',
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                          letterSpacing: '-0.01em',
-                          minWidth: { xs: 'auto', sm: 240 },
+                          minHeight: 36,
+                          boxShadow: 'none',
+                          minWidth: { xs: 'auto', sm: 220 },
                           '&:hover': {
-                            background: canScan 
-                              ? 'linear-gradient(135deg, #4338ca 0%, #5b21b6 100%)'
-                              : 'rgba(0,0,0,0.08)',
-                            boxShadow: canScan ? '0 6px 24px rgba(79,70,229,0.5)' : 'none',
-                            transform: canScan ? 'translateY(-2px)' : 'none',
-                          },
-                          '&:active': { transform: canScan ? 'translateY(0)' : 'none' },
-                          '&:disabled': {
-                            background: 'rgba(0,0,0,0.08)',
-                            color: 'rgba(0,0,0,0.35)',
+                            bgcolor: canScan ? 'var(--primary-dark, #2a4bc4)' : undefined,
                             boxShadow: 'none',
+                          },
+                          '&:disabled': {
+                            bgcolor: 'rgba(15, 23, 42, 0.12)',
+                            color: 'rgba(15, 23, 42, 0.26)',
                           },
                         }}
                       >
@@ -812,36 +726,38 @@ export default function JobScan() {
                 </Box>
               </Box>
             </Box>
+            </Box>
           )}
         </Card>
 
         {/* ── Summary Progress Card (when all steps complete) ── */}
         {!scanning && isStep0Complete && isStep1Complete && (
           <Card
+            elevation={0}
             sx={{
               mt: 3,
-              borderRadius: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06)',
-              border: '1.5px solid #86efac',
+              borderRadius: 2,
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+              border: '1px solid #86efac',
               overflow: 'hidden',
               bgcolor: '#f0fdf4',
             }}
           >
-            <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2.5 }}>
+            <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2.5 }}>
               <Box
                 sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 2.5,
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  bgcolor: 'var(--success-bg, #dcfce7)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                  border: '1px solid #86efac',
                 }}
               >
-                <CheckCircleRoundedIcon sx={{ color: 'white', fontSize: 32 }} />
+                <CheckCircleRoundedIcon sx={{ color: 'var(--success-dark, #16a34a)', fontSize: 28 }} />
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography
@@ -871,7 +787,7 @@ export default function JobScan() {
             </Box>
           </Card>
         )}
-      </Container>
+      </Box>
     </Box>
   );
 }

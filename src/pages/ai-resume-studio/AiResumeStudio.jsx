@@ -22,13 +22,15 @@ import {
   IconButton,
   Select,
   FormControl,
-  InputLabel,
   CircularProgress,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Stack,
+  Divider,
+  OutlinedInput,
 } from '@mui/material';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
@@ -43,6 +45,8 @@ import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import {
   listResumesAPI,
   deleteResumeAPI,
@@ -312,12 +316,21 @@ export default function AiResumeStudio() {
     <Box
       sx={{
         minHeight: '100%',
-        bgcolor: '#fff',
+        width: '100%',
+        bgcolor: '#fafbfc',
         fontFamily: 'var(--font-family)',
         pb: 5,
       }}
     >
-      <Box sx={{ maxWidth: 1120, mx: 'auto', px: { xs: 2, sm: 3 }, pt: { xs: 3, sm: 4 } }}>
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: '100%',
+          mx: 0,
+          px: { xs: 2, sm: 3, md: 4, lg: 5 },
+          pt: { xs: 3, sm: 4 },
+        }}
+      >
         {/* Header */}
         <Typography
           sx={{
@@ -487,8 +500,19 @@ export default function AiResumeStudio() {
           })}
         </Box>
 
-        {/* Tabs */}
-        <Box sx={{ borderBottom: `1px solid ${THEME.border}`, mb: 2 }}>
+        {/* Tabs + documents panel */}
+        <Box
+          sx={{
+            bgcolor: '#fff',
+            borderRadius: 2,
+            border: `1px solid ${THEME.border}`,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+            overflow: 'hidden',
+            mb: 2,
+            pb: 2,
+          }}
+        >
+        <Box sx={{ px: { xs: 2, sm: 2.5 }, pt: 1, borderBottom: `1px solid ${THEME.border}` }}>
           <Tabs
             value={tab}
             onChange={(_, v) => setTab(v)}
@@ -513,141 +537,357 @@ export default function AiResumeStudio() {
           </Tabs>
         </Box>
 
-        {/* Toolbar */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Typography sx={{ color: THEME.textSecondary, fontSize: '0.875rem' }}>
-              {selected.size} selected
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={selected.size === 0 || deleteBusy}
-              onClick={handleBulkDelete}
-              sx={{
-                textTransform: 'none',
-                borderColor: THEME.border,
-                color: selected.size === 0 ? undefined : THEME.primary,
-              }}
-            >
-              {deleteBusy ? 'Deleting…' : 'Delete'}
-            </Button>
-          </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={uploadBusy ? <CircularProgress size={16} color="inherit" /> : <UploadFileRoundedIcon />}
-              disabled={uploadBusy}
-              onClick={handleUploadClick}
-              sx={{
-                textTransform: 'none',
-                borderColor: THEME.primary,
-                color: THEME.primary,
-                '&:hover': { borderColor: THEME.primary, bgcolor: THEME.primarySoft },
-              }}
-            >
-              Upload
-            </Button>
-            <FormControl size="small" sx={{ minWidth: 130 }}>
-              <InputLabel id="doc-filter-label">Filter</InputLabel>
-              <Select
-                labelId="doc-filter-label"
-                label="Filter"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                {FILTER_OPTIONS.map((o) => (
-                  <MenuItem key={o.value} value={o.value}>
-                    {o.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              size="small"
-              placeholder="Search by name…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchRoundedIcon sx={{ color: THEME.textSecondary, fontSize: 20 }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ minWidth: { xs: '100%', sm: 220 } }}
-            />
-          </Box>
-        </Box>
-
-        {/* Table */}
+        {/* Data grid: toolbar + table are full width of card */}
         <TableContainer
           sx={{
-            border: `1px solid ${THEME.border}`,
-            borderRadius: 2,
-            overflow: 'hidden',
+            overflow: 'auto',
             position: 'relative',
-            minHeight: listLoading ? 200 : undefined,
+            minHeight: listLoading ? 220 : undefined,
+            bgcolor: '#fff',
           }}
         >
           {listLoading && (
             <Box
+              aria-busy="true"
+              aria-live="polite"
+              aria-label="Loading documents"
               sx={{
                 position: 'absolute',
                 inset: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: 'rgba(255,255,255,0.7)',
-                zIndex: 2,
+                bgcolor: 'rgba(255,255,255,0.82)',
+                backdropFilter: 'blur(4px)',
+                /* Sticky thead cells use z-index: 2 (MUI) — stay above toolbar + header row */
+                zIndex: 10,
               }}
             >
-              <CircularProgress size={36} sx={{ color: THEME.primary }} />
+              <CircularProgress size={40} thickness={4} sx={{ color: THEME.primary }} />
             </Box>
           )}
-          <Table size="medium">
+
+          {/* Toolbar — single flat row, fixed control height, external Source label (no floating-label overlap) */}
+          <Box
+            sx={{
+              px: { xs: 2, sm: 2.5 },
+              py: 1.25,
+              bgcolor: '#fff',
+              borderBottom: `1px solid ${THEME.border}`,
+            }}
+          >
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              alignItems={{ xs: 'stretch', md: 'center' }}
+              justifyContent="space-between"
+              spacing={1.25}
+            >
+              <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
+                <Typography
+                  sx={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: THEME.textSecondary,
+                    minWidth: 'fit-content',
+                  }}
+                >
+                  {selected.size} selected
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  disabled={selected.size === 0 || deleteBusy}
+                  onClick={handleBulkDelete}
+                  sx={{
+                    height: 36,
+                    minHeight: 36,
+                    px: 1.75,
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.8125rem',
+                    borderColor: selected.size === 0 ? 'rgba(15, 23, 42, 0.12)' : 'rgba(211, 47, 47, 0.35)',
+                    color: selected.size === 0 ? 'action.disabled' : 'error.main',
+                    bgcolor: 'transparent',
+                    '&:hover': {
+                      borderColor: selected.size === 0 ? undefined : 'error.main',
+                      bgcolor: selected.size === 0 ? undefined : 'rgba(211, 47, 47, 0.06)',
+                    },
+                  }}
+                >
+                  {deleteBusy ? 'Deleting…' : 'Delete'}
+                </Button>
+              </Stack>
+
+                <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                spacing={1.25}
+                flexWrap="wrap"
+                sx={{ justifyContent: { md: 'flex-end' } }}
+              >
+                <Button
+                  variant="contained"
+                  disableElevation
+                  disabled={uploadBusy}
+                  onClick={handleUploadClick}
+                  startIcon={
+                    uploadBusy ? <CircularProgress size={14} color="inherit" /> : <UploadFileRoundedIcon sx={{ fontSize: 18 }} />
+                  }
+                  sx={{
+                    height: 36,
+                    minHeight: 36,
+                    px: 2,
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.8125rem',
+                    bgcolor: THEME.primary,
+                    boxShadow: 'none',
+                    '&:hover': { bgcolor: 'var(--primary-dark, #2a4bc4)', boxShadow: 'none' },
+                  }}
+                >
+                  Upload
+                </Button>
+
+                <Divider
+                  orientation="vertical"
+                  sx={{ display: { xs: 'none', sm: 'block' }, height: 20, alignSelf: 'center', borderColor: THEME.border }}
+                />
+
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1.25}
+                  sx={{ minWidth: 0 }}
+                >
+                  <Typography
+                    component="label"
+                    htmlFor="resume-source-filter"
+                    sx={{
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: THEME.textSecondary,
+                      whiteSpace: 'nowrap',
+                      lineHeight: '36px',
+                    }}
+                  >
+                    Source
+                  </Typography>
+                  <FormControl
+                    size="small"
+                    sx={{
+                      minWidth: { xs: '100%', sm: 152 },
+                      maxWidth: 200,
+                      '& .MuiSelect-select': {
+                        display: 'flex',
+                        alignItems: 'center',
+                        py: 0,
+                      },
+                    }}
+                  >
+                    <Select
+                      id="resume-source-filter"
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                      displayEmpty
+                      input={
+                        <OutlinedInput
+                          notched={false}
+                          startAdornment={
+                            <InputAdornment position="start">
+                              <TuneRoundedIcon sx={{ fontSize: 17, color: 'action.active' }} />
+                            </InputAdornment>
+                          }
+                          sx={{
+                            height: 36,
+                            borderRadius: 1,
+                            bgcolor: '#fff',
+                            fontSize: '0.8125rem',
+                            fontWeight: 500,
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(15, 23, 42, 0.12)',
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(51, 94, 222, 0.35)',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                              borderWidth: 1,
+                              borderColor: THEME.primary,
+                            },
+                          }}
+                        />
+                      }
+                      renderValue={(v) => FILTER_OPTIONS.find((o) => o.value === v)?.label ?? 'All'}
+                      MenuProps={{
+                        anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+                        transformOrigin: { vertical: 'top', horizontal: 'left' },
+                        PaperProps: {
+                          elevation: 3,
+                          sx: {
+                            borderRadius: 1,
+                            mt: 0.5,
+                            minWidth: 200,
+                            border: `1px solid ${THEME.border}`,
+                            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.1)',
+                          },
+                        },
+                      }}
+                      inputProps={{ 'aria-label': 'Filter resumes by source' }}
+                    >
+                      {FILTER_OPTIONS.map((o) => (
+                        <MenuItem key={o.value} value={o.value} dense sx={{ fontSize: '0.8125rem', py: 1 }}>
+                          {o.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+
+                <TextField
+                  id="resume-search"
+                  size="small"
+                  placeholder="Search by name…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  hiddenLabel
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchRoundedIcon sx={{ color: THEME.textSecondary, fontSize: 18 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    width: { xs: '100%', sm: 260 },
+                    flex: { sm: '1 1 220px' },
+                    maxWidth: { sm: 320 },
+                    '& .MuiOutlinedInput-root': {
+                      height: 36,
+                      borderRadius: 1,
+                      bgcolor: '#fff',
+                      fontSize: '0.8125rem',
+                      pl: 0.5,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(15, 23, 42, 0.12)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(51, 94, 222, 0.35)',
+                    },
+                    '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderWidth: 1,
+                      borderColor: THEME.primary,
+                    },
+                  }}
+                />
+              </Stack>
+            </Stack>
+          </Box>
+
+          <Table
+            stickyHeader
+            size="small"
+            sx={{
+              width: '100%',
+              tableLayout: 'fixed',
+              '& .MuiTableCell-root': {
+                borderColor: 'rgba(0,0,0,0.06)',
+                verticalAlign: 'middle',
+              },
+              '& .MuiTableCell-head': {
+                py: 1.25,
+                px: 2,
+                lineHeight: 1.25,
+              },
+              '& .MuiTableCell-body': {
+                py: 1.125,
+                px: 2,
+              },
+              '& .MuiTableCell-paddingCheckbox': {
+                px: 1,
+              },
+            }}
+          >
+            <colgroup>
+              <col style={{ width: 44 }} />
+              <col />
+              <col style={{ width: 156 }} />
+              <col style={{ width: 156 }} />
+              <col style={{ width: 132 }} />
+            </colgroup>
             <TableHead>
               <TableRow
                 sx={{
-                  bgcolor: 'rgba(51, 94, 222, 0.06)',
                   '& th': {
-                    fontWeight: 700,
-                    fontSize: '0.72rem',
-                    letterSpacing: 0.6,
+                    fontWeight: 600,
+                    fontSize: '0.6875rem',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
                     color: THEME.textSecondary,
+                    bgcolor: '#f1f5f9',
                     borderBottom: `1px solid ${THEME.border}`,
+                    textAlign: 'left',
                   },
                 }}
               >
-                <TableCell padding="checkbox">
+                <TableCell padding="checkbox" sx={{ width: 44 }}>
                   <Checkbox
+                    size="small"
                     indeterminate={someVisibleSelected && !allVisibleSelected}
                     checked={allVisibleSelected}
                     onChange={toggleSelectAll}
-                    sx={{ color: THEME.primary, '&.Mui-checked': { color: THEME.primary } }}
+                    sx={{ p: 0.5, color: THEME.primary, '&.Mui-checked': { color: THEME.primary } }}
                   />
                 </TableCell>
-                <TableCell>RESUME NAME</TableCell>
-                <TableCell>CREATED</TableCell>
-                <TableCell>LAST EDITED</TableCell>
-                <TableCell align="right">ACTIONS</TableCell>
+                <TableCell>Resume name</TableCell>
+                <TableCell align="right" sx={{ textAlign: 'right' }}>
+                  Created
+                </TableCell>
+                <TableCell align="right" sx={{ textAlign: 'right' }}>
+                  Last edited
+                </TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {listLoading ? null : filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ py: 4, textAlign: 'center', color: THEME.textSecondary }}>
-                    No resumes match your filters.
+                  <TableCell colSpan={5} sx={{ py: 6, border: 0 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1.25,
+                        textAlign: 'center',
+                        maxWidth: 360,
+                        mx: 'auto',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 2,
+                          bgcolor: 'rgba(51, 94, 222, 0.08)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <FolderOpenRoundedIcon sx={{ fontSize: 28, color: THEME.primary, opacity: 0.9 }} />
+                      </Box>
+                      <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: THEME.textPrimary }}>
+                        No resumes yet
+                      </Typography>
+                      <Typography sx={{ color: THEME.textSecondary, fontSize: '0.875rem', lineHeight: 1.5 }}>
+                        {search.trim() || filter !== 'all'
+                          ? 'No resumes match your filters. Try adjusting search or filter.'
+                          : 'Upload a PDF or use the Resume Generator to create your first document.'}
+                      </Typography>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -655,32 +895,42 @@ export default function AiResumeStudio() {
                   <TableRow
                     key={row.id}
                     hover
-                    sx={{ '&:last-child td': { borderBottom: 0 } }}
+                    sx={{
+                      transition: 'background-color 0.15s ease',
+                      '&:nth-of-type(even)': { bgcolor: 'rgba(248, 250, 252, 0.85)' },
+                      '&:last-child td': { borderBottom: 0 },
+                    }}
                   >
-                    <TableCell padding="checkbox">
+                    <TableCell padding="checkbox" sx={{ width: 44 }}>
                       <Checkbox
+                        size="small"
                         checked={selected.has(row.id)}
                         onChange={() => toggleRow(row.id)}
-                        sx={{ color: THEME.primary, '&.Mui-checked': { color: THEME.primary } }}
+                        sx={{ p: 0.5, color: THEME.primary, '&.Mui-checked': { color: THEME.primary } }}
                       />
                     </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                        <DescriptionRoundedIcon sx={{ fontSize: 20, color: THEME.primary, mt: 0.2 }} />
-                        <Box>
-                          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: THEME.textPrimary }}>
+                    <TableCell sx={{ overflow: 'hidden' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                        <DescriptionRoundedIcon sx={{ fontSize: 18, color: THEME.primary, flexShrink: 0 }} />
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            noWrap
+                            title={row.resume_name || 'Untitled'}
+                            sx={{ fontWeight: 600, fontSize: '0.8125rem', color: THEME.textPrimary, lineHeight: 1.3 }}
+                          >
                             {row.resume_name || 'Untitled'}
                           </Typography>
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5, mt: 0.35 }}>
                             <Chip
                               label={sourceLabel(row.resume_source)}
                               size="small"
                               sx={{
-                                height: 22,
-                                fontSize: '0.7rem',
+                                height: 20,
+                                fontSize: '0.65rem',
                                 fontWeight: 600,
                                 bgcolor: THEME.primarySoft,
                                 color: THEME.primary,
+                                '& .MuiChip-label': { px: 0.75 },
                               }}
                             />
                             {row.is_default && (
@@ -688,11 +938,12 @@ export default function AiResumeStudio() {
                                 label="Default"
                                 size="small"
                                 sx={{
-                                  height: 22,
-                                  fontSize: '0.7rem',
+                                  height: 20,
+                                  fontSize: '0.65rem',
                                   fontWeight: 600,
                                   bgcolor: 'rgba(34, 197, 94, 0.12)',
                                   color: 'success.dark',
+                                  '& .MuiChip-label': { px: 0.75 },
                                 }}
                               />
                             )}
@@ -700,23 +951,42 @@ export default function AiResumeStudio() {
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ color: THEME.textSecondary, fontSize: '0.875rem' }}>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        textAlign: 'right',
+                        fontVariantNumeric: 'tabular-nums',
+                        color: THEME.textSecondary,
+                        fontSize: '0.8125rem',
+                      }}
+                    >
                       {formatDate(row.created_at)}
                     </TableCell>
-                    <TableCell sx={{ color: THEME.textSecondary, fontSize: '0.875rem' }}>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        textAlign: 'right',
+                        fontVariantNumeric: 'tabular-nums',
+                        color: THEME.textSecondary,
+                        fontSize: '0.8125rem',
+                      }}
+                    >
                       {formatDate(row.updated_at)}
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                       <Button
                         size="small"
-                        startIcon={<EditRoundedIcon sx={{ fontSize: 18 }} />}
+                        startIcon={<EditRoundedIcon sx={{ fontSize: 16 }} />}
                         onClick={() => goEdit(row.id)}
                         sx={{
                           textTransform: 'none',
                           color: THEME.primary,
                           fontWeight: 600,
                           minWidth: 0,
-                          mr: 0.5,
+                          py: 0.25,
+                          px: 0.75,
+                          fontSize: '0.8125rem',
+                          mr: 0.25,
                         }}
                       >
                         Edit
@@ -728,8 +998,9 @@ export default function AiResumeStudio() {
                           setMenuRowId(row.id);
                         }}
                         aria-label="More actions"
+                        sx={{ p: 0.5 }}
                       >
-                        <MoreVertRoundedIcon sx={{ color: THEME.textSecondary }} />
+                        <MoreVertRoundedIcon sx={{ fontSize: 18, color: THEME.textSecondary }} />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -738,6 +1009,7 @@ export default function AiResumeStudio() {
             </TableBody>
           </Table>
         </TableContainer>
+        </Box>
 
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>
           <MenuItem

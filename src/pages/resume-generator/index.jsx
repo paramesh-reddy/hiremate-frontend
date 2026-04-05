@@ -30,6 +30,7 @@ import { buildScreenReducer } from './stateMachine';
 import { useResumeGeneratorParams } from '../../hooks/useResumeGeneratorParams';
 import EditorPanel from './components/EditorPanel';
 import PreviewPanel from './components/PreviewPanel';
+import PageBreadcrumb from '../../components/common/PageBreadcrumb';
 
 const BACKEND_ORIGIN = BASE_URL.replace(/\/api\/?$/, '');
 
@@ -774,18 +775,14 @@ export default function ResumeGenerator() {
   const tailorSelectView = (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', fontFamily: 'var(--font-family)', display: 'flex', flexDirection: 'column' }}>
       {/* Top bar */}
-      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid #e5e7eb', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-        <Button
-          onClick={() => navigate('/ai-resume-studio')}
-          size="small"
-          sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', fontWeight: 500, color: '#6b7280', fontSize: '0.875rem', '&:hover': { color: 'var(--primary)', bgcolor: 'transparent' } }}
-        >
-          AI Resume Studio
-        </Button>
-        <ChevronRightRoundedIcon sx={{ fontSize: 14, color: '#d1d5db' }} />
-        <Typography sx={{ fontSize: '0.875rem', color: '#374151', fontFamily: 'var(--font-family)', fontWeight: 500 }}>
-          Tailor Resume
-        </Typography>
+      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid var(--divider)', px: 3, py: 1.5, flexShrink: 0 }}>
+        <PageBreadcrumb
+          sx={{ mb: 0 }}
+          items={[
+            { label: 'AI Resume Studio', to: '/ai-resume-studio', showBackIcon: true },
+            { label: 'Tailor Resume' },
+          ]}
+        />
       </Box>
 
       <Box sx={{ flex: 1, maxWidth: 860, width: '100%', mx: 'auto', px: 3, pt: 5, pb: 10 }}>

@@ -20,11 +20,20 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import PageBreadcrumb from '../../components/common/PageBreadcrumb';
 import { listResumesAPI, deleteResumeAPI } from '../../services';
 import { BASE_URL } from '../../utilities/const';
+
+const THEME = {
+  primary: 'var(--primary, #2563eb)',
+  primarySoft: 'var(--light-blue-bg, rgba(96, 165, 250, 0.08))',
+  border: 'var(--divider, rgba(0,0,0,0.08))',
+  textPrimary: 'var(--text-primary)',
+  textSecondary: 'var(--text-secondary)',
+};
 
 const RESUME_GEN_STORAGE_KEY = 'resumeGeneratorView';
 const RESUME_GEN_SELECTED_KEY = 'resumeGeneratorSelectedId';
@@ -128,76 +137,45 @@ export default function ResumeGeneratorStart() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        bgcolor: '#f8fafc',
+        minHeight: '100%',
+        width: '100%',
+        bgcolor: '#fafbfc',
         fontFamily: 'var(--font-family)',
         display: 'flex',
         flexDirection: 'column',
+        pb: 5,
       }}
     >
-      {/* Top bar */}
       <Box
         sx={{
-          bgcolor: 'white',
-          borderBottom: '1px solid #e5e7eb',
-          px: 3,
-          py: 1.5,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          flexShrink: 0,
+          width: '100%',
+          maxWidth: '100%',
+          mx: 0,
+          px: { xs: 2, sm: 3, md: 4, lg: 5 },
+          pt: { xs: 3, sm: 4 },
         }}
       >
-        <Button
-          startIcon={<ArrowBackRoundedIcon sx={{ fontSize: 16 }} />}
-          onClick={() => navigate('/ai-resume-studio')}
-          size="small"
+        <PageBreadcrumb
+          items={[
+            { label: 'AI Resume Studio', to: '/ai-resume-studio', showBackIcon: true },
+            { label: 'New Resume' },
+          ]}
+        />
+
+        {/* Page header — matches "My Documents" block */}
+        <Typography
           sx={{
-            textTransform: 'none',
-            fontFamily: 'var(--font-family)',
-            fontWeight: 500,
-            color: '#6b7280',
-            fontSize: '0.875rem',
-            '&:hover': { color: 'var(--primary)', bgcolor: 'transparent' },
+            fontWeight: 800,
+            fontSize: { xs: '1.5rem', sm: '1.75rem' },
+            color: THEME.textPrimary,
+            mb: 0.5,
           }}
         >
-          AI Resume Studio
-        </Button>
-        <ChevronRightRoundedIcon sx={{ fontSize: 14, color: '#d1d5db' }} />
-        <Typography sx={{ fontSize: '0.875rem', color: '#374151', fontFamily: 'var(--font-family)', fontWeight: 500 }}>
-          New Resume
+          Create a new resume
         </Typography>
-      </Box>
-
-      {/* Page content */}
-      <Box sx={{ flex: 1, maxWidth: 860, width: '100%', mx: 'auto', px: 3, pt: 5, pb: 10 }}>
-
-        {/* Page header */}
-        <Box sx={{ mb: 5 }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontFamily: 'var(--font-family)',
-              fontWeight: 800,
-              fontSize: { xs: '1.5rem', sm: '1.875rem' },
-              color: '#0f172a',
-              letterSpacing: '-0.02em',
-              mb: 0.75,
-            }}
-          >
-            Create a new resume
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: 'var(--font-family)',
-              fontSize: '1rem',
-              color: '#64748b',
-              fontWeight: 400,
-            }}
-          >
-            Start from your profile or base it on an existing resume.
-          </Typography>
-        </Box>
+        <Typography sx={{ color: THEME.textSecondary, fontSize: '0.95rem', mb: 3 }}>
+          Start from your profile or base it on an existing resume.
+        </Typography>
 
         {/* Option 1 — Start From Profile */}
         <Box
@@ -206,18 +184,19 @@ export default function ResumeGeneratorStart() {
             display: 'flex',
             alignItems: 'center',
             gap: 3,
-            p: 3,
-            mb: 2.5,
-            bgcolor: 'white',
-            border: '1.5px solid #e5e7eb',
-            borderRadius: '16px',
+            p: 2.5,
+            mb: 3,
+            bgcolor: '#fff',
+            border: `1px solid ${THEME.border}`,
+            borderRadius: 2,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
             cursor: 'pointer',
-            transition: 'all 0.18s',
+            transition: 'box-shadow 0.2s, border-color 0.2s',
             '&:hover': {
-              borderColor: 'var(--primary)',
-              boxShadow: '0 0 0 4px rgba(37,99,235,0.06)',
-              '& .profile-arrow': { transform: 'translateX(4px)', color: 'var(--primary)' },
-              '& .profile-icon-wrap': { bgcolor: 'rgba(37,99,235,0.1)' },
+              borderColor: 'rgba(37, 99, 235, 0.35)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              '& .profile-arrow': { transform: 'translateX(4px)', color: THEME.primary },
+              '& .profile-icon-wrap': { bgcolor: THEME.primarySoft },
             },
           }}
         >
@@ -227,27 +206,27 @@ export default function ResumeGeneratorStart() {
             sx={{
               width: 52,
               height: 52,
-              borderRadius: '14px',
-              bgcolor: 'rgba(37,99,235,0.07)',
+              borderRadius: 2,
+              bgcolor: THEME.primarySoft,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              transition: 'background 0.18s',
+              transition: 'background 0.2s',
             }}
           >
-            <PersonOutlineRoundedIcon sx={{ fontSize: 26, color: 'var(--primary)' }} />
+            <PersonOutlineRoundedIcon sx={{ fontSize: 26, color: THEME.primary }} />
           </Box>
 
           {/* Text */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.375 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.375, flexWrap: 'wrap' }}>
               <Typography
                 sx={{
                   fontFamily: 'var(--font-family)',
                   fontWeight: 700,
-                  fontSize: '1rem',
-                  color: '#0f172a',
+                  fontSize: '0.98rem',
+                  color: THEME.textPrimary,
                 }}
               >
                 Start from my profile
@@ -257,8 +236,8 @@ export default function ResumeGeneratorStart() {
                 size="small"
                 sx={{
                   height: 20,
-                  bgcolor: 'rgba(37,99,235,0.08)',
-                  color: 'var(--primary)',
+                  bgcolor: THEME.primarySoft,
+                  color: THEME.primary,
                   fontWeight: 700,
                   fontSize: '0.65rem',
                   fontFamily: 'var(--font-family)',
@@ -266,42 +245,61 @@ export default function ResumeGeneratorStart() {
                 }}
               />
             </Box>
-            <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5 }}>
+            <Typography
+              sx={{
+                fontFamily: 'var(--font-family)',
+                fontSize: '0.8rem',
+                color: THEME.textSecondary,
+                lineHeight: 1.45,
+              }}
+            >
               Pull in your work experience, education, and skills automatically from your profile.
             </Typography>
           </Box>
 
           <ChevronRightRoundedIcon
             className="profile-arrow"
-            sx={{ fontSize: 22, color: '#9ca3af', flexShrink: 0, transition: 'all 0.18s' }}
+            sx={{ fontSize: 22, color: THEME.textSecondary, flexShrink: 0, transition: 'all 0.2s', opacity: 0.85 }}
           />
         </Box>
 
         {/* Divider */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2.5 }}>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: '#e5e7eb' }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', fontFamily: 'var(--font-family)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: THEME.border }} />
+          <Typography
+            sx={{
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: THEME.textSecondary,
+              fontFamily: 'var(--font-family)',
+              textTransform: 'uppercase',
+            }}
+          >
             or copy from existing
           </Typography>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: '#e5e7eb' }} />
+          <Box sx={{ flex: 1, height: '1px', bgcolor: THEME.border }} />
         </Box>
 
-        {/* Option 2 — Existing Resumes */}
+        {/* Option 2 — Existing Resumes (documents panel style) */}
         <Box
           sx={{
-            bgcolor: 'white',
-            border: '1.5px solid #e5e7eb',
-            borderRadius: '16px',
+            bgcolor: '#fff',
+            borderRadius: 2,
+            border: `1px solid ${THEME.border}`,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
             overflow: 'hidden',
+            mb: 2,
+            pb: 0,
           }}
         >
           {/* Section header */}
           <Box
             sx={{
-              px: 3,
-              pt: 2.5,
-              pb: 2,
-              borderBottom: '1px solid #f1f5f9',
+              px: { xs: 2, sm: 2.5 },
+              pt: 2,
+              pb: 1.75,
+              borderBottom: `1px solid ${THEME.border}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -310,22 +308,38 @@ export default function ResumeGeneratorStart() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '8px',
-                  bgcolor: 'rgba(124,58,237,0.08)',
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2,
+                  bgcolor: THEME.primarySoft,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <DescriptionOutlinedIcon sx={{ fontSize: 17, color: '#7c3aed' }} />
+                <DescriptionOutlinedIcon sx={{ fontSize: 22, color: THEME.primary }} />
               </Box>
               <Box>
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a', lineHeight: 1.2 }}>
+                <Typography
+                  sx={{
+                    fontFamily: 'var(--font-family)',
+                    fontWeight: 700,
+                    fontSize: '0.98rem',
+                    color: THEME.textPrimary,
+                    lineHeight: 1.25,
+                  }}
+                >
                   Use an existing resume
                 </Typography>
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.2 }}>
+                <Typography
+                  sx={{
+                    fontFamily: 'var(--font-family)',
+                    fontSize: '0.8rem',
+                    color: THEME.textSecondary,
+                    lineHeight: 1.45,
+                    mt: 0.25,
+                  }}
+                >
                   Only generated resumes appear here
                 </Typography>
               </Box>
@@ -337,7 +351,7 @@ export default function ResumeGeneratorStart() {
                 sx={{
                   height: 22,
                   bgcolor: '#f1f5f9',
-                  color: '#64748b',
+                  color: THEME.textSecondary,
                   fontWeight: 600,
                   fontSize: '0.72rem',
                   fontFamily: 'var(--font-family)',
@@ -346,28 +360,48 @@ export default function ResumeGeneratorStart() {
             )}
           </Box>
 
-          {/* Search */}
-          <Box sx={{ px: 3, py: 1.75, borderBottom: '1px solid #f8fafc' }}>
+          {/* Search — toolbar row aligned with My Documents table toolbar */}
+          <Box
+            sx={{
+              px: { xs: 2, sm: 2.5 },
+              py: 1.25,
+              bgcolor: '#fff',
+              borderBottom: `1px solid ${THEME.border}`,
+            }}
+          >
             <TextField
               fullWidth
               size="small"
               placeholder="Search by name…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              hiddenLabel
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchRoundedIcon sx={{ fontSize: 17, color: '#94a3b8' }} />
+                    <SearchRoundedIcon sx={{ color: THEME.textSecondary, fontSize: 18 }} />
                   </InputAdornment>
                 ),
-                sx: {
+              }}
+              sx={{
+                maxWidth: 320,
+                '& .MuiOutlinedInput-root': {
+                  height: 36,
+                  borderRadius: 1,
+                  bgcolor: '#fff',
+                  fontSize: '0.8125rem',
                   fontFamily: 'var(--font-family)',
-                  fontSize: '0.875rem',
-                  borderRadius: '10px',
-                  bgcolor: '#f8fafc',
-                  '& fieldset': { borderColor: '#e5e7eb' },
-                  '&:hover fieldset': { borderColor: '#cbd5e1' },
-                  '&.Mui-focused fieldset': { borderColor: 'var(--primary)' },
+                  pl: 0.5,
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(15, 23, 42, 0.12)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(51, 94, 222, 0.35)',
+                },
+                '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderWidth: 1,
+                  borderColor: THEME.primary,
                 },
               }}
             />
@@ -377,16 +411,31 @@ export default function ResumeGeneratorStart() {
           <Box sx={{ maxHeight: 380, overflowY: 'auto' }}>
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }}>
-                <CircularProgress size={22} sx={{ color: 'var(--primary)' }} />
+                <CircularProgress size={36} sx={{ color: THEME.primary }} />
               </Box>
             ) : filteredResumes.length === 0 ? (
-              <Box sx={{ py: 6, textAlign: 'center' }}>
-                <AutoAwesomeRoundedIcon sx={{ fontSize: 32, color: '#d1d5db', mb: 1 }} />
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9rem', color: '#94a3b8', fontWeight: 500 }}>
+              <Box sx={{ py: 6, textAlign: 'center', px: 2 }}>
+                <AutoAwesomeRoundedIcon sx={{ fontSize: 32, color: THEME.border, mb: 1 }} />
+                <Typography
+                  sx={{
+                    fontFamily: 'var(--font-family)',
+                    fontSize: '0.875rem',
+                    color: THEME.textSecondary,
+                    fontWeight: 500,
+                  }}
+                >
                   {resumes.length === 0 ? 'No generated resumes yet' : 'No results found'}
                 </Typography>
                 {resumes.length === 0 && (
-                  <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8rem', color: '#cbd5e1', mt: 0.5 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: 'var(--font-family)',
+                      fontSize: '0.8rem',
+                      color: THEME.textSecondary,
+                      mt: 0.5,
+                      opacity: 0.85,
+                    }}
+                  >
                     Generate your first resume using "Start from my profile" above
                   </Typography>
                 )}
@@ -403,11 +452,12 @@ export default function ResumeGeneratorStart() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 2,
-                      px: 3,
-                      py: 1.75,
-                      borderBottom: idx < filteredResumes.length - 1 ? '1px solid #f8fafc' : 'none',
+                      px: { xs: 2, sm: 2.5 },
+                      py: 1.5,
+                      borderBottom:
+                        idx < filteredResumes.length - 1 ? '1px solid rgba(0, 0, 0, 0.06)' : 'none',
                       transition: 'background 0.12s',
-                      '&:hover': { bgcolor: '#f8fafc' },
+                      '&:hover': { bgcolor: '#fafbfc' },
                     }}
                   >
                     {/* Avatar */}
@@ -435,7 +485,7 @@ export default function ResumeGeneratorStart() {
                           fontFamily: 'var(--font-family)',
                           fontWeight: 600,
                           fontSize: '0.875rem',
-                          color: '#0f172a',
+                          color: THEME.textPrimary,
                           lineHeight: 1.3,
                         }}
                       >
@@ -456,7 +506,13 @@ export default function ResumeGeneratorStart() {
                           }}
                         />
                         {date && (
-                          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.72rem', color: '#94a3b8' }}>
+                          <Typography
+                            sx={{
+                              fontFamily: 'var(--font-family)',
+                              fontSize: '0.72rem',
+                              color: THEME.textSecondary,
+                            }}
+                          >
                             {date}
                           </Typography>
                         )}
@@ -469,7 +525,7 @@ export default function ResumeGeneratorStart() {
                         size="small"
                         onClick={(e) => handleDeleteClick(e, r)}
                         sx={{
-                          color: '#94a3b8',
+                          color: THEME.textSecondary,
                           '&:hover': {
                             color: '#ef4444',
                             bgcolor: 'rgba(239, 68, 68, 0.06)',
@@ -486,10 +542,11 @@ export default function ResumeGeneratorStart() {
                           textTransform: 'none',
                           fontFamily: 'var(--font-family)',
                           fontSize: '0.8125rem',
-                          fontWeight: 500,
-                          color: '#64748b',
+                          fontWeight: 600,
+                          color: THEME.textSecondary,
                           px: 1.25,
-                          '&:hover': { color: 'var(--primary)', bgcolor: 'transparent' },
+                          borderRadius: 1,
+                          '&:hover': { color: THEME.primary, bgcolor: 'transparent' },
                         }}
                       >
                         View
@@ -497,21 +554,23 @@ export default function ResumeGeneratorStart() {
                       <Button
                         size="small"
                         variant="contained"
+                        disableElevation
                         onClick={() => handleSelectResume(r)}
                         sx={{
                           textTransform: 'none',
                           fontFamily: 'var(--font-family)',
                           fontSize: '0.8125rem',
                           fontWeight: 600,
-                          bgcolor: '#0f172a',
-                          color: 'white',
-                          borderRadius: '8px',
-                          px: 1.75,
-                          py: 0.625,
+                          bgcolor: THEME.primary,
+                          color: '#fff',
+                          borderRadius: 1,
+                          height: 36,
+                          minHeight: 36,
+                          px: 2,
                           boxShadow: 'none',
                           '&:hover': {
-                            bgcolor: '#1e293b',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            bgcolor: 'var(--primary-dark, #1d4ed8)',
+                            boxShadow: 'none',
                           },
                         }}
                       >
@@ -539,11 +598,13 @@ export default function ResumeGeneratorStart() {
           },
         }}
       >
-        <DialogTitle sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1.125rem', color: '#0f172a' }}>
+        <DialogTitle
+          sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1.125rem', color: THEME.textPrimary }}
+        >
           Delete Resume
         </DialogTitle>
         <DialogContent>
-          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9375rem', color: '#64748b', lineHeight: 1.6 }}>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9375rem', color: THEME.textSecondary, lineHeight: 1.6 }}>
             Are you sure you want to delete "{resumeToDelete?.resume_name}"? This action cannot be undone.
           </Typography>
         </DialogContent>
@@ -556,11 +617,11 @@ export default function ResumeGeneratorStart() {
               fontFamily: 'var(--font-family)',
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: '#64748b',
+              color: THEME.textSecondary,
               px: 2.5,
               py: 0.875,
-              borderRadius: '8px',
-              '&:hover': { bgcolor: '#f8fafc' },
+              borderRadius: 1,
+              '&:hover': { bgcolor: '#fafbfc' },
             }}
           >
             Cancel

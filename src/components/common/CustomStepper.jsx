@@ -28,11 +28,11 @@ function StepIcon({ active, completed, index }) {
           width: 32,
           height: 32,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+          bgcolor: 'var(--primary, #335ede)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 2px 8px rgba(79,70,229,0.35), 0 0 0 3px rgba(79,70,229,0.1)',
+          boxShadow: '0 2px 8px rgba(51, 94, 222, 0.35), 0 0 0 3px rgba(51, 94, 222, 0.12)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
@@ -56,11 +56,11 @@ function StepIcon({ active, completed, index }) {
         width: 32,
         height: 32,
         borderRadius: '50%',
-        border: '2px solid #e2e8f0',
+        border: '2px solid var(--divider, #e5e7eb)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#f8fafc',
+        bgcolor: '#fafbfc',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
@@ -68,11 +68,11 @@ function StepIcon({ active, completed, index }) {
         sx={{ 
           fontSize: '0.8125rem', 
           fontWeight: 700, 
-          color: '#94a3b8', 
-          lineHeight: 1,
-          fontFamily: 'var(--font-family)',
-        }}
-      >
+        color: 'var(--placeholder, #94a3b8)',
+        lineHeight: 1,
+        fontFamily: 'var(--font-family)',
+      }}
+    >
         {index + 1}
       </Typography>
     </Box>
@@ -94,7 +94,7 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
             ...(variant === 'compact' && { py: 1 }),
             ...(variant === 'default' && { py: 2 }),
             '& .MuiStepConnector-line': {
-              borderColor: '#e2e8f0',
+              borderColor: 'var(--divider, #e5e7eb)',
               borderTopWidth: 2,
               ...(isVertical && { borderLeftWidth: 2, borderTopWidth: 0 }),
             },
@@ -102,7 +102,7 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
               borderColor: '#10b981',
             },
             '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
-              borderColor: '#4f46e5',
+              borderColor: 'var(--primary, #335ede)',
             },
             ...(isVertical && {
               '& .MuiStepConnector-root': {
@@ -121,10 +121,10 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
                     fontWeight: idx === activeStep ? 700 : 500,
                     color:
                       idx === activeStep
-                        ? '#1e293b'
+                        ? 'var(--text-primary)'
                         : idx < activeStep
-                        ? '#64748b'
-                        : '#94a3b8',
+                        ? 'var(--text-secondary)'
+                        : 'var(--placeholder, #94a3b8)',
                     mt: isVertical ? 0 : 1,
                     fontFamily: 'var(--font-family)',
                     letterSpacing: '-0.01em',
@@ -149,10 +149,10 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
                       fontWeight: idx === activeStep ? 700 : 500,
                       color:
                         idx === activeStep
-                          ? '#1e293b'
+                          ? 'var(--text-primary)'
                           : idx < activeStep
-                          ? '#64748b'
-                          : '#94a3b8',
+                          ? 'var(--text-secondary)'
+                          : 'var(--placeholder, #94a3b8)',
                       fontFamily: 'var(--font-family)',
                       letterSpacing: '-0.01em',
                       transition: 'all 0.3s',
@@ -164,7 +164,7 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
                     <Typography
                       sx={{
                         fontSize: '0.75rem',
-                        color: idx === activeStep ? '#64748b' : '#94a3b8',
+                        color: idx === activeStep ? 'var(--text-secondary)' : 'var(--placeholder, #94a3b8)',
                         fontFamily: 'var(--font-family)',
                         mt: 0.25,
                         lineHeight: 1.4,
@@ -202,8 +202,8 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
                   idx < activeStep
                     ? '#10b981'
                     : idx === activeStep
-                    ? '#4f46e5'
-                    : '#e2e8f0',
+                    ? 'var(--primary, #335ede)'
+                    : 'var(--divider, #e5e7eb)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
@@ -212,7 +212,7 @@ export default function CustomStepper({ steps, activeStep, orientation = 'horizo
         <Typography
           sx={{
             fontSize: '0.8125rem',
-            color: '#64748b',
+            color: 'var(--text-secondary)',
             fontWeight: 600,
             fontFamily: 'var(--font-family)',
           }}
