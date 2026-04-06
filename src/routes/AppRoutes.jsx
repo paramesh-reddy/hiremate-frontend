@@ -40,6 +40,7 @@ import AdminIssues from '../pages/admin/AdminIssues';
 import PrivacyPolicy from '../pages/legal/PrivacyPolicy';
 import ReportIssuePage from '../pages/report-issue/ReportIssuePage';
 import CompanySearchPage from '../pages/CompanySearch/CompanySearchPage';
+import TokenUsage from '../pages/token-usage/TokenUsage';
 
 export default function AppRoutes() {
   return (
@@ -91,6 +92,7 @@ export default function AppRoutes() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/report-issue" element={<ReportIssuePage />} />
             <Route path="/company-search" element={<CompanySearchPage />} />
+            <Route path="/token-usage" element={<TokenUsage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
