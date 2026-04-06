@@ -1,11 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getInterviewApplicationsAPI } from '../../services/interviewService';
 import {
   Box, Typography, Button, Dialog, DialogContent, TextField,
   InputAdornment, IconButton, CircularProgress, Chip, alpha,
-  useTheme, Skeleton, Tooltip,
+  useTheme, Skeleton, Tooltip, Card, Stack,
 } from '@mui/material';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createApplicationFromJDAPI } from '../../services/applicationsService';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -28,10 +31,18 @@ function getInitials(title = '') {
   return 'IN';
 }
 
+const THEME = {
+  primary: 'var(--primary, #335ede)',
+  primarySoft: 'var(--light-blue-bg, rgba(51, 94, 222, 0.08))',
+  border: 'var(--divider, rgba(0, 0, 0, 0.08))',
+  textPrimary: 'var(--text-primary, #1e293b)',
+  textSecondary: 'var(--text-secondary, #64748b)',
+};
+
 function scoreColor(score) {
-  if (score >= 75) return '#2563eb'; // Primary Blue
-  if (score >= 50) return '#0ea5e9'; // Sky Blue
-  return 'rgba(37,99,235,0.6)'; // Muted Blue
+  if (score >= 75) return '#10b981'; // Success Green
+  if (score >= 50) return THEME.primary; // Primary Blue
+  return '#f59e0b'; // Amber
 }
 
 function scoreLabel(score) {
@@ -47,25 +58,88 @@ const defaultInterviews = [
 ];
 
 const TOOLS = [
-  { key: 'questions', label: 'Q&A Generator', desc: 'Study likely, technical & HR questions with model answers and STAR breakdowns.', icon: PsychologyRoundedIcon, color: '#2563eb', bg: 'rgba(37,99,235,0.1)', route: 'questions', badge: 'Popular' },
-  { key: 'session', label: 'Mock Interview', desc: 'Live AI interviewer. Answer out loud or type — get instant STAR feedback per question.', icon: MicRoundedIcon, color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', route: 'session', badge: 'Live' },
-  { key: 'briefing', label: 'Company Briefing', desc: 'Pre-interview intel: recruiter thread, interview rounds, culture signals & prep topics.', icon: BusinessRoundedIcon, color: '#2563eb', bg: 'rgba(37,99,235,0.1)', route: 'briefing', badge: null },
+  { 
+    key: 'questions', 
+    category: 'Interview Prep',
+    title: 'Q&A Guide',
+    subtitle: 'Master the most likely questions',
+    desc: 'Study likely, technical & HR questions with model answers and STAR breakdowns.', 
+    icon: PsychologyRoundedIcon, 
+    cta: 'Study Questions',
+    route: 'questions', 
+    badge: 'Popular',
+    accent: false
+  },
+  { 
+    key: 'session', 
+    category: 'Live Practice',
+    title: 'Mock Session',
+    subtitle: 'Practice with a real-time AI coach',
+    desc: 'Live AI interviewer. Get instant STAR feedback per question.', 
+    icon: MicRoundedIcon, 
+    cta: 'Start Interview',
+    route: 'session', 
+    badge: 'Live',
+    accent: true
+  },
+  { 
+    key: 'briefing', 
+    category: 'Intelligence',
+    title: 'Company Brief',
+    subtitle: 'Get the inside track before you go',
+    desc: 'Pre-interview intel: recruiter thread, rounds, culture & prep topics.', 
+    icon: BusinessRoundedIcon, 
+    cta: 'View Briefing',
+    route: 'briefing', 
+    badge: null,
+    accent: false
+  },
 ];
 
 export default function InterviewPractice() {
   const navigate = useNavigate();
   const theme = useTheme();
+  const queryClient = useQueryClient();
   const isDark = theme.palette.mode === 'dark';
 
   const [modalOpen, setModalOpen] = useState(false);
   const [jobLink, setJobLink] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [interviews, setInterviews] = useState(defaultInterviews);
-  const [selectedId, setSelectedId] = useState('1');
+  const [localInterviews, setLocalInterviews] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const { data: applications, isLoading } = useQuery({
+    queryKey: ['applications', 'active-interviews'],
+    queryFn: async () => {
+      const response = await getInterviewApplicationsAPI();
+      return response.data;
+    }
+  });
+
+  const interviews = useMemo(() => {
+    const apps = (applications || []).map(app => ({
+      id: String(app.id),
+      title: app.role || 'Software Engineer',
+      companyName: app.company,
+      readinessScore: app.confidence ? Math.round(app.confidence * 100) : 0,
+      weakSpots: [], 
+      insights: app.interview_process || 'Preparing for your interview...',
+      isReal: true
+    }));
+    return [...apps, ...localInterviews];
+  }, [applications, localInterviews]);
+
+  // Handle initial selection
+  useEffect(() => {
+    if (!selectedId && interviews.length > 0) {
+      setSelectedId(interviews[0].id);
+    }
+  }, [interviews, selectedId]);
+
   const selected = interviews.find((i) => i.id === selectedId);
+  const scSelected = scoreColor(selected?.readinessScore ?? 0);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return interviews;
@@ -73,58 +147,91 @@ export default function InterviewPractice() {
     return interviews.filter((i) => i.title.toLowerCase().includes(q) || i.companyName.toLowerCase().includes(q));
   }, [searchQuery, interviews]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!jobDescription.trim() && !jobLink.trim()) return;
     setIsGenerating(true);
     setModalOpen(false);
-    const raw = jobDescription.trim().split('\n')[0]?.trim() || jobLink.trim() || 'New Interview';
-    const title = raw.length > 48 ? raw.slice(0, 45) + '…' : raw;
-    setTimeout(() => {
-      const id = String(Date.now());
-      const newItem = { id, title, companyName: 'Analyzing JD…', readinessScore: 0, weakSpots: [], insights: 'AI is generating your personalized prep plan…' };
-      setInterviews((p) => [newItem, ...p]);
-      setSelectedId(id);
-      setIsGenerating(false);
+    
+    try {
+      const response = await createApplicationFromJDAPI({
+        job_description: jobDescription,
+        job_url: jobLink
+      });
+      
+      const newApp = response.data;
+      
+      // Invalidate query to refresh sidebar
+      await queryClient.invalidateQueries(['applications', 'active-interviews']);
+      
+      // Select the new one
+      setSelectedId(String(newApp.id));
+      
+      // Cleanup
       setJobLink('');
       setJobDescription('');
-    }, 2400);
+    } catch (err) {
+      console.error('Failed to create prep session:', err);
+      // Fallback: show error to user?
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
     <PageContainer sx={{ height: 'calc(100vh - var(--navbar-height))', display: 'flex', flexDirection: 'row', p: 0, overflow: 'hidden', bgcolor: 'background.default' }}>
 
       {/* ─── LEFT SIDEBAR ─────────────────────────────── */}
-      <Box sx={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', bgcolor: 'background.paper', borderRight: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+      <Box sx={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', bgcolor: 'background.paper', overflow: 'hidden' }}>
 
         {/* Sidebar header */}
-        <Box sx={{ p: 2.5, pb: 2 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1, color: 'text.disabled', mb: 2 }}>
+        <Box sx={{ p: { xs: 2, sm: 2.5 }, pb: 2, borderBottom: `1px solid ${THEME.border}` }}>
+          <Typography
+            sx={{
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              letterSpacing: 0.8,
+              color: THEME.primary,
+              textTransform: 'uppercase',
+              mb: 2,
+            }}
+          >
             Prep Sessions
           </Typography>
           <Button
-            fullWidth variant="contained" startIcon={<AddRoundedIcon />}
+            fullWidth variant="contained" disableElevation startIcon={<AddRoundedIcon />}
             onClick={() => setModalOpen(true)}
-            sx={{ borderRadius: 2.5, py: 1.1, fontWeight: 700, textTransform: 'none', fontSize: '0.9rem', boxShadow: 'none', background: 'linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%)', '&:hover': { boxShadow: '0 8px 20px rgba(37,99,235,0.3)', transform: 'translateY(-1px)' }, transition: 'all 0.2s ease' }}
+            sx={{ 
+              borderRadius: 1, py: 1, fontWeight: 600, textTransform: 'none', 
+              fontSize: '0.85rem', bgcolor: THEME.primary,
+              '&:hover': { bgcolor: '#2a4bc4' }
+            }}
           >
             New Session
           </Button>
-          <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.8, borderRadius: 2, bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: '1px solid', borderColor: 'divider' }}>
-            <SearchRoundedIcon sx={{ fontSize: 17, color: 'text.disabled' }} />
+          
+          <Box sx={{ 
+            mt: 2, display: 'flex', alignItems: 'center', gap: 1, 
+            px: 1.5, py: 0.75, borderRadius: 1.5, bgcolor: isDark ? alpha('#fff', 0.03) : '#f8fafc',
+            border: `1px solid ${THEME.border}`,
+            '&:focus-within': { borderColor: THEME.primary, bgcolor: isDark ? alpha('#fff', 0.05) : '#fff' },
+            transition: 'all 0.2s'
+          }}>
+            <SearchRoundedIcon sx={{ fontSize: 18, color: THEME.textSecondary }} />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search sessions…"
-              style={{ border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '0.85rem', color: isDark ? '#e2e8f0' : '#1e293b', fontFamily: 'inherit' }}
+              style={{ border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '0.8125rem', color: THEME.textPrimary, fontFamily: 'inherit' }}
             />
           </Box>
         </Box>
 
         {/* Session list */}
-        <Box sx={{ flex: 1, overflow: 'auto', px: 1.5, pb: 2, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 2 } }}>
+        <Box sx={{ flex: 1, overflow: 'auto', px: 1, py: 1, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 2 } }}>
           {isGenerating && (
-            <Box sx={{ p: 1.5, mb: 1, borderRadius: 2.5, border: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ p: 1.5, mb: 1, borderRadius: 1.5, border: `1px solid ${THEME.border}`, bgcolor: THEME.primarySoft }}>
               <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                <Skeleton variant="circular" width={36} height={36} />
+                <Skeleton variant="circular" width={32} height={32} />
                 <Box sx={{ flex: 1 }}><Skeleton height={14} width="70%" /><Skeleton height={12} width="45%" /></Box>
               </Box>
             </Box>
@@ -136,18 +243,30 @@ export default function InterviewPractice() {
               <motion.div key={item.id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.04 }}>
                 <Box
                   onClick={() => setSelectedId(item.id)}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, mb: 0.75, borderRadius: 2.5, cursor: 'pointer', border: '1px solid', transition: 'all 0.2s ease', borderColor: isActive ? '#2563eb' : 'transparent', bgcolor: isActive ? alpha('#2563eb', 0.09) : 'transparent', '&:hover': { bgcolor: isActive ? alpha('#2563eb', 0.12) : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', '& .del-btn': { opacity: 1 } } }}
+                  sx={{ 
+                    display: 'flex', alignItems: 'center', gap: 1.5, p: 1.25, mb: 0.5, 
+                    borderRadius: 1.5, cursor: 'pointer', border: '1px solid', transition: 'all 0.2s', 
+                    borderColor: isActive ? alpha('#335ede', 0.2) : 'transparent', 
+                    bgcolor: isActive ? THEME.primarySoft : 'transparent', 
+                    '&:hover': { bgcolor: isActive ? alpha('#335ede', 0.12) : 'rgba(0,0,0,0.03)', '& .del-btn': { opacity: 1 } } 
+                  }}
                 >
-                  <Box sx={{ width: 36, height: 36, borderRadius: 2, background: isActive ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.7rem', flexShrink: 0 }}>
+                  <Box sx={{ 
+                    width: 32, height: 32, borderRadius: 1, 
+                    background: isActive ? THEME.primary : THEME.primarySoft, 
+                    color: isActive ? '#fff' : THEME.primary, 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    fontWeight: 700, fontSize: '0.6875rem', flexShrink: 0 
+                  }}>
                     {getInitials(item.title)}
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" noWrap sx={{ fontWeight: 700, fontSize: '0.82rem', color: isActive ? '#2563eb' : 'text.primary' }}>{item.title}</Typography>
-                    <Typography variant="caption" noWrap sx={{ color: 'text.disabled', fontSize: '0.72rem' }}>{item.companyName}</Typography>
+                    <Typography noWrap sx={{ fontWeight: 600, fontSize: '0.8125rem', color: THEME.textPrimary }}>{item.title}</Typography>
+                    <Typography noWrap sx={{ color: THEME.textSecondary, fontSize: '0.75rem' }}>{item.companyName}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
-                    <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: sc, boxShadow: `0 0 6px ${sc}` }} />
-                    <IconButton className="del-btn" size="small" onClick={(e) => { e.stopPropagation(); setInterviews((p) => p.filter((x) => x.id !== item.id)); if (selectedId === item.id) setSelectedId(null); }} sx={{ opacity: 0, transition: 'opacity 0.2s', p: 0.4, '&:hover': { color: 'error.main' } }}>
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: sc }} />
+                    <IconButton className="del-btn" size="small" onClick={(e) => { e.stopPropagation(); }} sx={{ opacity: 0, transition: 'opacity 0.2s', p: 0.4, '&:hover': { color: 'error.main' } }}>
                       <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
                     </IconButton>
                   </Box>
@@ -157,7 +276,7 @@ export default function InterviewPractice() {
           })}
           {filtered.length === 0 && !isGenerating && (
             <Box sx={{ textAlign: 'center', py: 5 }}>
-              <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '0.82rem' }}>No sessions found</Typography>
+              <Typography sx={{ color: THEME.textSecondary, fontSize: '0.8125rem' }}>No sessions found</Typography>
             </Box>
           )}
         </Box>
@@ -168,15 +287,43 @@ export default function InterviewPractice() {
         <AnimatePresence mode="wait">
           {!selectedId ? (
             <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Box sx={{ textAlign: 'center', maxWidth: 380, p: 4 }}>
-                <Box sx={{ width: 80, height: 80, borderRadius: 4, background: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(14,165,233,0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
-                  <AutoAwesomeRoundedIcon sx={{ fontSize: 38, color: '#2563eb' }} />
+              <Box 
+                sx={{ 
+                  height: '100%', display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', p: 4, textAlign: 'center'
+                }}
+              >
+                <Box 
+                  sx={{ 
+                    width: 80, height: 80, borderRadius: '50%', 
+                    bgcolor: THEME.primarySoft, border: `3px solid ${isDark ? alpha('#335ede', 0.2) : alpha('#335ede', 0.1)}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    mb: 3, animation: 'pulse 2s infinite'
+                  }}
+                >
+                  <AutoAwesomeRoundedIcon sx={{ fontSize: 40, color: THEME.primary }} />
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>Ready to ace your interviews?</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.8, mb: 3 }}>
-                  Create a prep session for a specific job or pick from your history on the left.
+                <Typography
+                  sx={{
+                    fontWeight: 800, fontSize: '1.5rem', 
+                    color: THEME.textPrimary, mb: 1, letterSpacing: '-0.01em'
+                  }}
+                >
+                  Ready to ace your interviews?
                 </Typography>
-                <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setModalOpen(true)} sx={{ borderRadius: 2.5, fontWeight: 700, textTransform: 'none', background: 'linear-gradient(135deg, #2563eb, #0ea5e9)', boxShadow: 'none' }}>
+                <Typography 
+                  sx={{ 
+                    color: THEME.textSecondary, fontSize: '0.9375rem', 
+                    lineHeight: 1.5, mb: 4, maxWidth: 440
+                  }}
+                >
+                  Create a tailored prep session for a specific job or pick from your history. Our AI analyzes the JD to build your master Q&A.
+                </Typography>
+                <Button 
+                  variant="contained" disableElevation startIcon={<AddRoundedIcon />} 
+                  onClick={() => setModalOpen(true)} 
+                  sx={{ borderRadius: 1, px: 3, py: 1.1, fontWeight: 600, bgcolor: THEME.primary }}
+                >
                   Create Your First Session
                 </Button>
               </Box>
@@ -186,47 +333,54 @@ export default function InterviewPractice() {
               <Box sx={{ p: { xs: 2.5, md: 4 }, mx: 'auto' }}>
 
                 {/* ── Hero header ── */}
-                <Box sx={{ borderRadius: 4, overflow: 'hidden', mb: 4, background: isDark ? 'linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(14,165,233,0.12) 100%)' : 'linear-gradient(135deg, rgba(37,99,235,0.09) 0%, rgba(14,165,233,0.06) 100%)', border: '1px solid', borderColor: isDark ? 'rgba(37,99,235,0.2)' : 'rgba(37,99,235,0.12)', p: { xs: 2.5, md: 3.5 }, boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.03)' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <Chip label="Active Session" size="small" sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: alpha('#2563eb', 0.12), color: '#2563eb', height: 22 }} />
+                <Box sx={{ 
+                  borderRadius: 2, overflow: 'hidden', mb: 4, bgcolor: 'background.paper',
+                  border: `1px solid ${THEME.border}`, p: { xs: 3, md: 4 }, 
+                  boxShadow: isDark ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)' 
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 3 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: 0.8, color: THEME.primary, textTransform: 'uppercase' }}>Active Prep Session</Typography>
+                        <Chip label={selected?.isReal ? 'Tracker Linked' : 'Manual Prep'} size="small" sx={{ fontWeight: 600, fontSize: '0.6875rem', bgcolor: THEME.primarySoft, color: THEME.primary, height: 24, border: `1px solid ${THEME.border}` }} />
                       </Box>
-                      <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.2, mb: 0.75, fontSize: { xs: '1.5rem', md: '2rem' } }}>
+                      <Typography sx={{ fontWeight: 800, lineHeight: 1.2, mb: 0.5, fontSize: { xs: '1.5rem', md: '1.75rem' }, color: THEME.textPrimary }}>
                         {selected?.title}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <BusinessRoundedIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>{selected?.companyName}</Typography>
+                        <BusinessRoundedIcon sx={{ fontSize: 18, color: THEME.textSecondary }} />
+                        <Typography sx={{ color: THEME.textSecondary, fontWeight: 500, fontSize: '0.95rem' }}>{selected?.companyName}</Typography>
                       </Box>
                     </Box>
 
                     {/* Readiness ring */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, p: 2.5, borderRadius: 3.5, bgcolor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', border: '1px solid', borderColor: 'divider', minWidth: 110 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, p: 2, px: 3, borderRadius: 2, bgcolor: isDark ? alpha('#fff', 0.02) : '#f8fafc', border: `1px solid ${THEME.border}` }}>
                       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                        <CircularProgress variant="determinate" value={100} size={60} thickness={4} sx={{ color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)', position: 'absolute' }} />
-                        <CircularProgress variant="determinate" value={selected?.readinessScore ?? 0} size={60} thickness={4} sx={{ color: scoreColor(selected?.readinessScore ?? 0), filter: `drop-shadow(0 0 8px ${scoreColor(selected?.readinessScore ?? 0)}88)` }} />
+                        <CircularProgress variant="determinate" value={100} size={50} thickness={4.5} sx={{ color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', position: 'absolute' }} />
+                        <CircularProgress variant="determinate" value={selected?.readinessScore ?? 0} size={50} thickness={4.5} sx={{ color: scSelected, transition: 'all 0.6s ease' }} />
                         <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Typography sx={{ fontWeight: 900, fontSize: '0.9rem', color: scoreColor(selected?.readinessScore ?? 0) }}>{selected?.readinessScore ?? 0}%</Typography>
+                          <Typography sx={{ fontWeight: 700, fontSize: '0.8125rem', color: THEME.textPrimary }}>{selected?.readinessScore ?? 0}%</Typography>
                         </Box>
                       </Box>
-                      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.7rem' }}>Readiness</Typography>
-                      <Chip label={scoreLabel(selected?.readinessScore ?? 0)} size="small" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700, bgcolor: alpha(scoreColor(selected?.readinessScore ?? 0), 0.12), color: scoreColor(selected?.readinessScore ?? 0) }} />
+                      <Box>
+                        <Typography sx={{ fontWeight: 700, color: THEME.textPrimary, fontSize: '0.9375rem', mb: 0.25 }}>Interview Readiness</Typography>
+                        <Typography sx={{ fontWeight: 600, color: scSelected, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>{scoreLabel(selected?.readinessScore ?? 0)}</Typography>
+                      </Box>
                     </Box>
                   </Box>
 
-                  {/* Gap tags */}
-                  {selected?.weakSpots?.length > 0 && (
-                    <Box sx={{ mt: 2.5, pt: 2.5, borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
-                        <AutoAwesomeRoundedIcon sx={{ fontSize: 15, color: '#2563eb' }} />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
+                   {/* Gap tags */}
+                   {selected?.weakSpots?.length > 0 && (
+                    <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${THEME.border}` }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                        <AutoAwesomeRoundedIcon sx={{ fontSize: 16, color: THEME.primary }} />
+                        <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: 0.8, color: THEME.primary, textTransform: 'uppercase' }}>
                           Priority gaps to address
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {selected.weakSpots.map((s) => (
-                          <Chip key={s} label={s} size="small" sx={{ height: 24, fontWeight: 600, fontSize: '0.72rem', bgcolor: isDark ? 'rgba(37,99,235,0.1)' : 'rgba(37,99,235,0.08)', color: '#2563eb', border: '1px dashed rgba(37,99,235,0.35)', borderRadius: 1.5 }} />
+                          <Chip key={s} label={s} size="small" sx={{ fontWeight: 600, fontSize: '0.75rem', bgcolor: THEME.primarySoft, border: `1px solid ${THEME.border}`, color: THEME.textPrimary, height: 28 }} />
                         ))}
                       </Box>
                     </Box>
@@ -234,75 +388,134 @@ export default function InterviewPractice() {
                 </Box>
 
                 {/* ── AI Insight ── */}
-                <Box sx={{ mb: 4, p: 2.5, borderRadius: 3, display: 'flex', gap: 2, alignItems: 'flex-start', bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid', borderColor: 'divider' }}>
-                  <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(37,99,235,0.12)', flexShrink: 0, mt: 0.25 }}>
-                    <TipsAndUpdatesRoundedIcon sx={{ fontSize: 18, color: '#2563eb' }} />
+                <Box sx={{ mb: 4, p: 3, borderRadius: 2, display: 'flex', gap: 2.5, alignItems: 'flex-start', bgcolor: 'background.paper', border: `1px solid ${THEME.border}`, boxShadow: isDark ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+                  <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: THEME.primarySoft, color: THEME.primary, flexShrink: 0, mt: 0.25 }}>
+                    <TipsAndUpdatesRoundedIcon sx={{ fontSize: 22 }} />
                   </Box>
                   <Box>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem', display: 'block', mb: 0.5 }}>AI Coach Insight</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.75 }}>{selected?.insights}</Typography>
+                    <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: 0.8, color: THEME.primary, textTransform: 'uppercase', mb: 0.5 }}>AI Coach Insight</Typography>
+                    <Typography sx={{ color: THEME.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>{selected?.insights}</Typography>
                   </Box>
                 </Box>
 
                 {/* ── Practice tools grid ── */}
-                <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'text.disabled', fontSize: '0.68rem', display: 'block', mb: 2 }}>
-                  Practice Tools
+                <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: THEME.textPrimary, mb: 2 }}>
+                  Your Training Suit
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                  {TOOLS.map((tool, idx) => {
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+                  {TOOLS.map((tool) => {
                     const Icon = tool.icon;
                     return (
-                      <motion.div key={tool.key} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-                        <Box
-                          onClick={() => navigate(`/interview-practice/${selectedId}/${tool.route}`)}
-                          sx={{ p: 2.5, borderRadius: 3.5, cursor: 'pointer', border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', transition: 'all 0.25s ease', position: 'relative', overflow: 'hidden', boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.04)', '&:hover': { borderColor: tool.color, boxShadow: `0 8px 28px ${tool.color}22`, transform: 'translateY(-2px)' } }}
-                        >
-                          {/* BG glow */}
-                          <Box sx={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', bgcolor: tool.color, opacity: 0.06, filter: 'blur(20px)' }} />
-                          {tool.badge && (
-                            <Chip label={tool.badge} size="small" sx={{ position: 'absolute', top: 14, right: 14, height: 18, fontSize: '0.58rem', fontWeight: 800, bgcolor: tool.color, color: 'white', borderRadius: 1 }} />
-                          )}
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 1.5 }}>
-                            <Box sx={{ p: 1.2, borderRadius: 2.5, bgcolor: tool.bg, flexShrink: 0 }}>
-                              <Icon sx={{ fontSize: 22, color: tool.color }} />
-                            </Box>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.3, mt: 0.3 }}>{tool.label}</Typography>
+                      <Card
+                        key={tool.key}
+                        onClick={() => navigate(`/interview-practice/${selectedId}/${tool.route}`)}
+                        elevation={0}
+                        sx={{
+                          position: 'relative',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          p: 2,
+                          pt: tool.accent ? 2.5 : 2,
+                          borderRadius: 2,
+                          border: tool.accent
+                            ? `1.5px solid ${alpha('#335ede', 0.28)}`
+                            : `1px solid ${THEME.border}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          bgcolor: 'background.paper',
+                          boxShadow: tool.accent ? `0 4px 20px ${alpha('#335ede', isDark ? 0.2 : 0.1)}` : 'none',
+                          overflow: 'visible',
+                          '&:hover': {
+                            boxShadow: tool.accent
+                              ? `0 8px 28px ${alpha('#335ede', isDark ? 0.3 : 0.16)}`
+                              : isDark ? '0 8px 24px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
+                            borderColor: alpha('#335ede', 0.4),
+                            transform: 'translateY(-2px)'
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1.5 }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2,
+                              bgcolor: tool.accent ? THEME.primary : THEME.primarySoft,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <Icon sx={{ fontSize: 24, color: tool.accent ? '#fff' : THEME.primary }} />
                           </Box>
-                          <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7, fontSize: '0.82rem', mb: 2 }}>{tool.desc}</Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Typography variant="caption" sx={{ fontWeight: 700, color: tool.color }}>
-                              {idx < 2 ? 'Start now' : 'Open'}
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: 0.8, color: THEME.primary, textTransform: 'uppercase', mb: 0.35 }}>
+                              {tool.category}
                             </Typography>
-                            <ArrowForwardRoundedIcon sx={{ fontSize: 14, color: tool.color }} />
+                            <Typography sx={{ fontWeight: 700, color: THEME.textPrimary, fontSize: '0.98rem', lineHeight: 1.25, mb: 0.5 }}>
+                              {tool.title}
+                            </Typography>
                           </Box>
                         </Box>
-                      </motion.div>
+
+                        <Typography sx={{ color: THEME.textSecondary, fontSize: '0.8rem', lineHeight: 1.45, mb: 3, flex: 1 }}>
+                          {tool.desc}
+                        </Typography>
+
+                        <Button
+                          fullWidth
+                          variant={tool.accent ? 'contained' : 'outlined'}
+                          size="small"
+                          endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: '16px !important' }} />}
+                          sx={{
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            borderRadius: 1.5,
+                            py: 0.85,
+                            ...(tool.accent
+                              ? {
+                                  bgcolor: THEME.primary,
+                                  color: '#fff',
+                                  '&:hover': { bgcolor: '#2a4bc4' },
+                                }
+                              : {
+                                  color: THEME.primary,
+                                  borderColor: THEME.primary,
+                                  '&:hover': { bgcolor: THEME.primarySoft },
+                                }),
+                          }}
+                        >
+                          {tool.cta}
+                        </Button>
+                      </Card>
                     );
                   })}
                 </Box>
 
-              </Box>
-            </motion.div>
-          )}
+                </Box>
+              </motion.div>
+            )}
         </AnimatePresence>
       </Box>
 
       {/* ─── CREATE MODAL ─────────────────────────────── */}
       <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: 4, overflow: 'hidden' } } }}>
         {/* Modal header */}
-        <Box sx={{ px: 3.5, pt: 3.5, pb: 2.5, background: 'linear-gradient(135deg, rgba(37,99,235,0.1), rgba(14,165,233,0.06))', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ px: 3.5, pt: 3.5, pb: 2.5, bgcolor: 'background.paper', borderBottom: `1px solid ${THEME.border}` }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(37,99,235,0.15)' }}>
-                <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: '#2563eb' }} />
+              <Box sx={{ p: 1, borderRadius: 2, bgcolor: THEME.primarySoft }}>
+                <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: THEME.primary }} />
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>Start a Prep Session</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: THEME.textPrimary }}>Start a Prep Session</Typography>
             </Box>
-            <IconButton size="small" onClick={() => setModalOpen(false)} sx={{ color: 'text.secondary' }}>
+            <IconButton size="small" onClick={() => setModalOpen(false)} sx={{ color: THEME.textSecondary }}>
               <CloseRoundedIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Typography variant="body2" sx={{ color: 'text.secondary', ml: 5.5 }}>
+          <Typography sx={{ color: THEME.textSecondary, ml: 5.5, fontSize: '0.9rem' }}>
             Paste the JD and our AI will generate a custom prep pack for you.
           </Typography>
         </Box>
@@ -331,10 +544,10 @@ export default function InterviewPractice() {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1.5 }}>
-            <Button fullWidth variant="outlined" onClick={() => setModalOpen(false)} sx={{ borderRadius: 2.5, fontWeight: 700, textTransform: 'none', py: 1.3, color: 'text.secondary', borderColor: 'divider' }}>
+            <Button fullWidth variant="outlined" onClick={() => setModalOpen(false)} sx={{ borderRadius: 1.5, fontWeight: 700, textTransform: 'none', py: 1.2, color: THEME.textSecondary, borderColor: THEME.border }}>
               Cancel
             </Button>
-            <Button fullWidth variant="contained" onClick={handleCreate} disabled={!jobDescription.trim() && !jobLink.trim()} startIcon={<AutoAwesomeRoundedIcon />} sx={{ borderRadius: 2.5, fontWeight: 700, textTransform: 'none', py: 1.3, boxShadow: 'none', background: 'linear-gradient(135deg, #2563eb, #0ea5e9)', '&:hover': { boxShadow: '0 8px 20px rgba(37,99,235,0.35)' } }}>
+            <Button fullWidth variant="contained" disableElevation onClick={handleCreate} disabled={!jobDescription.trim() && !jobLink.trim()} startIcon={<AutoAwesomeRoundedIcon />} sx={{ borderRadius: 1.5, fontWeight: 700, textTransform: 'none', py: 1.2, bgcolor: THEME.primary, '&:hover': { bgcolor: '#2a4bc4' } }}>
               Generate Prep Pack
             </Button>
           </Box>

@@ -1,105 +1,64 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, memo, useCallback } from 'react';
 import {
-  Box, Typography, IconButton, Grid, Chip, Tooltip, useTheme, LinearProgress, alpha
+  Box, Typography, IconButton, Grid, Chip, Tooltip, useTheme, alpha, CircularProgress, Button, Dialog,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Divider, Card
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getInterviewQuestionsAPI, evaluateInterviewAnswerAPI, saveInterviewSessionAPI, getInterviewHistoryAPI } from '../../services/interviewService';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import TimerRoundedIcon from '@mui/icons-material/TimerRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
-import { Trophy, Wrench, Compass, Book, Clock, Lightbulb, Mic, Sparkles, ChevronRight, CheckCircle2, X } from 'lucide-react';
+import { Trophy, Wrench, Compass, Book, Clock, Lightbulb, Mic, Sparkles, ChevronRight, CheckCircle2, X, Target, Zap, PlayCircle, BrainCircuit, MessageSquare, Info, CloudCog, Award, History, LayoutGrid, CheckCircle } from 'lucide-react';
 import PageContainer from '../../components/common/PageContainer';
 
 const ICON_MAP = {
-  wrench: Wrench,
-  compass: Compass,
-  book: Book,
-  clock: Clock,
+  Wrench: Wrench,
+  Compass: Compass,
+  Book: Book,
+  Clock: Clock,
 };
 
-const QUESTIONS = [
-  {
-    text: 'Tell me about a time you had to deal with a difficult technical challenge. How did you handle it?',
-    category: 'Problem Solving',
-    difficulty: 'Medium',
-    icon: 'wrench',
-    tip: 'Be specific about the obstacle. Quantify the impact of your fix — numbers always land better than adjectives.',
-    starKeywords: {
-      s: ['while', 'at my', 'we were', 'working on', 'our team', 'the project', 'when i', 'last year', 'last month', 'during'],
-      t: ['my role', 'i was responsible', 'i needed to', 'the goal was', 'tasked with', 'had to', 'needed to'],
-      a: ['i decided', 'i built', 'i implemented', 'i wrote', 'i led', 'i refactored', 'i fixed', 'i proposed', 'i created', 'i designed'],
-      r: ['result', 'reduced', 'improved', 'increased', 'shipped', 'resolved', '%', 'seconds', 'days', 'users', 'faster', 'better'],
-    },
-  },
-  {
-    text: 'Describe a situation where you had to make a technical decision with incomplete information.',
-    category: 'Decision Making',
-    difficulty: 'Hard',
-    icon: 'compass',
-    tip: 'Show that you can move forward under uncertainty. Mention what you did to reduce risk and how you validated the decision.',
-    starKeywords: {
-      s: ['while', 'we had', 'the situation', 'at the time', 'faced with', 'when', 'during'],
-      t: ['needed to decide', 'had to choose', 'my task', 'responsible for', 'i had to'],
-      a: ['i gathered', 'i prototyped', 'i consulted', 'i decided', 'i chose', 'i tested', 'i researched'],
-      r: ['worked out', 'deployed', 'successful', 'learned', 'shipped', 'reduced', 'improved', 'result'],
-    },
-  },
-  {
-    text: 'How do you stay up-to-date with the latest in your field? Give a concrete example.',
-    category: 'Growth Mindset',
-    difficulty: 'Easy',
-    icon: 'book',
-    tip: 'Name a specific resource and a specific thing you applied at work. Vague answers about "following blogs" score poorly.',
-    starKeywords: {
-      s: ['recently', 'last month', 'i read', 'i watched', 'i attended', 'i discovered', 'i found'],
-      t: ['wanted to learn', 'needed to understand', 'to apply', 'to improve'],
-      a: ['i tried', 'i implemented', 'i built', 'i experimented', 'i used', 'i applied', 'i practiced'],
-      r: ['now i use', 'it helped', 'it improved', 'we adopted', 'shipped', 'better', 'faster'],
-    },
-  },
-  {
-    text: 'Tell me about a time you had to deliver a project under tight deadline pressure.',
-    category: 'Time Management',
-    difficulty: 'Medium',
-    icon: 'clock',
-    tip: 'Interviewers want to see composure and scope management — not heroic all-nighters. Show how you communicated with stakeholders.',
-    starKeywords: {
-      s: ['the deadline', 'we had', 'sprint', 'launch date', 'tight timeline', 'under pressure'],
-      t: ['responsible for', 'i had to', 'my task', 'needed to ship', 'i was asked'],
-      a: ['i prioritized', 'i cut scope', 'i communicated', 'i asked', 'i delegated', 'i focused', 'i broke down'],
-      r: ['shipped', 'delivered', 'on time', 'met the deadline', 'launched', 'success'],
-    },
-  },
-];
+const THEME = {
+  primary: 'var(--primary)',
+  primarySoft: 'var(--light-blue-bg-08)',
+  border: 'var(--border-color)',
+  textPrimary: 'var(--text-primary)',
+  textSecondary: 'var(--text-secondary)',
+  bgPage: 'var(--bg-default)',
+  bgCard: 'var(--bg-paper)',
+  bgLight: 'var(--bg-light)',
+  shadow: 'var(--dashboard-card-shadow)',
+};
 
 const STAR_CONFIG = {
-  s: { label: 'Situation', desc: 'Set the scene', color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
-  t: { label: 'Task', desc: 'Your responsibility', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-  a: { label: 'Action', desc: 'Steps you took', color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
-  r: { label: 'Result', desc: 'Quantified outcome', color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
+  s: { label: 'Situation', desc: 'Context of the event', color: 'var(--primary)', bg: 'var(--light-blue-bg-08)' },
+  t: { label: 'Task', desc: 'Your responsibility', color: 'var(--secondary)', bg: 'var(--light-blue-bg-08)' },
+  a: { label: 'Action', desc: 'Steps you specifically took', color: 'var(--info)', bg: 'var(--light-blue-bg-08)' },
+  r: { label: 'Result', desc: 'Quantified outcome', color: 'var(--success)', bg: 'rgba(34, 197, 94, 0.08)' },
 };
 
 const DIFF_META = {
-  Easy: { color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
-  Medium: { color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
-  Hard: { color: '#1d4ed8', bg: 'rgba(29,78,216,0.1)' },
+  Easy: { color: 'var(--success)', bg: 'rgba(34, 197, 94, 0.08)' },
+  Medium: { color: 'var(--primary)', bg: 'var(--light-blue-bg-08)' },
+  Hard: { color: 'var(--error)', bg: 'rgba(220, 38, 38, 0.08)' },
 };
 
-const SAMPLE_AI_FEEDBACK = [
-  "Good start on Situation — consider adding a specific timestamp or team context to ground the interviewer.",
-  "Strong Action section. Try to quantify the impact in the Result part more precisely.",
-  "Excellent use of STAR structure! Your Result is concrete and memorable.",
-  "Your Task is clear. The Action section could benefit from naming specific tools or techniques you used.",
-];
+const UNIVERSAL_STAR_KEYWORDS = {
+  s: ['while', 'at my', 'we were', 'working on', 'our team', 'the project', 'when i', 'during', 'situation', 'context'],
+  t: ['my role', 'i was responsible', 'i needed to', 'the goal was', 'tasked with', 'had to', 'objective'],
+  a: ['i decided', 'i built', 'i implemented', 'i wrote', 'i led', 'i refactored', 'i fixed', 'i proposed', 'i created', 'i designed'],
+  r: ['result', 'reduced', 'improved', 'increased', 'shipped', 'resolved', '%', 'seconds', 'days', 'users', 'faster', 'better', 'outcome'],
+};
 
-function detectStar(text, keywords) {
+function detectStar(text) {
   const lower = text.toLowerCase();
   const covered = {};
-  for (const [key, words] of Object.entries(keywords)) {
+  for (const [key, words] of Object.entries(UNIVERSAL_STAR_KEYWORDS)) {
     covered[key] = words.some((w) => lower.includes(w));
   }
   return covered;
@@ -112,795 +71,497 @@ function formatTime(seconds) {
 }
 
 function scoreColor(s) {
-  return s >= 75 ? '#2563eb' : s >= 50 ? '#0ea5e9' : 'rgba(37,99,235,0.6)';
+  return s >= 75 ? 'var(--success)' : s >= 50 ? 'var(--primary)' : 'var(--text-secondary)';
 }
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── DEBOUNCE HOOK ───────────────────────────────────────────────────────────
+function useDebounce(callback, delay) {
+  const timeoutRef = useRef(null);
+  return useCallback((...args) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => callback(...args), delay);
+  }, [callback, delay]);
+}
+
+// ── TIMER COMPONENT ──────────────────────────────────────────────────────────
+const TimerDisplay = memo(({ onTick }) => {
+  const [elapsed, setElapsed] = useState(0);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setElapsed((e) => {
+        const next = e + 1;
+        if (onTick) onTick(next);
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [onTick]);
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, px: 2.25, py: 0.85, borderRadius: 2, bgcolor: 'var(--bg-light)', border: `1px solid var(--border-color)` }}>
+      <TimerRoundedIcon sx={{ fontSize: 18, color: 'var(--primary)' }} />
+      <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+        {formatTime(elapsed)}
+      </Typography>
+    </Box>
+  );
+});
+
+// ── QUESTION COMPONENT ───────────────────────────────────────────────────────
+const QuestionHero = memo(({ question, index, total, border, surface, textColor, muted, DIFF_META }) => (
+  <motion.div key={index} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
+    <Box sx={{ p: 4, borderRadius: 3, bgcolor: surface, border: `1px solid ${border}`, boxShadow: 'var(--dashboard-card-shadow)' }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+         <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'var(--light-blue-bg-08)', color: 'var(--primary)', display: 'flex' }}>
+           {(() => { const QIcon = ICON_MAP[question?.icon] || Book; return <QIcon size={22} />; })()}
+         </Box>
+         <Box>
+            <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', mb: 0.25 }}>Scenario Strategy</Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Chip label={question?.category} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 800, bgcolor: 'transparent', border: `1px solid ${border}`, color: muted }} />
+              <Chip label={`${question?.complexity} · ${question?.duration}`} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 800, bgcolor: (DIFF_META[question?.complexity] || DIFF_META.Medium).bg, color: (DIFF_META[question?.complexity] || DIFF_META.Medium).color }} />
+            </Box>
+         </Box>
+      </Box>
+      <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', color: textColor, lineHeight: 1.5, mb: 3 }}>{question?.question_text}</Typography>
+      <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'var(--bg-light)', border: `1px solid ${border}`, display: 'flex', gap: 2 }}>
+        <Zap size={18} color="var(--warning)" style={{ flexShrink: 0, marginTop: 2 }} />
+        <Typography sx={{ fontSize: '0.85rem', color: muted, lineHeight: 1.6, fontWeight: 500 }}>{question?.overview}</Typography>
+      </Box>
+    </Box>
+  </motion.div>
+));
+
+// ── STAR GUIDE COMPONENT ─────────────────────────────────────────────────────
+const StarGuideSidebar = memo(({ starCoverage, config, border, muted, textColor }) => (
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: muted, textTransform: 'uppercase', letterSpacing: 1, mb: 1, px: 1 }}>Answer Architecture (STAR)</Typography>
+    {Object.entries(config).map(([key, cfg]) => {
+      const active = starCoverage[key];
+      return (
+        <Box 
+          key={key} 
+          sx={{ 
+            p: 2.25, borderRadius: 2, display: 'flex', alignItems: 'center', gap: 2.5,
+            border: '1px solid', 
+            borderColor: active ? cfg.color : 'transparent',
+            bgcolor: active ? cfg.bg : 'transparent',
+            transition: 'all 0.3s'
+          }}
+        >
+          <Box sx={{ 
+            width: 32, height: 32, borderRadius: 1.25, bgcolor: active ? cfg.color : border, 
+            color: active ? '#fff' : muted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' 
+          }}>
+            {active ? <CheckRoundedIcon sx={{ fontSize: 18 }} /> : key.toUpperCase()}
+          </Box>
+          <Box>
+            <Typography sx={{ fontWeight: 800, fontSize: '0.92rem', color: active ? cfg.color : textColor }}>{cfg.label}</Typography>
+            <Typography sx={{ fontSize: '0.75rem', color: muted, fontWeight: 600 }}>{cfg.desc}</Typography>
+          </Box>
+          {active && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ marginLeft: 'auto' }}><Sparkles size={16} color={cfg.color} /></motion.div>}
+        </Box>
+      );
+    })}
+  </Box>
+));
+
+// ── OPTIMIZATION: Isolated Editor Component ──────────────────────────────────
+const ResponseEditor = memo(({ transcript, isListening, activeIndex, onFullTextChange, isAiThinking, textColor, muted, THEME, border, surface, toggleListening }) => {
+  const [internalText, setInternalText] = useState('');
+  const [baseText, setBaseText] = useState('');
+  
+  // Sync when Question changes
+  useEffect(() => {
+    setInternalText('');
+    setBaseText('');
+  }, [activeIndex]);
+
+  // Sync transcription to local state
+  useEffect(() => {
+    if (isListening) {
+      const full = baseText + (baseText && transcript ? ' ' : '') + transcript;
+      setInternalText(full);
+      onFullTextChange(full, false); // Debounced in parent or immediate if needed
+    }
+  }, [transcript, isListening, baseText, onFullTextChange]);
+
+  const handleTextareaChange = (e) => {
+    const val = e.target.value;
+    setInternalText(val);
+    setBaseText(val); // When typing, keyboard becomes the new base
+    onFullTextChange(val, true); // Signal typing to parent
+  };
+
+  const wordCount = internalText.trim() ? internalText.trim().split(/\s+/).length : 0;
+
+  return (
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: surface }}>
+      <Box sx={{ px: 4, py: 2.25, borderBottom: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: isListening ? 'var(--error)' : 'var(--primary)', animation: isListening ? 'pulse-red 1s infinite' : 'none' }} />
+          <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Response Studio</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ textAlign: 'right', mr: 2 }}>
+            <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, color: muted }}>Capture Mode</Typography>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: isListening ? 'var(--error)' : THEME.primary }}>{isListening ? 'Voice Active' : 'Keyboard'}</Typography>
+          </Box>
+          <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
+          <IconButton 
+            onClick={() => {
+              if (!isListening) setBaseText(internalText); // Capture current text as base before mic starts
+              toggleListening();
+            }} 
+            sx={{ width: 44, height: 44, borderRadius: 1.5, bgcolor: isListening ? 'var(--error)' : 'var(--light-blue-bg-08)', color: isListening ? '#fff' : THEME.primary, '&:hover': { bgcolor: isListening ? 'var(--error-dark)' : 'var(--light-blue-bg-12)' } }}
+          >
+             {isListening ? <X size={22} /> : <Mic size={22} />}
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Box sx={{ flex: 1, position: 'relative' }}>
+        <textarea
+          value={internalText}
+          onChange={handleTextareaChange}
+          placeholder={`Synthesize your response using the STAR method on the left...\n\nExample: "In my previous role as [Position] at [Company], the situation was..."`}
+          disabled={isAiThinking}
+          autoFocus
+          style={{
+            width: '100%', height: '100%', border: 'none', outline: 'none', resize: 'none',
+            padding: '40px 50px', fontFamily: 'inherit', fontSize: '1.25rem', lineHeight: 1.8,
+            background: 'transparent', color: textColor, boxSizing: 'border-box'
+          }}
+        />
+        
+        <Box sx={{ position: 'absolute', bottom: 30, right: 40, display: 'flex', alignItems: 'center', gap: 3, px: 2, py: 1, borderRadius: 2, bgcolor: 'var(--bg-light)', border: `1px solid ${border}` }}>
+           <Box sx={{ textAlign: 'right' }}>
+             <Typography sx={{ fontSize: '0.65rem', fontWeight: 800, color: muted, textTransform: 'uppercase' }}>Volume</Typography>
+             <Typography sx={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--text-primary)' }}>{internalText.length} chars / {wordCount} words</Typography>
+           </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+});
 
 export default function MockInterviewSession() {
   const navigate = useNavigate();
+  const { interviewId } = useParams();
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
-
-  const bg = 'background.default';
-  const surface = 'background.paper';
-  const border = 'divider';
-  const muted = 'text.secondary';
-  const textColor = 'text.primary';
-
+  const queryClient = useQueryClient();
+  
+  const [view, setView] = useState('start'); // start, active, complete
   const [activeIndex, setActiveIndex] = useState(0);
-  const [userAnswer, setUserAnswer] = useState('');
+  const [starFeedback, setStarFeedback] = useState({ s: false, t: false, a: false, r: false });
   const [isAiThinking, setIsAiThinking] = useState(false);
-  const [sessionDone, setSessionDone] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [showEncouragement, setShowEncouragement] = useState(false);
-  const [baseText, setBaseText] = useState('');
-  const timerRef = useRef(null);
 
-  const { isListening, transcript, start, stop, reset: resetTranscript, isSupported, error: speechError } = useSpeechRecognition();
+  // Refs for performance - keep track of things without parent re-renders
+  const currentAnswerRef = useRef('');
+  const totalSecondsRef = useRef(0);
 
-  // Handle live transcription appending
-  useEffect(() => {
-    if (isListening) {
-      setUserAnswer(baseText + (baseText && transcript ? ' ' : '') + transcript);
+  const { data: questions = [], isLoading } = useQuery({
+    queryKey: ['interview-questions', 'session', interviewId],
+    queryFn: async () => {
+      const response = await getInterviewQuestionsAPI(interviewId);
+      return response.data;
+    },
+    enabled: !!interviewId
+  });
+
+  const { data: history = [], isLoading: isHistoryLoading } = useQuery({
+    queryKey: ['interview-history', interviewId],
+    queryFn: async () => {
+      const response = await getInterviewHistoryAPI();
+      return (response.data || []).filter(s => String(s.application_id) === String(interviewId));
+    },
+    enabled: !!interviewId
+  });
+
+  const { isListening, transcript, start, stop, reset: resetTranscript } = useSpeechRecognition();
+
+  // ── OPTIMIZATION: Debounced Feedback ─────────────────────────────────────
+  const debouncedStarUpdate = useDebounce((text) => {
+    const nextCoverage = detectStar(text);
+    setStarFeedback(nextCoverage);
+    
+    const count = Object.values(nextCoverage).filter(Boolean).length;
+    if (count === 4 && text.length > 50) {
+      setShowEncouragement(true);
+      setTimeout(() => setShowEncouragement(false), 3000);
     }
-  }, [transcript, isListening, baseText]);
+  }, 250);
 
-  const toggleListening = () => {
+  const handleFullTextChange = useCallback((text, isTyping) => {
+    currentAnswerRef.current = text;
+    if (isTyping) {
+      debouncedStarUpdate(text);
+    } else {
+      setStarFeedback(detectStar(text));
+    }
+  }, [debouncedStarUpdate]);
+
+  const toggleListening = useCallback(() => {
     if (isListening) {
       stop();
     } else {
-      setBaseText(userAnswer);
       resetTranscript();
       start();
     }
-  };
+  }, [isListening, start, stop, resetTranscript]);
 
-  const currentQuestion = QUESTIONS[activeIndex];
-  const starCoverage = detectStar(userAnswer, currentQuestion?.starKeywords ?? {});
-  const coveredCount = Object.values(starCoverage).filter(Boolean).length;
-  const progress = (activeIndex / QUESTIONS.length) * 100;
+  const currentQuestion = questions[activeIndex];
 
-  useEffect(() => {
-    timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => clearInterval(timerRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (coveredCount === 4 && userAnswer.length > 50) {
-      setShowEncouragement(true);
-      const t = setTimeout(() => setShowEncouragement(false), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [coveredCount, userAnswer.length]);
-
-  const handleSubmit = () => {
-    if (!userAnswer.trim() || isAiThinking) return;
+  const handleSubmit = async () => {
+    const text = currentAnswerRef.current;
+    if (!text.trim() || isAiThinking) return;
     setIsAiThinking(true);
-    const feedback = SAMPLE_AI_FEEDBACK[activeIndex % SAMPLE_AI_FEEDBACK.length];
-    const star = detectStar(userAnswer, currentQuestion.starKeywords);
-    const starScore = Math.round((Object.values(star).filter(Boolean).length / 4) * 100);
-    const answerObj = {
-      question: currentQuestion.text,
-      category: currentQuestion.category,
-      icon: currentQuestion.icon,
-      answer: userAnswer,
-      star,
-      starScore,
-      feedback,
-    };
+    stop();
 
-    setTimeout(() => {
-      setAnswers((prev) => [...prev, answerObj]);
-      setIsAiThinking(false);
-      if (activeIndex === QUESTIONS.length - 1) {
-        clearInterval(timerRef.current);
-        setSessionDone(true);
+    try {
+      const response = await evaluateInterviewAnswerAPI(
+        interviewId,
+        currentQuestion?.question_text,
+        text
+      );
+
+      const evaluation = response.data;
+      const newAnswer = {
+        question: currentQuestion?.question_text,
+        answer: text,
+        star_score: evaluation.star_score,
+        star_breakdown: evaluation.star_breakdown,
+        feedback: evaluation.feedback,
+      };
+      
+      const updatedAnswers = [...answers, newAnswer];
+      setAnswers(updatedAnswers);
+
+      if (activeIndex < questions.length - 1) {
+        setActiveIndex(activeIndex + 1);
+        currentAnswerRef.current = '';
+        setStarFeedback({ s: false, t: false, a: false, r: false });
+        setIsAiThinking(false);
       } else {
-        setActiveIndex((i) => i + 1);
-        setUserAnswer('');
+        const totalScore = Math.round(updatedAnswers.reduce((acc, curr) => acc + (curr.star_score || 0), 0) / updatedAnswers.length);
+        
+        await saveInterviewSessionAPI(interviewId, {
+          answers: updatedAnswers,
+          duration_seconds: totalSecondsRef.current,
+          total_score: totalScore
+        });
+        queryClient.invalidateQueries(['interview-history', interviewId]);
+        setView('complete');
       }
-    }, 1600);
+    } catch (err) {
+      console.error('Submission failed:', err);
+      setIsAiThinking(false);
+    }
   };
 
-  // ── Session complete screen ─────────────────────────────────────────────
-  if (sessionDone) {
-    const avgScore = Math.round(answers.reduce((s, a) => s + a.starScore, 0) / answers.length);
-    const starTotals = { s: 0, t: 0, a: 0, r: 0 };
-    answers.forEach((a) => {
-      Object.entries(a.star).forEach(([k, v]) => { if (v) starTotals[k]++; });
-    });
+  const bg = THEME.bgPage;
+  const surface = THEME.bgCard;
+  const border = THEME.border;
+  const muted = THEME.textSecondary;
+  const textColor = THEME.textPrimary;
 
+  if (isLoading) {
     return (
-      <PageContainer sx={{ height: 'calc(100vh - var(--navbar-height))', overflow: 'auto', p: 0, bgcolor: bg }}>
-        <Box sx={{ mx: 'auto', p: { xs: 2.5, md: 5 }, display: 'flex', flexDirection: 'column', gap: 3.5 }}>
+      <Box sx={{ height: 'calc(100vh - var(--navbar-height))', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: bg }}>
+        <CircularProgress sx={{ color: THEME.primary }} />
+      </Box>
+    );
+  }
 
-          {/* Hero */}
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <Box
-              sx={{
-                p: { xs: 3, md: 4.5 },
-                borderRadius: 4,
-                background: isDark
-                  ? 'linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(14,165,233,0.1) 100%)'
-                  : 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(14,165,233,0.06) 100%)',
-                border: `1px solid ${isDark ? 'rgba(37,99,235,0.22)' : 'rgba(37,99,235,0.15)'}`,
-                textAlign: 'center',
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-                <Box sx={{ p: 2, borderRadius: '50%', bgcolor: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)' }}>
-                  <Trophy size={48} color="#2563eb" strokeWidth={1.5} />
-                </Box>
+  // ── START / HISTORY SCREEN ─────────────────────────────────────────────
+  if (view === 'start') {
+    return (
+      <PageContainer sx={{ display: 'flex', flexDirection: 'column', p: 0, bgcolor: bg, height: 'calc(100vh - var(--navbar-height))', overflow: 'auto' }}>
+        <Box sx={{ bgcolor: surface, borderBottom: `1px solid ${border}`, pt: { xs: 4, md: 5 }, pb: { xs: 4, md: 5 } }}>
+          <Box sx={{ mx: 'auto', px: { xs: 3, md: 5 }, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 3 }}>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                <IconButton onClick={() => navigate('/interview-practice')} sx={{ bgcolor: 'var(--light-blue-bg-08)', color: textColor, borderRadius: 1.25, width: 36, height: 36, '&:hover': { bgcolor: 'var(--light-blue-bg-15)', color: THEME.primary } }}><ArrowBackRoundedIcon sx={{ fontSize: 20 }} /></IconButton>
+                <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: THEME.primary, textTransform: 'uppercase', letterSpacing: 1 }}>Live Coaching</Typography>
               </Box>
-              <Typography sx={{ fontWeight: 900, fontSize: { xs: '1.5rem', md: '2rem' }, color: textColor, mb: 0.5 }}>
-                Session Complete!
-              </Typography>
-              <Typography variant="body2" sx={{ color: muted, mb: 3 }}>
-                You answered {answers.length} questions in {formatTime(elapsed)}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'baseline',
-                  gap: 0.5,
-                  px: 3,
-                  py: 1.25,
-                  borderRadius: 3,
-                  background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
-                  border: `1px solid ${border}`,
-                }}
-              >
-                <Typography sx={{ fontWeight: 900, fontSize: '2.8rem', color: scoreColor(avgScore), lineHeight: 1 }}>
-                  {avgScore}%
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: muted }}>avg STAR score</Typography>
-              </Box>
+              <Typography variant="h3" sx={{ fontWeight: 800, color: textColor, letterSpacing: '-0.02em', mb: 1.5 }}>Mock Interview Session</Typography>
+              <Typography sx={{ color: muted, fontSize: '1rem', maxWidth: 540, lineHeight: 1.6 }}>Practice interview scenarios with real-time AI feedback on your STAR structured answers. Review your history below.</Typography>
             </Box>
-          </motion.div>
-
-          {/* STAR coverage summary */}
-          <Grid container spacing={2}>
-            {(['s', 't', 'a', 'r']).map((key, i) => {
-              const cfg = STAR_CONFIG[key];
-              const count = starTotals[key];
-              const pct = Math.round((count / answers.length) * 100);
-              return (
-                <Grid item xs={6} md={3} key={key}>
-                  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 + 0.3 }}>
-                    <Box
-                      sx={{
-                        p: 2.5,
-                        borderRadius: 3.5,
-                        bgcolor: cfg.bg,
-                        border: `1px solid ${cfg.color}30`,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 1,
-                      }}
-                    >
-                      <Typography sx={{ fontWeight: 900, fontSize: '1.8rem', color: cfg.color, lineHeight: 1 }}>
-                        {pct}%
-                      </Typography>
-                      <Typography sx={{ fontWeight: 800, fontSize: '0.82rem', color: cfg.color }}>{cfg.label}</Typography>
-                      <Typography sx={{ fontSize: '0.7rem', color: muted }}>{count}/{answers.length} answers</Typography>
-                    </Box>
-                  </motion.div>
-                </Grid>
-              );
-            })}
-          </Grid>
-
-          {/* Per-question breakdown */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: textColor }}>Question Breakdown</Typography>
-            {answers.map((a, idx) => (
-              <motion.div key={idx} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.07 + 0.5 }}>
-                <Box
-                  sx={{
-                    p: 2.75,
-                    borderRadius: 3.5,
-                    bgcolor: surface,
-                    border: `1px solid ${border}`,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
-                    <Box sx={{ mt: 0.5 }}>
-                      {(() => {
-                        const QIcon = ICON_MAP[a.icon] || Book;
-                        return <QIcon size={20} color="#2563eb" />;
-                      })()}
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ display: 'flex', gap: 1, mb: 0.75, flexWrap: 'wrap' }}>
-                        <Box sx={{ px: 1.25, py: 0.25, borderRadius: 4, bgcolor: 'rgba(37,99,235,0.1)', fontSize: '0.68rem', fontWeight: 700, color: '#2563eb' }}>
-                          {a.category}
-                        </Box>
-                        <Box sx={{ px: 1.25, py: 0.25, borderRadius: 4, bgcolor: `${scoreColor(a.starScore)}18`, fontSize: '0.68rem', fontWeight: 700, color: scoreColor(a.starScore) }}>
-                          {a.starScore}% STAR
-                        </Box>
-                      </Box>
-                      <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: textColor, lineHeight: 1.55 }}>
-                        {a.question}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* STAR badges */}
-                  <Box sx={{ display: 'flex', gap: 0.75, mb: 2, flexWrap: 'wrap' }}>
-                    {(['s', 't', 'a', 'r']).map((key) => {
-                      const cfg = STAR_CONFIG[key];
-                      const active = a.star[key];
-                      return (
-                        <Box
-                          key={key}
-                          sx={{
-                            px: 1.5,
-                            py: 0.35,
-                            borderRadius: 4,
-                             bgcolor: active ? cfg.bg : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                             border: `1px solid ${active ? cfg.color : 'divider'}`,
-                             fontSize: '0.72rem',
-                             fontWeight: 700,
-                             color: active ? cfg.color : 'text.disabled',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                          }}
-                        >
-                          {active && <CheckRoundedIcon sx={{ fontSize: 11 }} />}
-                          {cfg.label}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-
-                  {/* AI feedback */}
-                  <Box
-                    sx={{
-                      p: 1.75,
-                      borderRadius: 2.5,
-                      bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-                      border: `1px solid ${border}`,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                      <AutoAwesomeRoundedIcon sx={{ fontSize: 13, color: '#2563eb' }} />
-                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563eb' }}>AI Feedback</Typography>
-                    </Box>
-                    <Typography sx={{ fontSize: '0.82rem', color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)', lineHeight: 1.75 }}>
-                      {a.feedback}
-                    </Typography>
-                  </Box>
-                </Box>
-              </motion.div>
-            ))}
+            <Button variant="contained" disableElevation startIcon={<PlayCircle size={22} />} onClick={() => setView('active')} sx={{ borderRadius: 2, px: 4, py: 1.75, fontWeight: 700, bgcolor: THEME.primary, color: 'var(--primary-contrast)', textTransform: 'none', fontSize: '0.95rem', minWidth: 180, '&:hover': { bgcolor: 'var(--primary-dark)', boxShadow: '0 4px 12px rgba(51, 94, 222, 0.2)' } }}>Start New Session</Button>
           </Box>
-
-          {/* Actions */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', pb: 2 }}>
-            <Box
-              onClick={() => navigate('/interview-practice')}
-              sx={{
-                display: 'flex', alignItems: 'center', gap: 1,
-                px: 3, py: 1.4, borderRadius: 2.5,
-                border: '1px solid divider', bgcolor: surface,
-                cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem', color: textColor,
-                transition: 'all 0.2s',
-                '&:hover': { borderColor: 'rgba(37,99,235,0.3)', bgcolor: 'rgba(37,99,235,0.05)' },
-              }}
-            >
-              <ArrowBackRoundedIcon sx={{ fontSize: 17 }} />
-              Back to Dashboard
-            </Box>
-            <Box
-              onClick={() => { setActiveIndex(0); setUserAnswer(''); setAnswers([]); setSessionDone(false); setElapsed(0); timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000); }}
-              sx={{
-                display: 'flex', alignItems: 'center', gap: 1,
-                px: 3.5, py: 1.4, borderRadius: 2.5,
-                background: 'linear-gradient(135deg, #2563eb, #0ea5e9)',
-                cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem', color: '#fff',
-                boxShadow: '0 4px 16px rgba(37,99,235,0.35)',
-                transition: 'all 0.2s',
-                '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 6px 20px rgba(37,99,235,0.4)' },
-              }}
-            >
-              <ReplayRoundedIcon sx={{ fontSize: 17 }} />
-              Practice Again
-            </Box>
+        </Box>
+        <Box sx={{ mx: 'auto', width: '100%', p: { xs: 3, md: 5 } }}>
+          <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <Box><Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: textColor, mb: 0.5 }}>Attempt History</Typography><Typography sx={{ color: muted, fontSize: '0.9rem' }}>Comprehensive log of your previous performance and AI coaching feedback.</Typography></Box>
           </Box>
+          <Paper elevation={0} sx={{ borderRadius: 2, border: `1px solid ${border}`, bgcolor: surface, overflow: 'hidden', boxShadow: THEME.shadow }}>
+            {isHistoryLoading ? (
+               <Box sx={{ display: 'flex', py: 12, justifyContent: 'center' }}><CircularProgress size={32} sx={{ color: THEME.primary }} /></Box>
+            ) : history.length === 0 ? (
+              <Box sx={{ p: 12, textAlign: 'center' }}><Box sx={{ mb: 3, opacity: 0.15, display: 'flex', justifyContent: 'center' }}><Trophy size={64} /></Box><Typography sx={{ color: muted, fontWeight: 600, fontSize: '1rem' }}>No session logs found. Start your first attempt to begin tracking progress!</Typography></Box>
+            ) : (
+              <TableContainer sx={{ bgcolor: 'transparent' }}>
+                <Table sx={{ minWidth: 650 }}>
+                  <TableHead><TableRow sx={{ '& th': { fontWeight: 600, fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: muted, bgcolor: 'var(--bg-light)', borderBottom: `1px solid ${border}`, textAlign: 'left', py: 1.75, px: 3 } }}><TableCell>Session Date</TableCell><TableCell>Questions Covered</TableCell><TableCell>Session Duration</TableCell><TableCell>Performance Score</TableCell><TableCell align="right" sx={{ textAlign: 'right !important' }}>Action</TableCell></TableRow></TableHead>
+                  <TableBody>
+                    {history.map((s) => (
+                      <TableRow key={s.id} hover sx={{ cursor: 'pointer', transition: 'background-color 0.15s ease', '&:nth-of-type(even)': { bgcolor: 'var(--bg-light)' }, '&:last-child td': { borderBottom: 0 }, '& td': { py: 2.25, px: 3, borderBottom: `1px solid ${border}` } }} onClick={() => navigate(`/interview-practice/${interviewId}/session/${s.id}`)}>
+                        <TableCell><Typography sx={{ fontWeight: 600, color: textColor, fontSize: '0.8125rem', lineHeight: 1.3 }}>{formatDate(s.date)}</Typography><Typography sx={{ color: muted, fontSize: '0.7rem', mt: 0.25 }}>Completed Attempt</Typography></TableCell>
+                        <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Box sx={{ p: 0.5, borderRadius: 1, bgcolor: THEME.primarySoft, color: THEME.primary, display: 'flex' }}><Target size={14} /></Box><Typography sx={{ fontWeight: 600, color: textColor, fontSize: '0.8125rem' }}>{s.answer_count} Scenarios</Typography></Box></TableCell>
+                        <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Box sx={{ p: 0.5, borderRadius: 1, bgcolor: 'var(--bg-light)', color: muted, display: 'flex' }}><Clock size={14} /></Box><Typography sx={{ fontWeight: 600, color: textColor, fontSize: '0.8125rem' }}>{Math.floor(s.duration / 60)}m {s.duration % 60}s</Typography></Box></TableCell>
+                        <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}><Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CircularProgress variant="determinate" value={100} size={28} thickness={5} sx={{ color: 'var(--light-blue-bg-08)', position: 'absolute' }} /><CircularProgress variant="determinate" value={s.score} size={28} thickness={5} sx={{ color: scoreColor(s.score) }} /></Box><Typography sx={{ fontWeight: 800, fontSize: '0.85rem', color: scoreColor(s.score) }}>{s.score}%</Typography></Box></TableCell>
+                        <TableCell align="right"><IconButton size="small" sx={{ color: THEME.primary, p: 0.5 }}><ChevronRight size={18} /></IconButton></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Paper>
         </Box>
       </PageContainer>
     );
   }
 
-  // ── Active session screen ───────────────────────────────────────────────
+  // ── COMPLETE / SUMMARY SCREEN (AI RESUME STUDIO ABSOLUTE ALIGNMENT) ──────
+  if (view === 'complete') {
+    const finalScore = Math.round(answers.reduce((acc, curr) => acc + (curr.star_score || 0), 0) / answers.length);
+    
+    return (
+      <PageContainer sx={{ display: 'flex', flexDirection: 'column', bgcolor: bg, p: 0, height: 'calc(100vh - var(--navbar-height))', overflow: 'auto' }}>
+        <Box sx={{ flex: 1, p: 4, pt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center',justifyContent: "center" }}>
+          
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <Typography variant="h3" sx={{ fontWeight: 950, color: textColor, letterSpacing: '-0.04em', mb: 1, textTransform: 'none' }}>Great job, Hero!</Typography>
+            <Typography sx={{ color: muted, fontSize: '1rem', fontWeight: 500 }}>Congratulations on concluding your interview session successfully.</Typography>
+          </motion.div>
+
+          {/* Studio Metrics Grid — Exact replication of tools card grid */}
+          <Box sx={{ width: '100%', maxWidth: 1000, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3, mb: 6 }}>
+             {[
+               { category: 'Performance', title: 'Final Score', val: `${finalScore}%`, icon: Award, accent: true },
+               { category: 'Engagement', title: 'Scenarios Completed', val: answers.length, icon: LayoutGrid, accent: false },
+               { category: 'Efficiency', title: 'Session Duration', val: formatTime(totalSecondsRef.current), icon: Clock, accent: false },
+             ].map((m, i) => (
+               <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + (i*0.1) }}>
+                 <Card 
+                   elevation={0}
+                   sx={{
+                     p: 2.5,
+                     borderRadius: 2,
+                     border: m.accent ? '1.5px solid rgba(51, 94, 222, 0.28)' : `1px solid ${border}`,
+                     bgcolor: '#fff',
+                     boxShadow: m.accent ? '0 4px 20px rgba(51, 94, 222, 0.1)' : 'none',
+                     transition: 'all 0.2s',
+                     '&:hover': {
+                       boxShadow: m.accent ? '0 8px 28px rgba(51, 94, 222, 0.16)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
+                       borderColor: 'rgba(51, 94, 222, 0.4)'
+                     }
+                   }}
+                 >
+                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 1.5 }}>
+                     <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: m.accent ? THEME.primary : THEME.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                       <m.icon size={22} color={m.accent ? '#fff' : THEME.primary} />
+                     </Box>
+                     <Box sx={{ flex: 1, minWidth: 0 }}>
+                       <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: 0.8, color: THEME.primary, textTransform: 'uppercase', mb: 0.35 }}>{m.category}</Typography>
+                       <Typography sx={{ fontWeight: 700, color: THEME.textPrimary, fontSize: '0.94rem', lineHeight: 1.25 }}>{m.title}</Typography>
+                     </Box>
+                   </Box>
+                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+                     <Typography sx={{ fontSize: '1.5rem', fontWeight: 950, color: textColor }}>{m.val}</Typography>
+                     {m.accent && <Box sx={{ p: 0.75, borderRadius: 2.5, bgcolor: 'rgba(34, 197, 94, 0.08)', color: 'var(--success)', display: 'flex' }}><Trophy size={16} /></Box>}
+                   </Box>
+                 </Card>
+               </motion.div>
+             ))}
+          </Box>
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} style={{ display: 'flex', gap: 16 }}>
+             <Button 
+               onClick={() => setView('start')}
+               variant="outlined" 
+               sx={{ 
+                 py: 1.8, px: 5, borderRadius: 2, border: `1px solid ${border}`, color: textColor, fontWeight: 800, textTransform: 'none', fontSize: '0.95rem',
+                 borderColor: border, '&:hover': { bgcolor: border, borderColor: border }
+               }}
+               startIcon={<History size={18} />}
+             >
+               View History
+             </Button>
+             <Button 
+               onClick={() => navigate('/interview-practice')}
+               variant="contained" 
+               disableElevation
+               sx={{ 
+                 py: 1.8, px: 6, borderRadius: 2, bgcolor: THEME.primary, fontWeight: 800, textTransform: 'none', fontSize: '0.95rem',
+                 '&:hover': { bgcolor: 'var(--primary-dark)', boxShadow: '0 4px 12px rgba(51, 94, 222, 0.2)' }
+               }}
+               startIcon={<CheckCircle size={18} />}
+             >
+               Interview Practice
+             </Button>
+          </motion.div>
+
+        </Box>
+      </PageContainer>
+    );
+  }
+
+  // ── ACTIVE SESSION SCREEN ──────────────────────────────────────────────────
   return (
-    <PageContainer
-      sx={{
-        height: 'calc(100vh - var(--navbar-height))',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        p: 0,
-        bgcolor: bg,
-      }}
-    >
-      {/* ── Top bar ── */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          px: { xs: 2, md: 3 },
-          py: 1.5,
-          bgcolor: surface,
-          borderBottom: `1px solid ${border}`,
-        }}
-      >
-        <IconButton
-          onClick={() => navigate('/interview-practice')}
-          size="small"
-          sx={{
-            color: muted,
-            border: '1px solid divider',
-            borderRadius: 1.5,
-            '&:hover': { color: '#2563eb', borderColor: 'rgba(37,99,235,0.35)', bgcolor: 'rgba(37,99,235,0.06)' },
-          }}
-        >
-          <ArrowBackRoundedIcon fontSize="small" />
-        </IconButton>
-
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.2, color: textColor }}>
-            Mock Interview Session
-          </Typography>
-          <Typography sx={{ fontSize: '0.72rem', color: muted, mt: 0.15 }}>
-            Question {activeIndex + 1} of {QUESTIONS.length}
-          </Typography>
+    <PageContainer sx={{ height: 'calc(100vh - var(--navbar-height))', display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 0, bgcolor: bg }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, px: { xs: 2, md: 4 }, py: 1.75, bgcolor: surface, borderBottom: `1px solid ${border}`, zIndex: 10 }}>
+        <IconButton onClick={() => navigate('/interview-practice')} size="small" sx={{ color: muted, border: `1px solid ${border}`, borderRadius: 1.25, width: 36, height: 36, '&:hover': { color: THEME.primary, borderColor: THEME.primary, bgcolor: THEME.primarySoft } }}><ArrowBackRoundedIcon fontSize="small" /></IconButton>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: textColor }}>Live Mock Interview</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.2 }}>
+             <Typography sx={{ fontSize: '0.72rem', color: THEME.primary, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>Scenario {activeIndex + 1} of {questions.length}</Typography>
+             <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: border }} />
+             <Box sx={{ display: 'flex', gap: 0.5 }}>{questions.map((_, i) => (<Box key={i} sx={{ width: i === activeIndex ? 16 : 6, height: 6, borderRadius: 3, bgcolor: i < activeIndex ? 'var(--success)' : i === activeIndex ? THEME.primary : border, transition: 'all 0.3s' }} />))}</Box>
+          </Box>
         </Box>
-
-        {/* Timer */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.75,
-            px: 1.75,
-            py: 0.75,
-            borderRadius: 2,
-            bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-            border: `1px solid ${border}`,
-          }}
-        >
-          <TimerRoundedIcon sx={{ fontSize: 15, color: muted }} />
-          <Typography sx={{ fontWeight: 800, fontSize: '0.88rem', color: textColor, fontVariantNumeric: 'tabular-nums' }}>
-            {formatTime(elapsed)}
-          </Typography>
-        </Box>
-
-        {/* Step dots */}
-        <Box sx={{ display: 'flex', gap: 0.6, alignItems: 'center' }}>
-          {QUESTIONS.map((_, i) => (
-            <Box
-              key={i}
-              sx={{
-                width: i === activeIndex ? 22 : 8,
-                height: 8,
-                borderRadius: 4,
-                transition: 'all 0.25s',
-                bgcolor: i < activeIndex
-                  ? '#0ea5e9'
-                  : i === activeIndex
-                    ? '#2563eb'
-                    : 'divider',
-              }}
-            />
-          ))}
-        </Box>
+        <TimerDisplay onTick={(val) => { totalSecondsRef.current = val; }} />
+        <Button variant="contained" disableElevation onClick={handleSubmit} disabled={isAiThinking} sx={{ ml: 2, borderRadius: 1.5, textTransform: 'none', fontWeight: 800, bgcolor: THEME.primary, '&:hover': { bgcolor: 'var(--primary-dark)' } }}>{isAiThinking ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : activeIndex === questions.length - 1 ? 'Finish Session' : 'Next Question'}</Button>
       </Box>
 
-      {/* Progress bar */}
-      <Box sx={{ height: 3, bgcolor: 'action.hover' }}>
-        <motion.div
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.4 }}
-          style={{ height: '100%', background: 'linear-gradient(90deg, #2563eb, #0ea5e9)', borderRadius: 2 }}
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <Box sx={{ width: '38%', borderRight: `1px solid ${border}`, bgcolor: 'var(--bg-light)', display: 'flex', flexDirection: 'column', p: 4, gap: 4, overflow: 'auto' }}>
+          <QuestionHero question={currentQuestion} index={activeIndex} total={questions.length} border={border} surface={surface} textColor={textColor} muted={muted} DIFF_META={DIFF_META} />
+          <StarGuideSidebar starCoverage={starFeedback} config={STAR_CONFIG} border={border} muted={muted} textColor={textColor} />
+        </Box>
+
+        <ResponseEditor 
+          transcript={transcript} 
+          isListening={isListening} 
+          activeIndex={activeIndex} 
+          onFullTextChange={handleFullTextChange} 
+          isAiThinking={isAiThinking} 
+          textColor={textColor} 
+          muted={muted} 
+          THEME={THEME} 
+          border={border} 
+          surface={surface} 
+          toggleListening={toggleListening} 
         />
       </Box>
 
-      {/* ── Body ── */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <Box sx={{ mx: 'auto', p: { xs: 2.5, md: 4 }, display: 'flex', flexDirection: 'column', gap: 3 }}>
-
-          {/* ─ Question card ─ */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              initial={{ opacity: 0, y: 20, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Box
-                sx={{
-                  p: { xs: 2.75, md: 3.75 },
-                  borderRadius: 4,
-                  background: isDark
-                    ? 'linear-gradient(135deg, rgba(37,99,235,0.16) 0%, rgba(14,165,233,0.1) 100%)'
-                    : 'linear-gradient(135deg, rgba(37,99,235,0.07) 0%, rgba(14,165,233,0.04) 100%)',
-                  border: `1px solid ${isDark ? 'rgba(37,99,235,0.22)' : 'rgba(37,99,235,0.15)'}`,
-                  boxShadow: isDark ? '0 8px 32px rgba(37,99,235,0.08)' : 'none',
-                }}
-              >
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                  <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(37,99,235,0.1)', mt: 0.5 }}>
-                    {(() => {
-                      const QIcon = ICON_MAP[currentQuestion.icon] || Book;
-                      return <QIcon size={28} color="#2563eb" />;
-                    })()}
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-                      <Box
-                        sx={{
-                          px: 1.5, py: 0.35, borderRadius: 4,
-                          bgcolor: 'rgba(37,99,235,0.12)', fontSize: '0.7rem', fontWeight: 700, color: '#2563eb',
-                        }}
-                      >
-                        {currentQuestion.category}
-                      </Box>
-                      <Box
-                        sx={{
-                          px: 1.5, py: 0.35, borderRadius: 4,
-                          bgcolor: DIFF_META[currentQuestion.difficulty].bg,
-                          fontSize: '0.7rem', fontWeight: 700,
-                          color: DIFF_META[currentQuestion.difficulty].color,
-                        }}
-                      >
-                        {currentQuestion.difficulty}
-                      </Box>
-                    </Box>
-                    <Typography sx={{ fontWeight: 700, fontSize: '1.08rem', lineHeight: 1.65, color: textColor, mb: 2 }}>
-                      {currentQuestion.text}
-                    </Typography>
-                    <Box
-                      sx={{
-                        px: 2, py: 1.25, borderRadius: 2.5,
-                        bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                        border: `1px solid ${border}`,
-                        display: 'flex', alignItems: 'flex-start', gap: 1.25,
-                      }}
-                    >
-                      <Lightbulb size={16} color="#f59e0b" style={{ marginTop: 2, flexShrink: 0 }} />
-                      <Typography sx={{ fontSize: '0.8rem', color: muted, lineHeight: 1.75 }}>{currentQuestion.tip}</Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* ─ STAR guide strip ─ */}
-          <Grid container spacing={1.25}>
-            {(['s', 't', 'a', 'r']).map((key) => {
-              const cfg = STAR_CONFIG[key];
-              const active = starCoverage[key];
-              return (
-                <Grid item xs={6} md={3} key={key}>
-                  <motion.div animate={{ scale: active ? 1.02 : 1 }} transition={{ duration: 0.18 }}>
-                    <Box
-                      sx={{
-                        p: 1.75,
-                        borderRadius: 3,
-                        border: `1.5px solid ${active ? cfg.color : border}`,
-                        bgcolor: active ? cfg.bg : surface,
-                        transition: 'all 0.3s',
-                        boxShadow: active ? `0 4px 16px ${cfg.color}18` : 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1.25,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: '50%',
-                          background: active ? cfg.color : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                          color: active ? '#fff' : muted,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.65rem',
-                          fontWeight: 900,
-                          flexShrink: 0,
-                          transition: 'all 0.3s',
-                          boxShadow: active ? `0 3px 10px ${cfg.color}55` : 'none',
-                        }}
-                      >
-                        {active ? <CheckRoundedIcon sx={{ fontSize: 13 }} /> : key.toUpperCase()}
-                      </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: active ? cfg.color : textColor, lineHeight: 1.2 }}>
-                          {cfg.label}
-                        </Typography>
-                        <Typography sx={{ fontSize: '0.62rem', color: muted }} noWrap>{cfg.desc}</Typography>
-                      </Box>
-                    </Box>
-                  </motion.div>
-                </Grid>
-              );
-            })}
-          </Grid>
-
-          {/* ─ Answer textarea ─ */}
-          <Box
-            sx={{
-              borderRadius: 4,
-              bgcolor: surface,
-              border: '1px solid',
-              borderColor: 'divider',
-              overflow: 'hidden',
-              boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)',
-            }}
-          >
-            <Box
-              sx={{
-                px: 3, py: 2,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-                display: 'flex', alignItems: 'center', gap: 1.5,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-                <Mic size={16} color="#2563eb" />
-                <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: textColor }}>Your Answer</Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {isListening && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 16,
-                      padding: '8px 16px',
-                      borderRadius: 12,
-                      background: isDark ? '#1e293b' : '#f1f5f9',
-                      border: `1px solid ${border}`,
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                      marginRight: 8
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Box 
-                        sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          borderRadius: '50%', 
-                          bgcolor: '#ef4444', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          color: '#fff',
-                          boxShadow: '0 0 12px rgba(239,68,68,0.4)',
-                          animation: 'pulse-red 2s infinite'
-                        }}
-                      >
-                        <Mic size={16} />
-                      </Box>
-                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: textColor }}>
-                        Recording...
-                      </Typography>
-                    </Box>
-
-                    <Typography sx={{ fontSize: '0.82rem', color: muted, fontVariantNumeric: 'tabular-nums', minWidth: 40 }}>
-                      {formatTime(elapsed % 3600)}
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <IconButton 
-                        onClick={stop} 
-                        size="small" 
-                        sx={{ 
-                          width: 28, height: 28, 
-                          bgcolor: '#ef4444', color: '#fff',
-                          borderRadius: 1.5,
-                          '&:hover': { bgcolor: '#dc2626' }
-                        }}
-                      >
-                        <Box sx={{ width: 10, height: 10, bgcolor: '#fff', borderRadius: 0.5 }} />
-                      </IconButton>
-                      <IconButton 
-                        onClick={stop} 
-                        size="small" 
-                        sx={{ color: muted }}
-                      >
-                        <X size={18} />
-                      </IconButton>
-                    </Box>
-                  </motion.div>
-                )}
-
-                {isSupported && (
-                  <Tooltip title={isListening ? "Stop Recording" : "Value Voice Input"}>
-                    <IconButton
-                      onClick={toggleListening}
-                      size="small"
-                      sx={{
-                        width: 42,
-                        height: 42,
-                        bgcolor: isListening ? '#ef4444' : alpha('#2563eb', 0.06),
-                        color: isListening ? '#fff' : '#2563eb',
-                        border: isListening ? 'none' : `1px solid ${alpha('#2563eb', 0.1)}`,
-                        boxShadow: isListening 
-                          ? '0 4px 12px rgba(239,68,68,0.35)' 
-                          : `0 0 0 4px ${alpha('#2563eb', 0.03)}`,
-                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                        '&:hover': { 
-                          bgcolor: isListening ? '#dc2626' : alpha('#2563eb', 0.1),
-                          transform: 'scale(1.05)'
-                        }
-                      }}
-                    >
-                      <Mic size={20} />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                {userAnswer && (
-                  <Tooltip title="Clear Answer">
-                    <IconButton 
-                      onClick={() => { setUserAnswer(''); stop(); }} 
-                      size="small" 
-                      sx={{ color: muted, '&:hover': { color: '#ef4444', bgcolor: alpha('#ef4444', 0.08) } }}
-                    >
-                      <ReplayRoundedIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </Box>
-            </Box>
-
-            <textarea
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && e.ctrlKey) handleSubmit(); }}
-              disabled={isAiThinking}
-              placeholder={`Start with the Situation...\n\n"While working on [project] at [company], we were facing [challenge]..."`}
-              rows={7}
-              style={{
-                width: '100%',
-                border: 'none',
-                outline: 'none',
-                resize: 'none',
-                padding: '20px 24px',
-                fontFamily: 'inherit',
-                fontSize: '0.95rem',
-                lineHeight: 1.85,
-                background: 'transparent',
-                color: 'text.primary',
-                boxSizing: 'border-box',
-              }}
-            />
-
-            <Box
-              sx={{
-                px: 3,
-                py: 1.75,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderTop: `1px solid ${border}`,
-                bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-                flexWrap: 'wrap',
-                gap: 1.5,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: userAnswer.length < 80 ? '#f59e0b' : muted }}>
-                  {userAnswer.length} chars
-                </Typography>
-                <Typography sx={{ fontSize: '0.72rem', color: muted }}>Ctrl+Enter to submit</Typography>
-              </Box>
-
-              <Box
-                onClick={!isAiThinking && userAnswer.trim().length >= 30 ? handleSubmit : undefined}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 1,
-                  px: 3, py: 1,
-                  borderRadius: 2.5,
-                  background: !isAiThinking && userAnswer.trim().length >= 30
-                    ? 'linear-gradient(135deg, #2563eb, #0ea5e9)'
-                    : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                  color: !isAiThinking && userAnswer.trim().length >= 30 ? '#fff' : muted,
-                  cursor: !isAiThinking && userAnswer.trim().length >= 30 ? 'pointer' : 'default',
-                  fontWeight: 700, fontSize: '0.85rem',
-                  transition: 'all 0.2s',
-                  boxShadow: !isAiThinking && userAnswer.trim().length >= 30 ? '0 4px 16px rgba(37,99,235,0.35)' : 'none',
-                  '&:hover': !isAiThinking && userAnswer.trim().length >= 30 ? { transform: 'translateY(-1px)' } : {},
-                }}
-              >
-                {isAiThinking ? (
-                  <>
-                    <Box
-                      sx={{
-                        width: 14, height: 14, borderRadius: '50%',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderTopColor: isDark ? '#fff' : '#555',
-                        animation: 'spin 0.8s linear infinite',
-                      }}
-                    />
-                    Evaluating…
-                  </>
-                ) : activeIndex === QUESTIONS.length - 1 ? (
-                  <>
-                    <CheckCircle2 size={18} />
-                    Finish Session
-                  </>
-                ) : (
-                  <>
-                    <ChevronRight size={18} />
-                    Next Question
-                  </>
-                )}
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Encouragement toast */}
       <AnimatePresence>
         {showEncouragement && (
-          <motion.div
-            initial={{ opacity: 0, y: 32, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-            style={{
-              position: 'fixed',
-              bottom: 32,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 2000,
-            }}
-          >
-            <Box
-              sx={{
-                px: 3,
-                py: 1.5,
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '0.88rem',
-                boxShadow: '0 8px 32px rgba(16,185,129,0.45)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.25,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <Sparkles size={18} fill="#fff" />
-              All 4 STAR components detected — great answer structure!
-            </Box>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8 }} style={{ position: 'fixed', bottom: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
+            <Box sx={{ px: 4, py: 2, borderRadius: 2, bgcolor: 'var(--success)', color: '#fff', display: 'flex', alignItems: 'center', gap: 2, boxShadow: '0 10px 40px rgba(16,185,129,0.3)' }}><Sparkles size={22} fill="currentColor" /><Typography sx={{ fontWeight: 900, fontSize: '0.95rem' }}>Perfect STAR Match Detected!</Typography></Box>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse-red {
-          0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
-          70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
-          100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
-        }
-      `}} />
     </PageContainer>
   );
 }

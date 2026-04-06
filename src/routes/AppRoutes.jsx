@@ -10,6 +10,7 @@ import Home from '../pages/dashboard/Home';
 import InterviewPractice from '../pages/dashboard/InterviewPractice';
 import InterviewQnAGenerator from '../pages/dashboard/InterviewQnAGenerator';
 import MockInterviewSession from '../pages/dashboard/MockInterviewSession';
+import InterviewSessionDetail from '../pages/dashboard/InterviewSessionDetail';
 import CompanyBriefing from '../pages/dashboard/CompanyBriefing';
 import StarCoach from '../pages/dashboard/StarCoach';
 import OfferNegotiation from '../pages/dashboard/OfferNegotiation';
@@ -74,6 +75,7 @@ export default function AppRoutes() {
             <Route path="/interview-practice" element={<InterviewPractice />} />
             <Route path="/interview-practice/:interviewId/questions" element={<InterviewQnAGenerator />} />
             <Route path="/interview-practice/:interviewId/session" element={<MockInterviewSession />} />
+            <Route path="/interview-practice/:interviewId/session/:sessionId" element={<InterviewSessionDetail />} />
             <Route path="/interview-practice/:interviewId/briefing" element={<CompanyBriefing />} />
             <Route path="/interview-practice/:interviewId/star-coach" element={<StarCoach />} />
             <Route path="/interview-practice/:interviewId/negotiation" element={<OfferNegotiation />} />
