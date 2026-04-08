@@ -35,3 +35,7 @@ export const getAdminSubmissionLogsAPI = (params = {}) =>
 
 export const getAdminSubmissionLogDetailAPI = (id) =>
   axiosClient.get(`/admin/learning/submission-logs/${id}`);
+
+/** Aggregated AI token usage (admin). Backend: GET /admin/token-usage */
+export const getAdminTokenUsageAPI = (params = {}) =>
+  axiosClient.get('/admin/token-usage', { params });

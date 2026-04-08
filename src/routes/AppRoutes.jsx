@@ -37,6 +37,7 @@ import AdminCompaniesViewed from '../pages/admin/AdminCompaniesViewed';
 import AdminCareerPages from '../pages/admin/AdminCareerPages';
 import AdminLearning from '../pages/admin/AdminLearning';
 import AdminIssues from '../pages/admin/AdminIssues';
+import AdminTokenUsage from '../pages/admin/AdminTokenUsage';
 import PrivacyPolicy from '../pages/legal/PrivacyPolicy';
 import ReportIssuePage from '../pages/report-issue/ReportIssuePage';
 import JobRecommendationPage from '../pages/job-recommendation/JobRecommendationPage';
@@ -65,6 +66,7 @@ export default function AppRoutes() {
               <Route path="career-pages" element={<AdminCareerPages />} />
               <Route path="learning" element={<AdminLearning />} />
               <Route path="issues" element={<AdminIssues />} />
+              <Route path="token-usage" element={<AdminTokenUsage />} />
             </Route>
           </Route>
           <Route element={<DashboardLayout />}>

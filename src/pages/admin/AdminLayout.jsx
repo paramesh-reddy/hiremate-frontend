@@ -14,6 +14,7 @@ import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
 import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded';
 import BugReportRoundedIcon from '@mui/icons-material/BugReportRounded';
 import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettingsRounded';
+import DataUsageRoundedIcon from '@mui/icons-material/DataUsageRounded';
 import Navbar from '../../components/common/Navbar';
 
 const ADMIN_NAV = [
@@ -23,6 +24,7 @@ const ADMIN_NAV = [
   { label: 'Career Page Links', path: '/admin/career-pages', icon: LinkRoundedIcon },
   { label: 'Learning', path: '/admin/learning', icon: SchoolRoundedIcon },
   { label: 'Issues', path: '/admin/issues', icon: BugReportRoundedIcon },
+  { label: 'Token Usage', path: '/admin/token-usage', icon: DataUsageRoundedIcon },
 ];
 
 export default function AdminLayout() {

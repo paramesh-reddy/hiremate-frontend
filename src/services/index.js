@@ -41,6 +41,7 @@ export {
   getAdminExtensionErrorsAPI,
   getAdminSubmissionLogsAPI,
   getAdminSubmissionLogDetailAPI,
+  getAdminTokenUsageAPI,
 } from './adminService';
 
 export {

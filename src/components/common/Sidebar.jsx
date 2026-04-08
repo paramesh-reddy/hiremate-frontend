@@ -28,6 +28,7 @@ import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownR
 import ExtensionRoundedIcon from '@mui/icons-material/ExtensionRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 import RecommendRoundedIcon from '@mui/icons-material/RecommendRounded';
+import DataUsageRoundedIcon from '@mui/icons-material/DataUsageRounded';
 import { logout } from '../../store/auth/authSlice';
 import { toggleTheme } from '../../store/theme/themeSlice';
 import { getProfileCompletion } from '../../pages/profile/utils/profileCompletion';
@@ -49,6 +50,12 @@ const ACCOUNT_NAV = [
 
 const ADMIN_NAV = { label: 'Admin', path: '/admin', icon: AdminPanelSettingsRoundedIcon };
 
+const TOKEN_USAGE_NAV = {
+  label: 'Token Usage',
+  path: '/admin/token-usage',
+  icon: DataUsageRoundedIcon,
+};
+
 const USER_MENU = [
   { label: 'Profile', path: '/profile', icon: AccountCircleRoundedIcon },
   { label: 'Subscription & Billing', path: '/pricing', icon: CreditCardRoundedIcon },
@@ -66,6 +73,7 @@ const ICON_COLORS = {
   '/profile': '#f59e0b',
   '/settings': '#64748b',
   '/admin': '#ef4444',
+  '/admin/token-usage': '#0d9488',
 };
 
 function SectionLabel({ children }) {
@@ -268,7 +276,12 @@ export default function Sidebar() {
             incomplete={item.path === '/profile' ? profileIncomplete : undefined}
           />
         ))}
-        {isAdmin && <NavItem {...ADMIN_NAV} location={location} />}
+        {isAdmin && (
+          <>
+            <NavItem {...ADMIN_NAV} location={location} />
+            <NavItem {...TOKEN_USAGE_NAV} location={location} />
+          </>
+        )}
 
         {/* Report an Issue */}
         {(() => {
@@ -709,7 +722,14 @@ export default function Sidebar() {
           </Box>
         </Box>
 
-        {USER_MENU.map(({ label, path, icon: Icon }) => (
+        {(isAdmin
+          ? [
+              ...USER_MENU.slice(0, 3),
+              { label: 'Token Usage', path: '/admin/token-usage', icon: DataUsageRoundedIcon },
+              USER_MENU[3],
+            ]
+          : USER_MENU
+        ).map(({ label, path, icon: Icon }) => (
           <MenuItem
             key={path}
             onClick={() => { setUserMenuAnchor(null); navigate(path); }}
