@@ -31,6 +31,7 @@ import { useResumeGeneratorParams } from '../../hooks/useResumeGeneratorParams';
 import EditorPanel from './components/EditorPanel';
 import PreviewPanel from './components/PreviewPanel';
 import PageBreadcrumb from '../../components/common/PageBreadcrumb';
+import { RESUME_STUDIO_THEME as THEME } from '../../utilities/resumeStudioTheme';
 
 const BACKEND_ORIGIN = BASE_URL.replace(/\/api\/?$/, '');
 
@@ -53,8 +54,6 @@ const computeDefaultResumeName = (profile) => {
   const years = computeTotalExpYears(profile.experiences || []);
   return years > 0 ? `${firstName}_${years}Years` : firstName;
 };
-const HERO_GRADIENT = 'linear-gradient(90deg, rgba(51, 94, 222, 1) 0%, rgba(39, 39, 125, 1) 35%, rgba(54, 94, 214, 1) 100%)';
-
 const AVATAR_COLORS = [
   ['#dbeafe', '#2563eb'],
   ['#ede9fe', '#7c3aed'],
@@ -773,9 +772,8 @@ export default function ResumeGenerator() {
   const handleGenerateNew = () => navigate('/resume-generator');
 
   const tailorSelectView = (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc', fontFamily: 'var(--font-family)', display: 'flex', flexDirection: 'column' }}>
-      {/* Top bar */}
-      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid var(--divider)', px: 3, py: 1.5, flexShrink: 0 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: THEME.pageBg, fontFamily: 'var(--font-family)', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ bgcolor: THEME.surface, borderBottom: `1px solid ${THEME.border}`, px: { xs: 2, sm: 3, md: 4, lg: 5 }, py: 1.5, flexShrink: 0 }}>
         <PageBreadcrumb
           sx={{ mb: 0 }}
           items={[
@@ -785,154 +783,312 @@ export default function ResumeGenerator() {
         />
       </Box>
 
-      <Box sx={{ flex: 1, maxWidth: 860, width: '100%', mx: 'auto', px: 3, pt: 5, pb: 10 }}>
-        {/* JD banner */}
-        <Box sx={{ mb: 4, p: 2.5, bgcolor: 'rgba(37,99,235,0.05)', border: '1.5px solid rgba(37,99,235,0.15)', borderRadius: '14px' }}>
+      <Box sx={{ flex: 1, maxWidth: 860, width: '100%', mx: 'auto', px: { xs: 2, sm: 3, md: 4, lg: 5 }, pt: { xs: 3, sm: 4 }, pb: 10 }}>
+        <Box
+          sx={{
+            mb: 3,
+            p: 2.5,
+            bgcolor: THEME.primarySoft,
+            border: `1px solid rgba(51, 94, 222, 0.2)`,
+            borderRadius: 2,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-            <AutoAwesomeRoundedIcon sx={{ fontSize: 17, color: 'var(--primary)' }} />
+            <AutoAwesomeRoundedIcon sx={{ fontSize: 17, color: THEME.primary }} />
             <Chip
               label="Job from Chrome Extension"
               size="small"
-              sx={{ height: 20, bgcolor: 'rgba(37,99,235,0.1)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.65rem', fontFamily: 'var(--font-family)', '& .MuiChip-label': { px: 1 } }}
+              sx={{
+                height: 20,
+                bgcolor: THEME.primarySoft,
+                color: THEME.primary,
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                fontFamily: 'var(--font-family)',
+                '& .MuiChip-label': { px: 1 },
+              }}
             />
           </Box>
           {jobRole && (
-            <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1rem', color: '#0f172a', mb: 0.5 }}>
+            <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1rem', color: THEME.textPrimary, mb: 0.5 }}>
               {jobRole}
             </Typography>
           )}
-          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.5 }}>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8125rem', color: THEME.textSecondary, lineHeight: 1.5 }}>
             {jobDescription.length > 220 ? `${jobDescription.slice(0, 220)}…` : jobDescription}
           </Typography>
         </Box>
 
-        {/* Page header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontFamily: 'var(--font-family)', fontWeight: 800, fontSize: { xs: '1.5rem', sm: '1.875rem' }, color: '#0f172a', letterSpacing: '-0.02em', mb: 0.75 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            sx={{
+              fontFamily: 'var(--font-family)',
+              fontWeight: 800,
+              fontSize: { xs: '1.5rem', sm: '1.75rem' },
+              color: THEME.textPrimary,
+              mb: 0.5,
+            }}
+          >
             Create a tailored resume
           </Typography>
-          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '1rem', color: '#64748b' }}>
-            Choose how to start — we'll tailor it to the job description above.
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.95rem', color: THEME.textSecondary }}>
+            Choose how to start — we&apos;ll tailor it to the job description above.
           </Typography>
         </Box>
 
-        {/* Option 1 — Start from profile */}
         <Box
           onClick={handleTailorFromProfile}
           sx={{
-            display: 'flex', alignItems: 'center', gap: 3, p: 3, mb: 2.5,
-            bgcolor: 'white', border: '1.5px solid #e5e7eb', borderRadius: '16px',
-            cursor: 'pointer', transition: 'all 0.18s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+            p: 2.5,
+            mb: 2.5,
+            bgcolor: THEME.surface,
+            border: `1px solid ${THEME.border}`,
+            borderRadius: 2,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s, border-color 0.2s',
             '&:hover': {
-              borderColor: 'var(--primary)', boxShadow: '0 0 0 4px rgba(37,99,235,0.06)',
-              '& .ts-profile-arrow': { transform: 'translateX(4px)', color: 'var(--primary)' },
-              '& .ts-profile-icon': { bgcolor: 'rgba(37,99,235,0.1)' },
+              borderColor: 'rgba(51, 94, 222, 0.35)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              '& .ts-profile-arrow': { transform: 'translateX(4px)', color: THEME.primary },
+              '& .ts-profile-icon': { bgcolor: THEME.primarySoft },
             },
           }}
         >
-          <Box className="ts-profile-icon" sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: 'rgba(37,99,235,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.18s' }}>
-            <PersonOutlineRoundedIcon sx={{ fontSize: 26, color: 'var(--primary)' }} />
+          <Box
+            className="ts-profile-icon"
+            sx={{
+              width: 52,
+              height: 52,
+              borderRadius: 2,
+              bgcolor: THEME.primarySoft,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'background 0.2s',
+            }}
+          >
+            <PersonOutlineRoundedIcon sx={{ fontSize: 26, color: THEME.primary }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.375 }}>
-              <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.375, flexWrap: 'wrap' }}>
+              <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.98rem', color: THEME.textPrimary }}>
                 Start from my profile
               </Typography>
-              <Chip label="Recommended" size="small" sx={{ height: 20, bgcolor: 'rgba(37,99,235,0.08)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.65rem', fontFamily: 'var(--font-family)', '& .MuiChip-label': { px: 1 } }} />
+              <Chip
+                label="Recommended"
+                size="small"
+                sx={{
+                  height: 20,
+                  bgcolor: THEME.primarySoft,
+                  color: THEME.primary,
+                  fontWeight: 700,
+                  fontSize: '0.65rem',
+                  fontFamily: 'var(--font-family)',
+                  '& .MuiChip-label': { px: 1 },
+                }}
+              />
             </Box>
-            <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5 }}>
+            <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.875rem', color: THEME.textSecondary, lineHeight: 1.5 }}>
               Generate a fresh resume from your profile, tailored to this job.
             </Typography>
           </Box>
-          <ChevronRightRoundedIcon className="ts-profile-arrow" sx={{ fontSize: 22, color: '#9ca3af', flexShrink: 0, transition: 'all 0.18s' }} />
+          <ChevronRightRoundedIcon className="ts-profile-arrow" sx={{ fontSize: 22, color: THEME.textSecondary, flexShrink: 0, transition: 'all 0.18s', opacity: 0.85 }} />
         </Box>
 
-        {/* Divider */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2.5 }}>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: '#e5e7eb' }} />
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', fontFamily: 'var(--font-family)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: THEME.border }} />
+          <Typography
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: THEME.textSecondary,
+              fontFamily: 'var(--font-family)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+            }}
+          >
             or tailor from existing
           </Typography>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: '#e5e7eb' }} />
+          <Box sx={{ flex: 1, height: '1px', bgcolor: THEME.border }} />
         </Box>
 
-        {/* Option 2 — Existing resumes */}
-        <Box sx={{ bgcolor: 'white', border: '1.5px solid #e5e7eb', borderRadius: '16px', overflow: 'hidden' }}>
-          <Box sx={{ px: 3, pt: 2.5, pb: 2, borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box
+          sx={{
+            bgcolor: THEME.surface,
+            border: `1px solid ${THEME.border}`,
+            borderRadius: 2,
+            overflow: 'hidden',
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+          }}
+        >
+          <Box
+            sx={{
+              px: { xs: 2, sm: 2.5 },
+              pt: 2.5,
+              pb: 2,
+              borderBottom: `1px solid ${THEME.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ width: 32, height: 32, borderRadius: '8px', bgcolor: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <DescriptionOutlinedIcon sx={{ fontSize: 17, color: '#7c3aed' }} />
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 1,
+                  bgcolor: THEME.primarySoft,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <DescriptionOutlinedIcon sx={{ fontSize: 17, color: THEME.primary }} />
               </Box>
               <Box>
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.9375rem', color: '#0f172a', lineHeight: 1.2 }}>
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.9375rem', color: THEME.textPrimary, lineHeight: 1.2 }}>
                   Tailor an existing resume
                 </Typography>
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.2 }}>
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.78rem', color: THEME.textSecondary, lineHeight: 1.2 }}>
                   Select a base resume to retailor for this job
                 </Typography>
               </Box>
             </Box>
             {resumes.length > 0 && (
-              <Chip label={`${resumes.length} resume${resumes.length !== 1 ? 's' : ''}`} size="small" sx={{ height: 22, bgcolor: '#f1f5f9', color: '#64748b', fontWeight: 600, fontSize: '0.72rem', fontFamily: 'var(--font-family)' }} />
+              <Chip
+                label={`${resumes.length} resume${resumes.length !== 1 ? 's' : ''}`}
+                size="small"
+                sx={{
+                  height: 22,
+                  bgcolor: '#f1f5f9',
+                  color: THEME.textSecondary,
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                  fontFamily: 'var(--font-family)',
+                }}
+              />
             )}
           </Box>
 
-          {/* Search */}
-          <Box sx={{ px: 3, py: 1.75, borderBottom: '1px solid #f8fafc' }}>
+          <Box sx={{ px: { xs: 2, sm: 2.5 }, py: 1.25, borderBottom: `1px solid ${THEME.border}`, bgcolor: THEME.surface }}>
             <TextField
               fullWidth
               size="small"
               placeholder="Search by name…"
               value={tailorSelectSearch}
               onChange={(e) => setTailorSelectSearch(e.target.value)}
+              hiddenLabel
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchRoundedIcon sx={{ fontSize: 17, color: '#94a3b8' }} />
+                    <SearchRoundedIcon sx={{ fontSize: 18, color: THEME.textSecondary }} />
                   </InputAdornment>
                 ),
-                sx: { fontFamily: 'var(--font-family)', fontSize: '0.875rem', borderRadius: '10px', bgcolor: '#f8fafc', '& fieldset': { borderColor: '#e5e7eb' }, '&:hover fieldset': { borderColor: '#cbd5e1' }, '&.Mui-focused fieldset': { borderColor: 'var(--primary)' } },
+                sx: {
+                  height: 36,
+                  fontFamily: 'var(--font-family)',
+                  fontSize: '0.8125rem',
+                  borderRadius: 1,
+                  bgcolor: THEME.surface,
+                  pl: 0.5,
+                },
+              }}
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: THEME.mutedBorder },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(51, 94, 222, 0.35)' },
+                '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderWidth: 1, borderColor: THEME.primary },
               }}
             />
           </Box>
 
-          {/* Resume list */}
           <Box sx={{ maxHeight: 380, overflowY: 'auto' }}>
             {resumes.length === 0 ? (
               <Box sx={{ py: 6, textAlign: 'center' }}>
-                <AutoAwesomeRoundedIcon sx={{ fontSize: 32, color: '#d1d5db', mb: 1 }} />
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9rem', color: '#94a3b8', fontWeight: 500 }}>
+                <AutoAwesomeRoundedIcon sx={{ fontSize: 32, color: THEME.border, mb: 1 }} />
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9rem', color: THEME.textSecondary, fontWeight: 500 }}>
                   No generated resumes yet
                 </Typography>
-                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8rem', color: '#cbd5e1', mt: 0.5 }}>
-                  Use "Start from my profile" above to create one
+                <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.8rem', color: THEME.textSecondary, mt: 0.5, opacity: 0.85 }}>
+                  Use &quot;Start from my profile&quot; above to create one
                 </Typography>
               </Box>
             ) : (
               resumes
                 .filter((r) => (r.resume_name || '').toLowerCase().includes(tailorSelectSearch.toLowerCase()))
-                .map((r, idx) => {
+                .map((r, idx, arr) => {
                   const [bgColor, textColor] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
                   const initials = getResumeInitials(r.resume_name);
                   return (
                     <Box
                       key={r.id}
-                      sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1.75, borderBottom: idx < resumes.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.12s', '&:hover': { bgcolor: '#f8fafc' } }}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        px: { xs: 2, sm: 2.5 },
+                        py: 1.75,
+                        borderBottom: idx < arr.length - 1 ? `1px solid ${THEME.border}` : 'none',
+                        transition: 'background-color 0.15s ease',
+                        '&:hover': { bgcolor: 'rgba(248, 250, 252, 0.85)' },
+                      }}
                     >
-                      <Avatar sx={{ width: 38, height: 38, borderRadius: '10px', bgcolor: bgColor, color: textColor, fontSize: '0.8rem', fontWeight: 700, fontFamily: 'var(--font-family)', flexShrink: 0 }}>
+                      <Avatar
+                        sx={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: '10px',
+                          bgcolor: bgColor,
+                          color: textColor,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-family)',
+                          flexShrink: 0,
+                        }}
+                      >
                         {initials}
                       </Avatar>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography noWrap sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.875rem', color: '#0f172a', lineHeight: 1.3 }}>
+                        <Typography noWrap sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.8125rem', color: THEME.textPrimary, lineHeight: 1.3 }}>
                           {r.resume_name}
                         </Typography>
-                        <Chip label="Generated" size="small" sx={{ height: 17, bgcolor: '#ecfdf5', color: '#059669', fontWeight: 700, fontSize: '0.6rem', fontFamily: 'var(--font-family)', '& .MuiChip-label': { px: 0.75 } }} />
+                        <Chip
+                          label="Generated"
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: '0.65rem',
+                            fontWeight: 600,
+                            bgcolor: THEME.primarySoft,
+                            color: THEME.primary,
+                            fontFamily: 'var(--font-family)',
+                            '& .MuiChip-label': { px: 0.75 },
+                          }}
+                        />
                       </Box>
                       <Button
                         size="small"
                         variant="contained"
+                        disableElevation
                         onClick={() => handleTailorFromExistingResume(r)}
-                        sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', fontSize: '0.8125rem', fontWeight: 600, bgcolor: '#0f172a', color: 'white', borderRadius: '8px', px: 1.75, py: 0.625, boxShadow: 'none', '&:hover': { bgcolor: '#1e293b', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' } }}
+                        sx={{
+                          height: 36,
+                          minHeight: 36,
+                          textTransform: 'none',
+                          fontFamily: 'var(--font-family)',
+                          fontSize: '0.8125rem',
+                          fontWeight: 600,
+                          bgcolor: THEME.primary,
+                          borderRadius: 1,
+                          px: 1.75,
+                          '&:hover': { bgcolor: THEME.primaryDark, boxShadow: 'none' },
+                        }}
                       >
                         Tailor this →
                       </Button>
@@ -947,42 +1103,73 @@ export default function ResumeGenerator() {
   );
 
   const generatingView = (
-    <Box sx={{ minHeight: '100%', background: 'var(--bg-app)', overflowX: 'hidden', fontFamily: 'var(--font-family)' }}>
-      <Box sx={{ background: HERO_GRADIENT, color: 'white', py: 3.5, px: { xs: 2.5, sm: 4 } }}>
-        <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-            <Chip label="Welcome back, gurusai!" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 'var(--label-font-weight)' }} />
-          </Box>
-          <Typography variant="h4" sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, textAlign: 'center', fontSize: { xs: 'var(--font-size-section-header)', sm: 'var(--font-size-page-title)' }, mb: 1 }}>
-            Land Your Dream Job
-          </Typography>
-          <Typography sx={{ fontFamily: 'var(--font-family)', textAlign: 'center', fontSize: 'var(--font-size-page-subtitle)', opacity: 0.95, mb: 2 }}>
-            with an AI-tailored resume
-          </Typography>
-        </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: THEME.pageBg, overflowX: 'hidden', fontFamily: 'var(--font-family)', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ bgcolor: THEME.surface, borderBottom: `1px solid ${THEME.border}`, px: { xs: 2, sm: 3, md: 4, lg: 5 }, py: 1.5, flexShrink: 0 }}>
+        <PageBreadcrumb
+          sx={{ mb: 0 }}
+          items={[
+            { label: 'AI Resume Studio', to: '/ai-resume-studio', showBackIcon: true },
+            { label: 'Generating resume' },
+          ]}
+        />
       </Box>
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 8 }}>
-        <Box sx={{ width: 72, height: 72, borderRadius: '50%', bgcolor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-          <AutoAwesomeRoundedIcon sx={{ color: 'white', fontSize: 40 }} />
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', px: 3, py: 8 }}>
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: 420,
+            bgcolor: THEME.surface,
+            border: `1px solid ${THEME.border}`,
+            borderRadius: 2,
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+            p: { xs: 3, sm: 4 },
+            textAlign: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: 2,
+              bgcolor: THEME.primarySoft,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <AutoAwesomeRoundedIcon sx={{ color: THEME.primary, fontSize: 32 }} />
+          </Box>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 800, fontSize: { xs: '1.25rem', sm: '1.35rem' }, color: THEME.textPrimary, mb: 0.75 }}>
+            Creating your resume{jobRole ? ` for ${jobRole}` : ''}
+          </Typography>
+          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.9rem', color: THEME.textSecondary, mb: 3, lineHeight: 1.5 }}>
+            Tailoring content and skills to match the job description.
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={Math.min(progress, 100)}
+            sx={{
+              width: '100%',
+              height: 8,
+              borderRadius: 1,
+              bgcolor: 'rgba(15, 23, 42, 0.06)',
+              '& .MuiLinearProgress-bar': { borderRadius: 1, bgcolor: THEME.primary },
+            }}
+          />
+          <Typography variant="caption" sx={{ fontFamily: 'var(--font-family)', color: THEME.textSecondary, mt: 1.5, display: 'block' }}>
+            {Math.round(Math.min(progress, 100))}% complete
+          </Typography>
         </Box>
-        <Typography variant="h5" sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, color: 'var(--text-primary)', mb: 0.5 }}>
-          Creating Your Perfect Resume{jobRole ? ` for ${jobRole}` : ''}
-        </Typography>
-        <Typography variant="body2" color="var(--text-muted)" sx={{ fontFamily: 'var(--font-family)', mb: 2 }}>
-          Tailoring content and skills to match the job description...
-        </Typography>
-        <LinearProgress variant="determinate" value={Math.min(progress, 100)} sx={{ width: '100%', maxWidth: 320, height: 8, borderRadius: 4, bgcolor: 'var(--bg-light)', '& .MuiLinearProgress-bar': { borderRadius: 4 } }} />
-        <Typography variant="caption" color="var(--text-muted)" sx={{ fontFamily: 'var(--font-family)', mt: 1 }}>
-          {Math.round(Math.min(progress, 100))}% complete
-        </Typography>
       </Box>
     </Box>
   );
 
   const previewView = (
     <>
-      <Box sx={{ minHeight: '100%', background: '#FFFFFF', overflowX: 'hidden', fontFamily: 'var(--font-family)' }}>
-        <Box data-resume-preview-container sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, height: { md: '100vh' }, overflow: 'hidden' }}>
+      <Box sx={{ minHeight: '100%', bgcolor: THEME.pageBg, overflowX: 'hidden', fontFamily: 'var(--font-family)' }}>
+        <Box data-resume-preview-container sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, height: { md: '100vh' }, overflow: 'hidden', bgcolor: THEME.pageBg }}>
           <Box sx={{ width: { xs: '100%', md: `${leftPanelWidth}%` }, minWidth: { md: 280 }, height: { md: '100vh' }, display: 'flex', flexDirection: 'column' }}>
             <EditorPanel
               activeTab={activeTab}
@@ -1030,7 +1217,7 @@ export default function ResumeGenerator() {
               flexShrink: 0,
               position: 'relative',
               bgcolor: 'transparent',
-              '&:hover': { bgcolor: 'rgba(51, 94, 222, 0.08)' },
+              '&:hover': { bgcolor: 'rgba(51, 94, 222, 0.1)' },
             }}
             aria-label="Resize panels"
           />

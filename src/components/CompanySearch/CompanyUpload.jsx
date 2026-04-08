@@ -9,6 +9,7 @@ import {
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { parseFile } from '../../services/companySearchService';
+import { RESUME_STUDIO_THEME as THEME } from '../../utilities/resumeStudioTheme';
 
 export default function CompanyUpload({ companies = [], onCompaniesChange }) {
   const inputRef = useRef(null);
@@ -54,16 +55,16 @@ export default function CompanyUpload({ companies = [], onCompaniesChange }) {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         sx={{
-          border: `2px dashed ${dragging ? '#4f46e5' : 'var(--border-color)'}`,
+          border: `2px dashed ${dragging ? THEME.primary : THEME.border}`,
           borderRadius: 2,
           p: 4,
           textAlign: 'center',
           cursor: 'pointer',
           transition: 'border-color 0.2s, background 0.2s',
-          bgcolor: dragging ? 'rgba(79,70,229,0.04)' : 'transparent',
+          bgcolor: dragging ? THEME.primarySoft : 'transparent',
           '&:hover': {
-            borderColor: '#4f46e5',
-            bgcolor: 'rgba(79,70,229,0.03)',
+            borderColor: THEME.primary,
+            bgcolor: THEME.primarySoft,
           },
         }}
       >
@@ -74,19 +75,17 @@ export default function CompanyUpload({ companies = [], onCompaniesChange }) {
           style={{ display: 'none' }}
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
-        <UploadFileRoundedIcon sx={{ fontSize: 40, color: '#4f46e5', mb: 1 }} />
-        <Typography
-          sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, color: 'var(--text-primary)', mb: 0.5 }}
-        >
+        <UploadFileRoundedIcon sx={{ fontSize: 40, color: THEME.primary, mb: 1 }} />
+        <Typography sx={{ fontWeight: 600, color: THEME.textPrimary, mb: 0.5 }}>
           Drop your company list here
         </Typography>
-        <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontFamily: 'var(--font-family)' }}>
+        <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary }}>
           PDF or DOCX — we'll extract all company names automatically
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mt: 2, fontFamily: 'var(--font-family)' }}>
+        <Alert severity="error" sx={{ mt: 2 }}>
           {error}
         </Alert>
       )}
@@ -101,9 +100,7 @@ export default function CompanyUpload({ companies = [], onCompaniesChange }) {
 
       {!loading && companies.length > 0 && (
         <Box sx={{ mt: 2 }}>
-          <Typography
-            sx={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-family)', mb: 1 }}
-          >
+          <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary, mb: 1 }}>
             {companies.length} companies found — click × to remove any
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
@@ -115,12 +112,12 @@ export default function CompanyUpload({ companies = [], onCompaniesChange }) {
                 onDelete={() => removeCompany(idx)}
                 deleteIcon={<CloseRoundedIcon sx={{ fontSize: '14px !important' }} />}
                 sx={{
-                  fontFamily: 'var(--font-family)',
                   fontSize: '0.8125rem',
-                  bgcolor: 'rgba(79,70,229,0.08)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid rgba(79,70,229,0.2)',
-                  '& .MuiChip-deleteIcon': { color: '#94a3b8', '&:hover': { color: '#64748b' } },
+                  bgcolor: THEME.primarySoft,
+                  color: THEME.primary,
+                  border: `1px solid rgba(51, 94, 222, 0.22)`,
+                  fontWeight: 600,
+                  '& .MuiChip-deleteIcon': { color: THEME.textSecondary, '&:hover': { color: THEME.textPrimary } },
                 }}
               />
             ))}

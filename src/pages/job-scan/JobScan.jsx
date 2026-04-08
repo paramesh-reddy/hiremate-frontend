@@ -120,6 +120,8 @@ export default function JobScan() {
       sx={{
         minHeight: '100%',
         width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
         bgcolor: '#fafbfc',
         fontFamily: 'var(--font-family)',
         display: 'flex',
@@ -132,6 +134,7 @@ export default function JobScan() {
           width: '100%',
           maxWidth: '100%',
           mx: 0,
+          boxSizing: 'border-box',
           px: { xs: 2, sm: 3, md: 4, lg: 5 },
           pt: { xs: 3, sm: 4 },
         }}

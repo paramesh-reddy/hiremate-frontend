@@ -11,15 +11,13 @@ import {
   Tabs,
   Tab,
   Chip,
-  IconButton,
-  Tooltip,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  Stack,
 } from '@mui/material';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import BookmarkBorderRoundedIcon from '@mui/icons-material/BookmarkBorderRounded';
 import PrintRoundedIcon from '@mui/icons-material/PrintRounded';
 import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
@@ -27,33 +25,33 @@ import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
-import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import PageBreadcrumb from '../../components/common/PageBreadcrumb';
+
+const THEME = {
+  primary: 'var(--primary, #335ede)',
+  primarySoft: 'rgba(51, 94, 222, 0.08)',
+  border: 'var(--divider, rgba(0,0,0,0.08))',
+  textPrimary: 'var(--text-primary)',
+  textSecondary: 'var(--text-secondary)',
+};
 
 /* ── helpers ─────────────────────────────────── */
 function ImpactBadge({ label }) {
-  const colors = {
-    IMPORTANT: { bg: '#374151', color: '#fff' },
-    'HIGH SCORE IMPACT': { bg: '#374151', color: '#fff' },
-    'MEDIUM SCORE IMPACT': { bg: '#374151', color: '#fff' },
-  };
-  const c = colors[label] || { bg: '#374151', color: '#fff' };
   return (
     <Chip
       label={label}
       size="small"
       sx={{
         ml: 1.5,
-        fontFamily: 'var(--font-family)',
         fontWeight: 700,
-        fontSize: '0.7rem',
-        letterSpacing: 0.5,
-        bgcolor: c.bg,
-        color: c.color,
-        height: 22,
+        fontSize: '0.65rem',
+        letterSpacing: 0.06,
+        bgcolor: '#1e293b',
+        color: '#fff',
+        height: 24,
         borderRadius: 1,
         '& .MuiChip-label': { px: 1 },
       }}
@@ -115,18 +113,17 @@ function CheckRow({ label, items }) {
         display: 'flex',
         gap: 2,
         py: 1.5,
-        borderBottom: '1px solid var(--divider)',
+        borderBottom: `1px solid ${THEME.border}`,
         '&:last-child': { borderBottom: 'none' },
         alignItems: 'flex-start',
       }}
     >
       <Typography
         sx={{
-          fontFamily: 'var(--font-family)',
           fontWeight: 600,
-          fontSize: '0.9rem',
-          color: 'var(--text-primary)',
-          minWidth: 160,
+          fontSize: '0.875rem',
+          color: THEME.textPrimary,
+          minWidth: { xs: 120, sm: 160 },
           pt: 0.25,
         }}
       >
@@ -148,7 +145,7 @@ function CheckRow({ label, items }) {
               {item.link && (
                 <Typography
                   variant="body2"
-                  sx={{ fontFamily: 'var(--font-family)', color: 'var(--primary)', cursor: 'pointer', fontWeight: 500 }}
+                  sx={{ color: THEME.primary, cursor: 'pointer', fontWeight: 600, fontSize: '0.8125rem' }}
                 >
                   {item.link}
                 </Typography>
@@ -165,7 +162,7 @@ function SkillsTable({ rows }) {
   return (
     <Table size="small" sx={{ mt: 1 }}>
       <TableHead>
-        <TableRow sx={{ '& th': { borderBottom: '2px solid var(--divider)', pb: 1 } }}>
+        <TableRow sx={{ '& th': { borderBottom: `2px solid ${THEME.border}`, pb: 1, bgcolor: '#f1f5f9' } }}>
           <TableCell sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, color: 'var(--text-primary)', pl: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Skill
@@ -197,38 +194,9 @@ function SkillsTable({ rows }) {
       </TableHead>
       <TableBody>
         {rows.map((row, i) => (
-          <TableRow key={i} sx={{ '& td': { borderBottom: '1px solid var(--divider)', py: 1 } }}>
-            <TableCell sx={{ pl: 0, fontFamily: 'var(--font-family)', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
-              {row.locked ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 100,
-                      height: 14,
-                      bgcolor: 'var(--grey-light)',
-                      borderRadius: 1,
-                      filter: 'blur(4px)',
-                    }}
-                  />
-                  <Button
-                    size="small"
-                    startIcon={<LockRoundedIcon sx={{ fontSize: 13 }} />}
-                    sx={{
-                      fontFamily: 'var(--font-family)',
-                      fontSize: '0.75rem',
-                      color: 'var(--primary)',
-                      textTransform: 'none',
-                      border: '1px solid var(--primary)',
-                      borderRadius: 1,
-                      p: '2px 8px',
-                    }}
-                  >
-                    Unlock
-                  </Button>
-                </Box>
-              ) : (
-                row.skill
-              )}
+          <TableRow key={i} sx={{ '& td': { borderBottom: `1px solid ${THEME.border}`, py: 1 } }}>
+            <TableCell sx={{ pl: 0, color: THEME.textPrimary, fontSize: '0.875rem', fontWeight: 500 }}>
+              {row.skill || '—'}
             </TableCell>
             <TableCell align="center">
               {row.inResume ? (
@@ -324,9 +292,6 @@ const SEARCHABILITY_ROWS = [
 ];
 
 const HARD_SKILLS_ROWS = [
-  { locked: true, inResume: false, count: 2 },
-  { locked: true, inResume: false, count: 2 },
-  { locked: true, inResume: false, count: 2 },
   { skill: 'Front-end development', inResume: false, count: 1 },
   { skill: 'User interface design', inResume: false, count: 1 },
   { skill: 'Mocha', inResume: false, count: 1 },
@@ -336,7 +301,6 @@ const HARD_SKILLS_ROWS = [
 ];
 
 const SOFT_SKILLS_ROWS = [
-  { locked: true, inResume: false, count: 2 },
   { skill: 'Communication', inResume: false, count: 1 },
   { skill: 'Problem-solving', inResume: false, count: 1 },
 ];
@@ -436,23 +400,22 @@ function SkillSection({ title, badge, desc, tip, rows }) {
       <SectionHeader title={title} badge={badge} />
       <SectionDesc>{desc}</SectionDesc>
       <TipText>{tip}</TipText>
-      <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
+      <Box sx={{ border: `1px solid ${THEME.border}`, borderRadius: 2, overflow: 'hidden', bgcolor: '#fff' }}>
         <Tabs
           value={subTab}
           onChange={(_, v) => setSubTab(v)}
           sx={{
             minHeight: 42,
-            bgcolor: 'var(--grey-5)',
-            borderBottom: '1px solid var(--divider)',
-            '& .MuiTabs-indicator': { bgcolor: 'var(--primary)', height: 3 },
+            bgcolor: '#f8fafc',
+            borderBottom: `1px solid ${THEME.border}`,
+            '& .MuiTabs-indicator': { bgcolor: THEME.primary, height: 3 },
             '& .MuiTab-root': {
-              fontFamily: 'var(--font-family)',
               fontWeight: 600,
-              fontSize: '0.85rem',
+              fontSize: '0.8125rem',
               textTransform: 'none',
-              color: 'var(--text-secondary)',
+              color: THEME.textSecondary,
               minHeight: 42,
-              '&.Mui-selected': { color: 'var(--primary)' },
+              '&.Mui-selected': { color: THEME.primary },
             },
           }}
         >
@@ -486,7 +449,7 @@ function JobDescriptionTab({ jobDescriptionPreview }) {
         const regex = new RegExp(`(${kw})`, 'gi');
         return part.split(regex).map((seg, i) =>
           regex.test(seg) ? (
-            <mark key={i} style={{ background: '#dbeafe', color: '#1d4ed8', borderRadius: 2, padding: '0 2px' }}>
+            <mark key={i} style={{ background: 'rgba(51, 94, 222, 0.12)', color: '#335ede', borderRadius: 2, padding: '0 2px' }}>
               {seg}
             </mark>
           ) : (
@@ -533,43 +496,26 @@ function ResumeReportTab({ report }) {
 
   return (
     <Box>
-      {/* ATS Tip Banner */}
+      {/* Insight banner */}
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          bgcolor: 'var(--warning-bg)',
-          border: '1px solid #fde68a',
-          borderRadius: 1.5,
+          alignItems: 'flex-start',
+          gap: 1.5,
+          bgcolor: THEME.primarySoft,
+          border: `1px solid rgba(51, 94, 222, 0.2)`,
+          borderRadius: 2,
           px: 2,
-          py: 1.2,
+          py: 1.5,
           mb: 3,
         }}
       >
-        <BoltRoundedIcon sx={{ color: 'var(--warning)', fontSize: 20, flexShrink: 0 }} />
-        <Typography variant="body2" sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-secondary)', flex: 1 }}>
-          <strong style={{ color: 'var(--text-primary)' }}>ATS-Specific Tips</strong>
-          {' '}Adding this job&apos;s company name and web address can{' '}
-          <span style={{ color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>help us provide</span> you ATS-specific tips.
+        <BoltRoundedIcon sx={{ color: THEME.primary, fontSize: 22, flexShrink: 0, mt: 0.15 }} />
+        <Typography variant="body2" sx={{ color: THEME.textSecondary, flex: 1, fontSize: '0.875rem', lineHeight: 1.55 }}>
+          <strong style={{ color: THEME.textPrimary }}>Production insight</strong>
+          {' — '}
+          Align exact wording from the job description with your resume headers and skills list to maximize ATS keyword matching.
         </Typography>
-        <Button
-          size="small"
-          startIcon={<BoltRoundedIcon sx={{ fontSize: 14 }} />}
-          sx={{
-            fontFamily: 'var(--font-family)',
-            fontSize: '0.75rem',
-            color: 'var(--warning)',
-            textTransform: 'none',
-            border: '1px solid #fde68a',
-            borderRadius: 1,
-            bgcolor: '#fef3c7',
-            flexShrink: 0,
-            '&:hover': { bgcolor: '#fde68a' },
-          }}
-        >
-          ATS tip
-        </Button>
       </Box>
 
       {/* Searchability */}
@@ -580,9 +526,9 @@ function ResumeReportTab({ report }) {
           and manage the hiring process. Below is how well your resume appears in an ATS and a recruiter search.
         </SectionDesc>
         <TipText>Fix the red Xs to ensure your resume is easily searchable by recruiters and parsed correctly by the ATS.</TipText>
-        <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ border: `1px solid ${THEME.border}`, borderRadius: 2, overflow: 'hidden', bgcolor: '#fff' }}>
           {searchabilityRows.map((row, i) => (
-            <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? 'var(--bg-default)' : 'var(--bg-light)' }}>
+            <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? '#fafbfc' : '#fff' }}>
               <CheckRow label={row.label} items={row.items} />
             </Box>
           ))}
@@ -610,9 +556,9 @@ function ResumeReportTab({ report }) {
       {/* Recruiter Tips */}
       <Box sx={{ mb: 4 }}>
         <SectionHeader title="Recruiter tips" badge="IMPORTANT" />
-        <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ border: `1px solid ${THEME.border}`, borderRadius: 2, overflow: 'hidden', bgcolor: '#fff' }}>
           {recruiterTipsRows.map((row, i) => (
-            <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? 'var(--bg-default)' : 'var(--bg-light)' }}>
+            <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? '#fafbfc' : '#fff' }}>
               <CheckRow label={row.label} items={row.items} />
             </Box>
           ))}
@@ -622,9 +568,9 @@ function ResumeReportTab({ report }) {
       {/* Formatting */}
       <Box sx={{ mb: 4 }}>
         <SectionHeader title="Formatting" />
-        <Box sx={{ border: '1px solid var(--divider)', borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ border: `1px solid ${THEME.border}`, borderRadius: 2, overflow: 'hidden', bgcolor: '#fff' }}>
           {formattingRows.map((row, i) => (
-            <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? 'var(--bg-default)' : 'var(--bg-light)' }}>
+            <Box key={i} sx={{ px: 2, bgcolor: i % 2 === 0 ? '#fafbfc' : '#fff' }}>
               <CheckRow label={row.label} items={row.items} />
             </Box>
           ))}
@@ -638,28 +584,32 @@ function ResumeReportTab({ report }) {
 function AtsScoreCard({ score, scoreCategories }) {
   const navigate = useNavigate();
   const categories = scoreCategories ?? SCORE_CATEGORIES;
+  const pct = Math.min(100, Math.max(0, Number(score) || 0));
   return (
     <Card
+      elevation={0}
       sx={{
-        width: { xs: '100%', md: 270 },
-        minWidth: { md: 250 },
+        width: { xs: '100%', md: 280 },
+        minWidth: { md: 260 },
         flexShrink: 0,
         borderRadius: 2,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        border: `1px solid ${THEME.border}`,
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        bgcolor: '#fff',
         alignSelf: 'flex-start',
         position: { md: 'sticky' },
-        top: { md: 16 },
+        top: { md: 12 },
       }}
     >
-      <Grid container sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+      <Grid container sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
         <Grid item xs={12}>
         {/* Circular score */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2.5 }}>
           <Typography
             variant="caption"
-            sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-secondary)', mb: 2, fontWeight: 700, fontSize: '1.1rem' }}
+            sx={{ color: THEME.textSecondary, mb: 1.5, fontWeight: 700, fontSize: '0.65rem', letterSpacing: 0.08, textTransform: 'uppercase' }}
           >
-            Match Rate
+            Match rate
           </Typography>
           <Box sx={{ position: 'relative', display: 'inline-flex' }}>
             <CircularProgress
@@ -667,15 +617,15 @@ function AtsScoreCard({ score, scoreCategories }) {
               value={100}
               size={150}
               thickness={5}
-              sx={{ color: 'var(--grey-light)', position: 'absolute' }}
+              sx={{ color: '#f1f5f9', position: 'absolute' }}
             />
             <CircularProgress
               variant="determinate"
-              value={score}
+              value={pct}
               size={150}
               thickness={5}
               sx={{
-                color: score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--primary-light)',
+                color: pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : THEME.primary,
                 '& .MuiCircularProgress-circle': { strokeLinecap: 'round' },
               }}
             />
@@ -688,11 +638,9 @@ function AtsScoreCard({ score, scoreCategories }) {
                 justifyContent: 'center',
               }}
             >
-              <Typography
-                sx={{ fontFamily: 'var(--font-family)', fontWeight: 800, fontSize: '2rem', color: 'var(--text-primary)' }}
-              >
-                {score}
-                <Typography component="span" sx={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-secondary)' }}>%</Typography>
+              <Typography sx={{ fontWeight: 800, fontSize: '2rem', color: THEME.textPrimary }}>
+                {Math.round(pct)}
+                <Typography component="span" sx={{ fontSize: '1.15rem', fontWeight: 600, color: THEME.textSecondary }}>%</Typography>
               </Typography>
             </Box>
           </Box>
@@ -701,20 +649,20 @@ function AtsScoreCard({ score, scoreCategories }) {
         {/* Buttons */}
         <Button
           variant="contained"
+          disableElevation
           fullWidth
           startIcon={<FileUploadRoundedIcon />}
           onClick={() => navigate('/job-scan')}
           sx={{
-            fontFamily: 'var(--font-family)',
             fontWeight: 600,
-            fontSize: '0.82rem',
-            bgcolor: 'var(--primary)',
-            color: 'white',
-            borderRadius: 1.5,
+            fontSize: '0.8125rem',
+            bgcolor: THEME.primary,
+            color: '#fff',
+            borderRadius: 1,
             textTransform: 'none',
             mb: 1,
             py: 1,
-            '&:hover': { bgcolor: 'var(--primary-dark)' },
+            '&:hover': { bgcolor: 'var(--primary-dark, #2a4bc4)' },
           }}
         >
           Upload & rescan
@@ -725,18 +673,17 @@ function AtsScoreCard({ score, scoreCategories }) {
           startIcon={<AutoFixHighRoundedIcon />}
           onClick={() => navigate('/resume-generator')}
           sx={{
-            fontFamily: 'var(--font-family)',
             fontWeight: 600,
-            fontSize: '0.82rem',
-            color: 'var(--primary)',
-            borderColor: 'var(--primary)',
-            borderRadius: 1.5,
+            fontSize: '0.8125rem',
+            color: THEME.primary,
+            borderColor: THEME.primary,
+            borderRadius: 1,
             textTransform: 'none',
             py: 1,
-            '&:hover': { bgcolor: 'var(--light-blue-bg)', borderColor: 'var(--primary-dark)' },
+            '&:hover': { bgcolor: THEME.primarySoft, borderColor: THEME.primary },
           }}
         >
-          One-Click Optimize
+          Open resume generator
         </Button>
 
         {/* Category scores */}
@@ -744,29 +691,26 @@ function AtsScoreCard({ score, scoreCategories }) {
           {categories.map((cat) => (
             <Box key={cat.label} sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.875rem' }}
-                >
+                <Typography variant="body2" sx={{ color: THEME.textPrimary, fontWeight: 600, fontSize: '0.875rem' }}>
                   {cat.label}
                 </Typography>
                 {cat.issues > 0 && (
-                  <Typography
-                    variant="caption"
-                    sx={{ fontFamily: 'var(--font-family)', color: 'var(--error)', fontWeight: 600, fontSize: '0.75rem' }}
-                  >
+                  <Typography variant="caption" sx={{ color: '#dc2626', fontWeight: 600, fontSize: '0.75rem' }}>
                     {cat.issues} issues to fix
                   </Typography>
                 )}
               </Box>
               <LinearProgress
                 variant="determinate"
-                value={cat.value}
+                value={Math.min(100, Math.max(0, cat.value))}
                 sx={{
                   height: 6,
                   borderRadius: 3,
-                  bgcolor: 'var(--grey-light)',
-                  '& .MuiLinearProgress-bar': { bgcolor: cat.color, borderRadius: 3 },
+                  bgcolor: '#f1f5f9',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: String(cat.color || '').includes('error') ? '#dc2626' : THEME.primary,
+                    borderRadius: 3,
+                  },
                 }}
               />
             </Box>
@@ -789,141 +733,162 @@ export default function ScanReport() {
   const scoreCategories = stateReport?.score_categories;
 
   return (
-    <Box sx={{ minHeight: '100%', background: 'var(--bg-app)', fontFamily: 'var(--font-family)' }}>
-      {/* Page header */}
+    <Box
+      sx={{
+        minHeight: '100%',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        bgcolor: '#fafbfc',
+        fontFamily: 'var(--font-family)',
+      }}
+    >
       <Box
         sx={{
-          bgcolor: 'var(--bg-paper)',
-          borderBottom: '1px solid var(--divider)',
-          px: { xs: 2, sm: 4 },
-          py: 1.5,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 1,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Back to ATS Scanner">
-            <IconButton size="small" onClick={() => navigate('/job-scan')} sx={{ color: 'var(--text-secondary)' }}>
-              <ArrowBackRoundedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
-          <Box>
-            <Typography
-              variant="caption"
-              sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-muted)', display: 'block', mb: 0.25, fontSize: '0.78rem' }}
-            >
-              Resume scan results
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Typography
-                variant="h6"
-                sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}
-              >
-                {fileName ? `${fileName} – ATS Report` : 'Company - React.js Developer'}
-              </Typography>
-              <Tooltip title="Edit title">
-                <IconButton size="small" sx={{ color: 'var(--text-secondary)', p: 0.5 }}>
-                  <EditRoundedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            size="small"
-            startIcon={<BookmarkBorderRoundedIcon sx={{ fontSize: 17 }} />}
-            variant="outlined"
-            sx={{
-              fontFamily: 'var(--font-family)',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              color: 'var(--primary)',
-              borderColor: 'var(--primary)',
-              borderRadius: 1.5,
-              '&:hover': { bgcolor: 'var(--light-blue-bg)' },
-            }}
-          >
-            Track
-          </Button>
-          <Button
-            size="small"
-            startIcon={<PrintRoundedIcon sx={{ fontSize: 17 }} />}
-            variant="outlined"
-            sx={{
-              fontFamily: 'var(--font-family)',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              color: 'var(--text-secondary)',
-              borderColor: 'var(--border-color)',
-              borderRadius: 1.5,
-              '&:hover': { bgcolor: 'var(--bg-light)' },
-            }}
-          >
-            Print
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Body */}
-      <Box
-        sx={{
-          px: { xs: 2, sm: 3, md: 4 },
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+          px: { xs: 2, sm: 2.5, md: 3 },
           py: 3,
-          display: 'flex',
-          gap: 3,
-          alignItems: 'flex-start',
-          flexDirection: { xs: 'column', md: 'row' },
         }}
       >
-        {/* Left: ATS Score Card */}
-        <AtsScoreCard score={score} scoreCategories={scoreCategories} />
+        <PageBreadcrumb
+          items={[
+            { label: 'AI Resume Studio', to: '/ai-resume-studio', showBackIcon: true },
+            { label: 'ATS Scanner', to: '/job-scan' },
+            { label: 'Match report' },
+          ]}
+        />
 
-        {/* Right: Details Card */}
-        <Card
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
+          justifyContent="space-between"
+          spacing={2}
+          sx={{ mb: 3, gap: { sm: 2 } }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              sx={{
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                letterSpacing: 0.08,
+                color: THEME.primary,
+                textTransform: 'uppercase',
+                mb: 0.75,
+              }}
+            >
+              ATS analysis
+            </Typography>
+            <Typography
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                color: THEME.textPrimary,
+                lineHeight: 1.25,
+                wordBreak: 'break-word',
+              }}
+            >
+              {fileName || 'Resume'} — match report
+            </Typography>
+            <Typography sx={{ fontSize: '0.875rem', color: THEME.textSecondary, mt: 0.75, lineHeight: 1.5 }}>
+              Keyword alignment, searchability, skills, and formatting — same visual language as your resume analysis reports.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ flexShrink: 0 }}>
+            <Button
+              size="small"
+              startIcon={<BookmarkBorderRoundedIcon sx={{ fontSize: 18 }} />}
+              variant="outlined"
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: THEME.primary,
+                borderColor: THEME.primary,
+                borderRadius: 1,
+                '&:hover': { bgcolor: THEME.primarySoft },
+              }}
+            >
+              Track
+            </Button>
+            <Button
+              size="small"
+              startIcon={<PrintRoundedIcon sx={{ fontSize: 18 }} />}
+              variant="outlined"
+              onClick={() => window.print()}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: THEME.textSecondary,
+                borderColor: THEME.border,
+                borderRadius: 1,
+                '&:hover': { bgcolor: 'rgba(15, 23, 42, 0.04)' },
+              }}
+            >
+              Print
+            </Button>
+          </Stack>
+        </Stack>
+
+        <Box
           sx={{
-            flex: 1,
-            borderRadius: 2,
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-            overflow: 'hidden',
+            display: 'flex',
+            gap: { xs: 2, md: 3 },
+            alignItems: 'flex-start',
+            flexDirection: { xs: 'column', lg: 'row' },
+            width: '100%',
+            minWidth: 0,
           }}
         >
-          {/* Main Tabs */}
-          <Tabs
-            value={mainTab}
-            onChange={(_, v) => setMainTab(v)}
-            variant="fullWidth"
+          <AtsScoreCard score={score} scoreCategories={scoreCategories} />
+
+          <Card
+            elevation={0}
             sx={{
-              borderBottom: '1px solid var(--divider)',
-              '& .MuiTabs-indicator': { bgcolor: 'var(--primary)', height: 3 },
-              '& .MuiTab-root': {
-                fontFamily: 'var(--font-family)',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                textTransform: 'none',
-                color: 'var(--text-secondary)',
-                minHeight: 52,
-                '&.Mui-selected': { color: 'var(--primary)' },
-                '&:not(.Mui-selected)': { bgcolor: 'var(--grey-5)' },
-              },
+              flex: '1 1 0%',
+              minWidth: 0,
+              width: '100%',
+              borderRadius: 2,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+              overflow: 'hidden',
+              bgcolor: '#fff',
             }}
           >
-            <Tab label="Resume Report" />
-            <Tab label="Job Description" />
-          </Tabs>
+            <Tabs
+              value={mainTab}
+              onChange={(_, v) => setMainTab(v)}
+              variant="fullWidth"
+              sx={{
+                bgcolor: '#fff',
+                borderBottom: `1px solid ${THEME.border}`,
+                minHeight: 48,
+                '& .MuiTabs-indicator': { bgcolor: THEME.primary, height: 3 },
+                '& .MuiTab-root': {
+                  fontWeight: 600,
+                  fontSize: '0.9375rem',
+                  textTransform: 'none',
+                  color: THEME.textSecondary,
+                  minHeight: 48,
+                  '&.Mui-selected': { color: THEME.primary },
+                  '&:not(.Mui-selected)': { bgcolor: '#f8fafc' },
+                },
+              }}
+            >
+              <Tab label="Resume report" />
+              <Tab label="Job description" />
+            </Tabs>
 
-          <Grid container sx={{ p: { xs: 2, sm: 3 }, '&:last-child': { pb: 3 } }}>
-            <Grid item xs={12}>
-              {mainTab === 0 && <ResumeReportTab report={stateReport} />}
-              {mainTab === 1 && <JobDescriptionTab jobDescriptionPreview={stateReport?.job_description_preview} />}
+            <Grid container sx={{ p: { xs: 2, sm: 2.5, md: 3 }, '&:last-child': { pb: 3 } }}>
+              <Grid item xs={12}>
+                {mainTab === 0 && <ResumeReportTab report={stateReport} />}
+                {mainTab === 1 && <JobDescriptionTab jobDescriptionPreview={stateReport?.job_description_preview} />}
+              </Grid>
             </Grid>
-          </Grid>
-        </Card>
+          </Card>
+        </Box>
       </Box>
     </Box>
   );

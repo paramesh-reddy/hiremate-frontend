@@ -12,6 +12,10 @@ export const parseFile = (file) => {
 export const resolveLinks = (payload) =>
   axiosClient.post('/company-search/links', payload);
 
+/** @param {Record<string, string|number|undefined>} params — q, company, role, location, skills, posted_from, posted_to, page, page_size */
+export const fetchJobsCorpus = (params) =>
+  axiosClient.get('/company-search/jobs/corpus', { params });
+
 export const streamJobs = async (payload, onEvent, onComplete, onError) => {
   const token = localStorage.getItem('token');
   let response;

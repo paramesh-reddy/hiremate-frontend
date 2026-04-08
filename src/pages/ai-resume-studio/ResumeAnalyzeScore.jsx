@@ -1,26 +1,28 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   Box,
   Typography,
   Button,
   Chip,
-  IconButton,
   Divider,
   LinearProgress,
-  Tooltip,
   CircularProgress,
+  Card,
+  Stack,
 } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
-import LockRoundedIcon from '@mui/icons-material/LockRounded';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import EastRoundedIcon from '@mui/icons-material/EastRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
+import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
+import PageBreadcrumb from '../../components/common/PageBreadcrumb';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -30,14 +32,22 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-/* ─── Static data ─────────────────────────────────────── */
+/* ─── Defaults (fallback if navigation state missing) ───────────────── */
+
+const THEME = {
+  primary: 'var(--primary, #335ede)',
+  primarySoft: 'rgba(51, 94, 222, 0.08)',
+  border: 'var(--divider, rgba(0,0,0,0.08))',
+  textPrimary: 'var(--text-primary)',
+  textSecondary: 'var(--text-secondary)',
+};
 
 const TOP_FIXES = [
   { label: 'Quantify impact', count: 3, locked: false },
   { label: 'Repetition', count: 2, locked: false },
-  { label: 'Leadership', count: null, locked: true },
+  { label: 'Leadership & ownership', count: 2, locked: false },
   { label: 'Use of bullets', count: 4, locked: false },
-  { label: 'Communication', count: null, locked: true },
+  { label: 'Communication clarity', count: 2, locked: false },
 ];
 
 const COMPLETED = [
@@ -50,34 +60,78 @@ const ISSUE_CARDS = [
   {
     icon: 'cancel',
     title: 'Quantify impact',
-    desc: 'Add more numbers to quantify your accomplishments',
+    desc: 'Add metrics and numbers to quantify your accomplishments.',
     badge: 'IMPACT',
     locked: false,
   },
   {
     icon: 'cancel',
     title: 'Repetition',
-    desc: 'Use different action words and phrases instead of overusing the same ones',
+    desc: 'Vary action verbs and phrasing so bullets do not sound repetitive.',
     badge: 'IMPACT',
     locked: false,
   },
   {
-    icon: 'lock',
-    title: 'Leadership',
-    desc: 'This check is only for Pro users. Upgrade to unlock this check.',
+    icon: 'cancel',
+    title: 'Leadership & collaboration',
+    desc: 'Surface examples of leading initiatives, mentoring, or cross-functional work.',
     badge: 'SKILLS',
-    locked: true,
+    locked: false,
   },
 ];
 
 const DID_WELL = [
   { title: 'Page density', desc: 'Your page layout looks right.' },
-  { title: 'Dates are in the right format', desc: 'Your dates are in the right format.' },
+  { title: 'Dates are in the right format', desc: 'Your dates are in a clear format.' },
   { title: 'Verb tenses', desc: 'Your action verbs are in the right tense.' },
 ];
 
 const SCORE = 36;
 const MAX_SCORE = 100;
+
+function normalizeIssues(list) {
+  if (!Array.isArray(list)) return ISSUE_CARDS;
+  return list.map((item) => ({
+    ...item,
+    locked: false,
+    icon: item?.icon === 'lock' || item?.icon === 'locked' ? 'cancel' : item?.icon || 'cancel',
+  }));
+}
+
+function normalizeTopFixes(list) {
+  if (!Array.isArray(list)) return TOP_FIXES;
+  return list.map((f) => ({ ...f, locked: false }));
+}
+
+function buildAnalytics(issueCards, completed, didWell, topFixes, score, maxScore) {
+  const issues = Array.isArray(issueCards) ? issueCards : [];
+  const pass = Array.isArray(completed) ? completed : [];
+  const strengths = Array.isArray(didWell) ? didWell : [];
+  const fixes = Array.isArray(topFixes) ? topFixes : [];
+
+  let impact = 0;
+  let skills = 0;
+  issues.forEach((i) => {
+    const b = String(i?.badge || '').toUpperCase();
+    if (b.includes('IMPACT')) impact += 1;
+    else skills += 1;
+  });
+  const issueTotal = issues.length;
+  const prioritySignals = fixes.reduce(
+    (acc, f) => acc + (typeof f.count === 'number' ? f.count : 0),
+    0,
+  );
+
+  return {
+    issueTotal,
+    impact,
+    skills,
+    passing: pass.length,
+    strengths: strengths.length,
+    prioritySignals,
+    scorePct: Math.round((score / Math.max(maxScore, 1)) * 100),
+  };
+}
 
 /* ─── Circular Score SVG ──────────────────────────────── */
 function ScoreCircle({ score, max = 100, size = 90 }) {
@@ -120,72 +174,192 @@ function ScoreCircle({ score, max = 100, size = 90 }) {
 }
 
 /* ─── Fix Issue Card ─────────────────────────────────── */
-function IssueCard({ card }) {
+function IssueCard({ card, onFix }) {
   return (
     <Box
       sx={{
-        bgcolor: 'white',
-        borderRadius: 2.5,
+        bgcolor: '#fff',
+        borderRadius: 2,
         p: 2.5,
         mb: 2,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: { xs: 'flex-start', sm: 'center' },
         justifyContent: 'space-between',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        border: '1px solid #f0f0f0',
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 1.5, sm: 0 },
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        border: `1px solid ${THEME.border}`,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-        {card.locked ? (
-          <LockRoundedIcon sx={{ color: '#9ca3af', fontSize: 20, mt: 0.25 }} />
-        ) : (
-          <CancelRoundedIcon sx={{ color: '#ef4444', fontSize: 20, mt: 0.25 }} />
-        )}
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, minWidth: 0 }}>
+        <CancelRoundedIcon sx={{ color: '#ef4444', fontSize: 22, mt: 0.15, flexShrink: 0 }} />
         <Box>
-          <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', mb: 0.3 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: THEME.textPrimary, mb: 0.5 }}>
             {card.title}
           </Typography>
-          <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <Typography sx={{ fontSize: '0.875rem', color: THEME.textSecondary, lineHeight: 1.55 }}>
             {card.desc}
           </Typography>
         </Box>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 2, flexShrink: 0 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: { xs: 0, sm: 2 }, flexShrink: 0, alignSelf: { xs: 'stretch', sm: 'center' } }}>
         <Chip
           label={card.badge}
           size="small"
           sx={{
-            bgcolor: '#1f2937',
-            color: 'white',
+            bgcolor: '#1e293b',
+            color: '#fff',
             fontWeight: 700,
             fontSize: '0.65rem',
-            letterSpacing: 0.5,
-            height: 22,
-            borderRadius: 0.8,
+            letterSpacing: 0.06,
+            height: 24,
+            borderRadius: 1,
             '& .MuiChip-label': { px: 1 },
           }}
         />
-        {!card.locked && (
-          <Button
-            size="small"
-            variant="contained"
-            endIcon={<EastRoundedIcon sx={{ fontSize: '13px !important' }} />}
+        <Button
+          size="small"
+          variant="contained"
+          disableElevation
+          endIcon={<EastRoundedIcon sx={{ fontSize: '14px !important' }} />}
+          onClick={onFix}
+          sx={{
+            bgcolor: THEME.primary,
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: '0.8125rem',
+            borderRadius: 1,
+            px: 1.75,
+            py: 0.5,
+            textTransform: 'none',
+            whiteSpace: 'nowrap',
+            '&:hover': { bgcolor: 'var(--primary-dark, #2a4bc4)' },
+          }}
+        >
+          Fix
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+function ReportAnalytics({ analytics }) {
+  const a = analytics;
+  return (
+    <Box
+      id="resume-analytics"
+      sx={{
+        mb: 3,
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: `1px solid ${THEME.border}`,
+        bgcolor: '#fff',
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        scrollMarginTop: 24,
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <BarChartRoundedIcon sx={{ color: THEME.primary, fontSize: 22 }} />
+        <Box>
+          <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: THEME.textPrimary, lineHeight: 1.3 }}>
+            Analytics overview
+          </Typography>
+          <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary, lineHeight: 1.45 }}>
+            Full snapshot of this analysis run — issues, passing checks, and category mix.
+          </Typography>
+        </Box>
+      </Stack>
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, minmax(0, 1fr))',
+            sm: 'repeat(4, minmax(0, 1fr))',
+          },
+          gap: 1.5,
+          mb: 2.5,
+          width: '100%',
+        }}
+      >
+        {[
+          { label: 'Score', value: `${a.scorePct}%`, hint: 'vs max' },
+          { label: 'Issues flagged', value: a.issueTotal, hint: 'to improve' },
+          { label: 'Checks passed', value: a.passing, hint: 'this run' },
+          { label: 'Strengths', value: a.strengths, hint: 'highlighted' },
+        ].map((row) => (
+          <Box
+            key={row.label}
             sx={{
-              bgcolor: '#3b82f6',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '0.78rem',
+              p: 1.75,
               borderRadius: 1.5,
-              px: 1.5,
-              py: 0.5,
-              textTransform: 'none',
-              '&:hover': { bgcolor: '#2563eb' },
+              bgcolor: '#f8fafc',
+              border: `1px solid ${THEME.border}`,
             }}
           >
-            FIX
-          </Button>
-        )}
+            <Typography
+              sx={{
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                letterSpacing: 0.06,
+                color: THEME.textSecondary,
+                textTransform: 'uppercase',
+                mb: 0.75,
+              }}
+            >
+              {row.label}
+            </Typography>
+            <Typography sx={{ fontSize: '1.375rem', fontWeight: 800, color: THEME.textPrimary, lineHeight: 1.15 }}>
+              {row.value}
+            </Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: THEME.textSecondary, mt: 0.35 }}>{row.hint}</Typography>
+          </Box>
+        ))}
       </Box>
+
+      <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: 0.06, color: THEME.textSecondary, textTransform: 'uppercase', mb: 1 }}>
+        Issue mix by category
+      </Typography>
+      <Stack spacing={1.25}>
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: THEME.textPrimary }}>Impact & metrics</Typography>
+            <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary }}>{a.impact} issues</Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={a.issueTotal ? (a.impact / a.issueTotal) * 100 : 0}
+            sx={{
+              height: 8,
+              borderRadius: 1,
+              bgcolor: '#f1f5f9',
+              '& .MuiLinearProgress-bar': { bgcolor: THEME.primary, borderRadius: 1 },
+            }}
+          />
+        </Box>
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: THEME.textPrimary }}>Skills & presentation</Typography>
+            <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary }}>{a.skills} issues</Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={a.issueTotal ? (a.skills / a.issueTotal) * 100 : 0}
+            sx={{
+              height: 8,
+              borderRadius: 1,
+              bgcolor: '#f1f5f9',
+              '& .MuiLinearProgress-bar': { bgcolor: '#0d9488', borderRadius: 1 },
+            }}
+          />
+        </Box>
+      </Stack>
+
+      {a.prioritySignals > 0 && (
+        <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary, mt: 2, lineHeight: 1.5 }}>
+          <strong style={{ color: 'var(--text-primary)' }}>{a.prioritySignals}</strong> priority signals across your top fix areas — see the sidebar for detail.
+        </Typography>
+      )}
     </Box>
   );
 }
@@ -194,6 +368,7 @@ function IssueCard({ card }) {
 export default function ResumeAnalyzeScore() {
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector((s) => s.auth?.user);
 
   const resumeUrl = location.state?.resumeUrl || null;
   const fileName = location.state?.fileName || 'resume.pdf';
@@ -201,13 +376,38 @@ export default function ResumeAnalyzeScore() {
 
   const score = analysis?.score ?? SCORE;
   const maxScore = analysis?.max_score ?? MAX_SCORE;
-  const topFixes = analysis?.top_fixes ?? TOP_FIXES;
+  const topFixes = useMemo(
+    () => normalizeTopFixes(analysis?.top_fixes ?? TOP_FIXES),
+    [analysis?.top_fixes],
+  );
   const completed = analysis?.completed ?? COMPLETED;
-  const issueCards = analysis?.issues ?? ISSUE_CARDS;
+  const issueCards = useMemo(
+    () => normalizeIssues(analysis?.issues ?? ISSUE_CARDS),
+    [analysis?.issues],
+  );
   const didWell = analysis?.did_well ?? DID_WELL;
 
+  const displayName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
+    user?.email?.split('@')[0] ||
+    'there';
+  const greeting =
+    typeof window !== 'undefined'
+      ? new Date().getHours() < 12
+        ? 'Good morning'
+        : new Date().getHours() < 17
+          ? 'Good afternoon'
+          : 'Good evening'
+      : 'Hello';
+
+  const scoreSummaryIntro =
+    score >= 75
+      ? `Strong work — your resume is in great shape. Use the prioritized fixes below to push even higher and stand out to recruiters and ATS.`
+      : score >= 50
+        ? `You're on the right track. The items below are ranked by impact — addressing them can materially improve how both recruiters and ATS systems read your resume.`
+        : `We've identified high-impact improvements below. Tackling these first typically yields the biggest score gains and clearer positioning for roles you're targeting.`;
+
   const [activeTab, setActiveTab] = useState('latest');
-  const [activeSection, setActiveSection] = useState('fixes');
   const [numPages, setNumPages] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(true);
   const [containerWidth, setContainerWidth] = useState(null);
@@ -220,27 +420,51 @@ export default function ResumeAnalyzeScore() {
     ro.observe(node);
   }, []);
 
+  const pdfPageWidth = useMemo(() => {
+    if (!containerWidth) return undefined;
+    const padding = 32;
+    const raw = containerWidth - padding;
+    return Math.min(Math.max(raw, 220), 720);
+  }, [containerWidth]);
+
+  const analytics = useMemo(
+    () => buildAnalytics(issueCards, completed, didWell, topFixes, score, maxScore),
+    [issueCards, completed, didWell, topFixes, score, maxScore],
+  );
+
+  const [previewOpen, setPreviewOpen] = useState(true);
+
+  const scrollToIssues = () => {
+    const el = document.getElementById('resume-analysis-issues');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <Box
       sx={{
         display: 'flex',
-        height: 'calc(100vh - 64px)',
+        width: '100%',
+        minWidth: 0,
+        height: '100vh',
+        maxHeight: '100vh',
         overflow: 'hidden',
-        bgcolor: 'var(--bg-app)',
+        bgcolor: '#fafbfc',
         fontFamily: 'var(--font-family)',
+        boxSizing: 'border-box',
       }}
     >
       {/* ── LEFT SCORE SIDEBAR ───────────────────────────── */}
       <Box
         sx={{
-          width: 230,
-          minWidth: 230,
-          bgcolor: 'white',
-          borderRight: '1px solid #e5e7eb',
+          width: 240,
+          minWidth: 240,
+          bgcolor: '#fff',
+          borderRight: `1px solid ${THEME.border}`,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'auto',
           flexShrink: 0,
+          boxShadow: '1px 0 0 rgba(15, 23, 42, 0.04)',
         }}
       >
         {/* Score circle */}
@@ -248,15 +472,15 @@ export default function ResumeAnalyzeScore() {
           <ScoreCircle score={score} max={maxScore} />
           <Typography
             sx={{
-              fontSize: '0.68rem',
+              fontSize: '0.65rem',
               fontWeight: 700,
-              letterSpacing: 1.2,
-              color: '#9ca3af',
-              mt: 0.5,
+              letterSpacing: 0.08,
+              color: THEME.textSecondary,
+              mt: 0.75,
               textTransform: 'uppercase',
             }}
           >
-            Overall
+            Overall score
           </Typography>
         </Box>
 
@@ -268,81 +492,57 @@ export default function ResumeAnalyzeScore() {
             sx={{
               px: 2,
               py: 0.5,
-              fontSize: '0.62rem',
-              fontWeight: 800,
-              letterSpacing: 1.5,
-              color: '#9ca3af',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              letterSpacing: 0.08,
+              color: THEME.textSecondary,
               textTransform: 'uppercase',
             }}
           >
-            Top Fixes
+            Priority fixes
           </Typography>
 
           {topFixes.map((fix) => (
             <Box
               key={fix.label}
-              onClick={() => !fix.locked && setActiveSection('fixes')}
+              onClick={() => scrollToIssues()}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 px: 2,
                 py: 1,
-                cursor: fix.locked ? 'default' : 'pointer',
+                cursor: 'pointer',
                 borderRadius: 1,
                 mx: 0.5,
-                '&:hover': { bgcolor: '#f9fafb' },
+                transition: 'background-color 0.15s ease',
+                '&:hover': { bgcolor: THEME.primarySoft },
               }}
             >
               <Typography
                 sx={{
-                  fontSize: '0.84rem',
-                  color: fix.locked ? '#9ca3af' : '#374151',
-                  fontFamily: 'var(--font-family)',
+                  fontSize: '0.8125rem',
+                  color: THEME.textPrimary,
+                  fontWeight: 500,
                 }}
               >
                 {fix.label}
               </Typography>
-              {fix.locked ? (
-                <LockRoundedIcon sx={{ fontSize: 13, color: '#c4c9d4' }} />
-              ) : (
-                <Chip
-                  label={fix.count}
-                  size="small"
-                  sx={{
-                    height: 19,
-                    minWidth: 24,
-                    bgcolor: '#fee2e2',
-                    color: '#ef4444',
-                    fontWeight: 700,
-                    fontSize: '0.72rem',
-                    '& .MuiChip-label': { px: 0.8 },
-                  }}
-                />
-              )}
+              <Chip
+                label={fix.count != null ? fix.count : '—'}
+                size="small"
+                sx={{
+                  height: 22,
+                  minWidth: 28,
+                  bgcolor: '#fef2f2',
+                  color: '#dc2626',
+                  fontWeight: 700,
+                  fontSize: '0.7rem',
+                  '& .MuiChip-label': { px: 0.75 },
+                }}
+              />
             </Box>
           ))}
-
-          <Box sx={{ px: 1.5, mt: 1 }}>
-            <Button
-              fullWidth
-              size="small"
-              variant="outlined"
-              sx={{
-                borderColor: '#374151',
-                color: '#374151',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                py: 0.5,
-                borderRadius: 1.5,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                '&:hover': { bgcolor: '#f9fafb', borderColor: '#1f2937' },
-              }}
-            >
-              11 MORE ISSUES +
-            </Button>
-          </Box>
         </Box>
 
         <Divider sx={{ my: 1.5 }} />
@@ -353,14 +553,14 @@ export default function ResumeAnalyzeScore() {
             sx={{
               px: 2,
               py: 0.5,
-              fontSize: '0.62rem',
-              fontWeight: 800,
-              letterSpacing: 1.5,
-              color: '#9ca3af',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              letterSpacing: 0.08,
+              color: THEME.textSecondary,
               textTransform: 'uppercase',
             }}
           >
-            Completed
+            Passing checks
           </Typography>
 
           {completed.map((item) => (
@@ -374,9 +574,7 @@ export default function ResumeAnalyzeScore() {
                 py: 1,
               }}
             >
-              <Typography
-                sx={{ fontSize: '0.84rem', color: '#374151', fontFamily: 'var(--font-family)' }}
-              >
+              <Typography sx={{ fontSize: '0.8125rem', color: THEME.textPrimary, fontWeight: 500 }}>
                 {item.label}
               </Typography>
               <Chip
@@ -395,66 +593,54 @@ export default function ResumeAnalyzeScore() {
             </Box>
           ))}
 
-          <Box sx={{ px: 1.5, mt: 1 }}>
-            <Button
-              fullWidth
-              size="small"
-              variant="outlined"
-              sx={{
-                borderColor: '#6b7280',
-                color: '#6b7280',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                py: 0.5,
-                borderRadius: 1.5,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                '&:hover': { bgcolor: '#f9fafb' },
-              }}
-            >
-              1 MORE CHECKS +
-            </Button>
-          </Box>
         </Box>
 
         {/* Tools */}
-        <Divider sx={{ my: 1.5 }} />
+        <Divider sx={{ my: 1.5, borderColor: THEME.border }} />
         <Box>
           <Typography
             sx={{
               px: 2,
               py: 0.5,
-              fontSize: '0.62rem',
-              fontWeight: 800,
-              letterSpacing: 1.5,
-              color: '#9ca3af',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              letterSpacing: 0.08,
+              color: THEME.textSecondary,
               textTransform: 'uppercase',
             }}
           >
-            Tools
+            Next steps
           </Typography>
           {[
-            { label: 'Resume Rewriter', icon: <AutoFixHighRoundedIcon sx={{ fontSize: 15 }} /> },
-            { label: 'ATS Keywords', icon: <InsightsRoundedIcon sx={{ fontSize: 15 }} /> },
+            {
+              label: 'Resume generator',
+              to: '/resume-generator',
+              icon: <AutoFixHighRoundedIcon sx={{ fontSize: 18, color: THEME.primary }} />,
+            },
+            {
+              label: 'ATS job scan',
+              to: '/job-scan',
+              icon: <InsightsRoundedIcon sx={{ fontSize: 18, color: THEME.primary }} />,
+            },
           ].map((tool) => (
             <Box
               key={tool.label}
+              onClick={() => navigate(tool.to)}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1.2,
+                gap: 1.25,
                 px: 2,
-                py: 1,
+                py: 1.1,
                 cursor: 'pointer',
                 borderRadius: 1,
                 mx: 0.5,
-                '&:hover': { bgcolor: '#f9fafb' },
+                transition: 'background-color 0.15s ease',
+                '&:hover': { bgcolor: THEME.primarySoft },
               }}
             >
-              <Box sx={{ color: '#6b7280' }}>{tool.icon}</Box>
-              <Typography
-                sx={{ fontSize: '0.84rem', color: '#374151', fontFamily: 'var(--font-family)' }}
-              >
+              {tool.icon}
+              <Typography sx={{ fontSize: '0.8125rem', color: THEME.textPrimary, fontWeight: 600 }}>
                 {tool.label}
               </Typography>
             </Box>
@@ -462,55 +648,51 @@ export default function ResumeAnalyzeScore() {
         </Box>
 
         <Box sx={{ flexGrow: 1 }} />
-
-        {/* Unlock button */}
-        <Box sx={{ p: 1.5 }}>
-          <Button
-            fullWidth
-            variant="contained"
-            startIcon={<StarRoundedIcon sx={{ fontSize: '16px !important' }} />}
-            sx={{
-              bgcolor: '#1f2937',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              py: 1,
-              borderRadius: 2,
-              textTransform: 'none',
-              '&:hover': { bgcolor: '#111827' },
-            }}
-          >
-            Unlock full report
-          </Button>
-        </Box>
       </Box>
 
       {/* ── CENTER ANALYSIS AREA ────────────────────────── */}
       <Box
         sx={{
-          flex: 1,
+          flex: '1 1 0%',
           overflow: 'auto',
-          px: { xs: 2, md: 3 },
+          px: { xs: 2, sm: 2.5, md: 3 },
           py: 3,
           minWidth: 0,
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
         }}
       >
-        {/* Back button + tabs */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-          <Tooltip title="Back to Analyzer">
-            <IconButton
-              size="small"
-              onClick={() => navigate('/resume-analyzer')}
-              sx={{ bgcolor: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', '&:hover': { bgcolor: '#f9fafb' } }}
-            >
-              <ArrowBackRoundedIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
+        <PageBreadcrumb
+          items={[
+            { label: 'AI Resume Studio', to: '/ai-resume-studio', showBackIcon: true },
+            { label: 'Resume Scan', to: '/resume-analyzer' },
+            { label: 'Analysis report' },
+          ]}
+          sx={{ mb: 2, pb: 1.5 }}
+        />
 
-          <Box sx={{ display: 'flex', bgcolor: 'white', borderRadius: 2, p: 0.5, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+          spacing={1.5}
+          sx={{ mb: 3 }}
+        >
+          <Box
+            sx={{
+              display: 'inline-flex',
+              bgcolor: '#fff',
+              borderRadius: 2,
+              p: 0.5,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+              alignSelf: { xs: 'flex-start', sm: 'center' },
+            }}
+          >
             {[
-              { id: 'latest', label: 'LATEST SCORE', icon: <BoltRoundedIcon sx={{ fontSize: 14 }} /> },
-              { id: 'previous', label: 'PREVIOUS SCORE', icon: <HistoryRoundedIcon sx={{ fontSize: 14 }} /> },
+              { id: 'latest', label: 'Latest score', icon: <BoltRoundedIcon sx={{ fontSize: 16 }} /> },
+              { id: 'previous', label: 'Previous', icon: <HistoryRoundedIcon sx={{ fontSize: 16 }} /> },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -518,18 +700,17 @@ export default function ResumeAnalyzeScore() {
                 startIcon={tab.icon}
                 onClick={() => setActiveTab(tab.id)}
                 sx={{
-                  bgcolor: activeTab === tab.id ? '#1a1a2e' : 'transparent',
-                  color: activeTab === tab.id ? 'white' : '#6b7280',
-                  fontWeight: 700,
-                  fontSize: '0.72rem',
-                  letterSpacing: 0.5,
-                  px: 1.5,
-                  py: 0.7,
+                  bgcolor: activeTab === tab.id ? THEME.primary : 'transparent',
+                  color: activeTab === tab.id ? '#fff' : THEME.textSecondary,
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  px: 1.75,
+                  py: 0.65,
                   borderRadius: 1.5,
-                  textTransform: 'uppercase',
+                  textTransform: 'none',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    bgcolor: activeTab === tab.id ? '#1a1a2e' : '#f3f4f6',
+                    bgcolor: activeTab === tab.id ? 'var(--primary-dark, #2a4bc4)' : THEME.primarySoft,
                   },
                 }}
               >
@@ -537,75 +718,131 @@ export default function ResumeAnalyzeScore() {
               </Button>
             ))}
           </Box>
-        </Box>
+          <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+            {previewOpen ? (
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<CloseRoundedIcon sx={{ fontSize: 18 }} />}
+                onClick={() => setPreviewOpen(false)}
+                sx={{
+                  borderColor: THEME.border,
+                  color: THEME.textSecondary,
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  textTransform: 'none',
+                  borderRadius: 1,
+                  px: 1.5,
+                  '&:hover': { borderColor: THEME.primary, bgcolor: THEME.primarySoft, color: THEME.primary },
+                }}
+              >
+                Hide preview
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<PictureAsPdfOutlinedIcon sx={{ fontSize: 18 }} />}
+                onClick={() => setPreviewOpen(true)}
+                sx={{
+                  borderColor: THEME.primary,
+                  color: THEME.primary,
+                  fontWeight: 600,
+                  fontSize: '0.8125rem',
+                  textTransform: 'none',
+                  borderRadius: 1,
+                  px: 1.5,
+                  '&:hover': { bgcolor: THEME.primarySoft },
+                }}
+              >
+                Show resume preview
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+
+        {activeTab === 'previous' && (
+          <Card
+            elevation={0}
+            sx={{
+              mb: 2.5,
+              p: 2,
+              borderRadius: 2,
+              border: `1px solid ${THEME.border}`,
+              bgcolor: '#fff',
+            }}
+          >
+            <Typography sx={{ fontSize: '0.875rem', color: THEME.textSecondary }}>
+              History view is coming soon. This report reflects your latest analysis run.
+            </Typography>
+          </Card>
+        )}
 
         {/* Greeting */}
         <Typography
           sx={{
-            fontSize: '1.4rem',
-            fontWeight: 700,
-            color: '#1a1a2e',
-            mb: 0.3,
-            fontFamily: 'var(--font-family)',
+            fontSize: { xs: '1.25rem', sm: '1.4rem' },
+            fontWeight: 800,
+            color: THEME.textPrimary,
+            mb: 0.5,
           }}
         >
-          Good afternoon, User.
+          {greeting}, {displayName}.
         </Typography>
-        <Typography sx={{ color: '#6b7280', mb: 2.5, fontFamily: 'var(--font-family)' }}>
-          Welcome to your resume review.
+        <Typography sx={{ color: THEME.textSecondary, mb: 2.5, fontSize: '0.9375rem', lineHeight: 1.5 }}>
+          Full AI analysis of your resume — prioritized fixes, passing checks, and strengths.
         </Typography>
 
+        {activeTab === 'latest' && (
+        <>
         {/* Score summary card */}
         <Box
           sx={{
-            bgcolor: 'white',
-            borderRadius: 2.5,
+            bgcolor: '#fff',
+            borderRadius: 2,
             p: 3,
             mb: 3,
-            boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
-            border: '1px solid #f0f0f0',
+            boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+            border: `1px solid ${THEME.border}`,
           }}
         >
           <Typography
             sx={{
-              fontSize: '1.1rem',
+              fontSize: '1.125rem',
               fontWeight: 700,
-              color: '#1a1a2e',
+              color: THEME.textPrimary,
               mb: 1,
-              fontFamily: 'var(--font-family)',
             }}
           >
-            Your resume scored {score} out of {maxScore}.
+            Your resume scored {score} out of {maxScore}
           </Typography>
           <Typography
-            sx={{ color: '#6b7280', mb: 2.5, fontSize: '0.9rem', lineHeight: 1.7, fontFamily: 'var(--font-family)' }}
+            sx={{ color: THEME.textSecondary, mb: 2.5, fontSize: '0.9375rem', lineHeight: 1.65 }}
           >
-            It seems like your resume scored poorly on key checks that hiring managers and resume
-            screening software scan your resume for. But don't worry! With a few simple changes to
-            your resume, you can increase your score by 40+ points. We'll go through them in this
-            report.
+            {scoreSummaryIntro}
           </Typography>
 
           {/* Score comparison bar */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
-            <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#374151', letterSpacing: 0.5 }}>
+            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: THEME.textSecondary, letterSpacing: 0.06 }}>
               YOUR RESUME
             </Typography>
-            <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#22c55e', letterSpacing: 0.5 }}>
-              TOP RESUMES
+            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#16a34a', letterSpacing: 0.06 }}>
+              STRONG RESUMES (BENCHMARK)
             </Typography>
           </Box>
 
           <Box sx={{ position: 'relative', borderRadius: 10, overflow: 'visible' }}>
             <LinearProgress
               variant="determinate"
-              value={score}
+              value={Math.min(100, (score / maxScore) * 100)}
               sx={{
                 height: 18,
                 borderRadius: 10,
-                bgcolor: '#f3f4f6',
+                bgcolor: '#f1f5f9',
                 '& .MuiLinearProgress-bar': {
-                  background: 'linear-gradient(90deg, #1f2937, #374151)',
+                  background: `linear-gradient(90deg, ${THEME.primary}, #1e40af)`,
                   borderRadius: 10,
                 },
               }}
@@ -649,82 +886,49 @@ export default function ResumeAnalyzeScore() {
           </Box>
         </Box>
 
-        {/* Steps to increase score */}
+        <ReportAnalytics analytics={analytics} />
+
+        <Box id="resume-analysis-issues" sx={{ scrollMarginTop: 24 }}>
         <Typography
           sx={{
-            fontSize: '1.15rem',
+            fontSize: '1.125rem',
             fontWeight: 700,
-            color: '#1a1a2e',
-            mb: 0.8,
-            fontFamily: 'var(--font-family)',
+            color: THEME.textPrimary,
+            mb: 0.75,
           }}
         >
-          Steps to increase your score
+          Priority improvements
         </Typography>
         <Typography
-          sx={{ color: '#6b7280', mb: 2.5, fontSize: '0.88rem', lineHeight: 1.6, fontFamily: 'var(--font-family)' }}
+          sx={{ color: THEME.textSecondary, mb: 2.5, fontSize: '0.875rem', lineHeight: 1.6 }}
         >
-          Here are some recruiter checks that are bringing your score down. Click into each to learn
-          where you went wrong and how to improve your score.
+          Actionable items ranked by impact. Use Fix to jump to the resume generator or keep this report open while you edit.
         </Typography>
 
         {issueCards.map((card, i) => (
-          <IssueCard key={i} card={card} />
+          <IssueCard
+            key={`${card.title}-${i}`}
+            card={card}
+            onFix={() => navigate('/resume-generator')}
+          />
         ))}
-
-        {/* More issues */}
-        <Box
-          sx={{
-            bgcolor: 'white',
-            borderRadius: 2.5,
-            p: 2.5,
-            mb: 3,
-            textAlign: 'center',
-            border: '1.5px dashed #e5e7eb',
-          }}
-        >
-          <LockRoundedIcon sx={{ color: '#9ca3af', mb: 0.5 }} />
-          <Typography sx={{ fontWeight: 600, color: '#374151', mb: 0.3, fontFamily: 'var(--font-family)' }}>
-            11 more issues unlocked
-          </Typography>
-          <Typography sx={{ fontSize: '0.82rem', color: '#6b7280', mb: 1.5, fontFamily: 'var(--font-family)' }}>
-            Upgrade to Pro to unlock all issues and get the full picture.
-          </Typography>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<StarRoundedIcon sx={{ fontSize: '14px !important' }} />}
-            sx={{
-              bgcolor: '#1f2937',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '0.8rem',
-              borderRadius: 2,
-              textTransform: 'none',
-              '&:hover': { bgcolor: '#111827' },
-            }}
-          >
-            Unlock Full Report
-          </Button>
         </Box>
 
         {/* What you did well */}
         <Typography
           sx={{
-            fontSize: '1.15rem',
+            fontSize: '1.125rem',
             fontWeight: 700,
-            color: '#1a1a2e',
-            mb: 0.8,
-            fontFamily: 'var(--font-family)',
+            color: THEME.textPrimary,
+            mb: 0.75,
           }}
         >
-          What you did well
+          Strengths we found
         </Typography>
         <Typography
-          sx={{ color: '#6b7280', mb: 2.5, fontSize: '0.88rem', lineHeight: 1.6, fontFamily: 'var(--font-family)' }}
+          sx={{ color: THEME.textSecondary, mb: 2.5, fontSize: '0.875rem', lineHeight: 1.6 }}
         >
-          We ran 20+ checks on your resume. Here's a rundown of three key areas you did well in –
-          well done.
+          Highlights from our checks — keep reinforcing these in your next draft.
         </Typography>
 
         {didWell.map((item, i) => (
@@ -735,78 +939,90 @@ export default function ResumeAnalyzeScore() {
               alignItems: 'flex-start',
               gap: 2,
               mb: 2,
-              bgcolor: 'white',
-              borderRadius: 2.5,
+              bgcolor: '#fff',
+              borderRadius: 2,
               p: 2.5,
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-              border: '1px solid #f0f0f0',
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+              border: `1px solid ${THEME.border}`,
             }}
           >
-            <CheckCircleRoundedIcon sx={{ color: '#22c55e', fontSize: 20, mt: 0.2, flexShrink: 0 }} />
+            <CheckCircleRoundedIcon sx={{ color: '#16a34a', fontSize: 22, mt: 0.15, flexShrink: 0 }} />
             <Box>
-              <Typography
-                sx={{ fontWeight: 600, fontSize: '0.92rem', color: '#1a1a2e', mb: 0.3, fontFamily: 'var(--font-family)' }}
-              >
+              <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: THEME.textPrimary, mb: 0.35 }}>
                 {item.title}
               </Typography>
-              <Typography sx={{ fontSize: '0.82rem', color: '#6b7280', fontFamily: 'var(--font-family)' }}>
+              <Typography sx={{ fontSize: '0.875rem', color: THEME.textSecondary, lineHeight: 1.5 }}>
                 {item.desc}
               </Typography>
             </Box>
           </Box>
         ))}
+        </>
+        )}
       </Box>
 
       {/* ── RIGHT RESUME PREVIEW ────────────────────────── */}
+      {previewOpen && (
       <Box
         sx={{
-          width: { xs: '0%', md: '42%' },
-          minWidth: { md: 340 },
-          bgcolor: '#f1f3f5',
-          borderLeft: '1px solid #e5e7eb',
+          width: { xs: '0%', md: '40%' },
+          minWidth: { md: 360 },
+          bgcolor: '#fafbfc',
+          borderLeft: `1px solid ${THEME.border}`,
           display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
           flexShrink: 0,
           overflow: 'hidden',
         }}
       >
-        {/* Header */}
         <Box
           sx={{
             px: 2.5,
             py: 1.5,
-            bgcolor: 'white',
-            borderBottom: '1px solid #e5e7eb',
+            bgcolor: '#fff',
+            borderBottom: `1px solid ${THEME.border}`,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'space-between',
+            gap: 1.5,
             flexShrink: 0,
           }}
         >
-          <Typography
-            sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'var(--font-family)' }}
-          >
-            Resume Preview
-          </Typography>
-          {fileName && (
-            <Chip
-              label={fileName.length > 22 ? fileName.slice(0, 22) + '...' : fileName}
-              size="small"
-              sx={{ bgcolor: '#f3f4f6', color: '#6b7280', fontSize: '0.72rem', height: 22 }}
-            />
-          )}
+          <Box>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.8125rem', color: THEME.textPrimary, mb: 0.25 }}>
+              Resume preview
+            </Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: THEME.textSecondary, fontWeight: 500 }}>
+              PDF · scroll to review alongside feedback
+            </Typography>
+          </Box>
+          {fileName ? (
+            <Typography
+              sx={{
+                fontSize: '0.75rem',
+                color: THEME.textSecondary,
+                fontWeight: 600,
+                textAlign: 'right',
+                maxWidth: '52%',
+                wordBreak: 'break-word',
+                lineHeight: 1.35,
+              }}
+            >
+              {fileName}
+            </Typography>
+          ) : null}
         </Box>
 
-        {/* PDF / file display */}
         <Box
           ref={pdfContainerRef}
           sx={{
             flex: 1,
             overflow: 'auto',
             position: 'relative',
-            bgcolor: '#e8e8e8',
+            bgcolor: '#eef1f4',
             px: 2,
             py: 2,
+            minHeight: 0,
           }}
         >
           {resumeUrl ? (
@@ -819,11 +1035,12 @@ export default function ResumeAnalyzeScore() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: '#e8e8e8',
-                    zIndex: 2,
+                    bgcolor: 'rgba(238, 241, 244, 0.92)',
+                    backdropFilter: 'blur(4px)',
+                    zIndex: 10,
                   }}
                 >
-                  <CircularProgress size={32} sx={{ color: 'var(--primary)' }} />
+                  <CircularProgress size={40} thickness={4} sx={{ color: THEME.primary }} />
                 </Box>
               )}
               <Document
@@ -840,14 +1057,17 @@ export default function ResumeAnalyzeScore() {
                     key={i}
                     sx={{
                       mb: 2,
-                      boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
-                      display: 'inline-block',
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 24px rgba(15, 23, 42, 0.12)',
+                      bgcolor: '#fff',
+                      display: 'block',
                       width: '100%',
                     }}
                   >
                     <Page
                       pageNumber={i + 1}
-                      width={containerWidth ? containerWidth - 32 : undefined}
+                      width={pdfPageWidth}
                       renderAnnotationLayer
                       renderTextLayer
                     />
@@ -862,33 +1082,34 @@ export default function ResumeAnalyzeScore() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '100%',
+                minHeight: 280,
                 gap: 1.5,
-                color: '#9ca3af',
+                color: THEME.textSecondary,
               }}
             >
-              <InsightsRoundedIcon sx={{ fontSize: 48, opacity: 0.4 }} />
-              <Typography sx={{ fontSize: '0.9rem', fontFamily: 'var(--font-family)' }}>
-                No resume to preview
-              </Typography>
+              <InsightsRoundedIcon sx={{ fontSize: 48, opacity: 0.35 }} />
+              <Typography sx={{ fontSize: '0.9rem' }}>No resume to preview</Typography>
               <Button
                 size="small"
                 variant="outlined"
                 onClick={() => navigate('/resume-analyzer')}
                 sx={{
-                  borderColor: '#d1d5db',
-                  color: '#6b7280',
-                  fontSize: '0.8rem',
-                  borderRadius: 2,
+                  borderColor: THEME.primary,
+                  color: THEME.primary,
+                  fontSize: '0.8125rem',
+                  borderRadius: 1,
                   textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': { borderColor: THEME.primary, bgcolor: THEME.primarySoft },
                 }}
               >
-                Upload Resume
+                Upload resume
               </Button>
             </Box>
           )}
         </Box>
       </Box>
+      )}
     </Box>
   );
 }

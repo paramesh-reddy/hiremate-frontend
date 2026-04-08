@@ -21,10 +21,101 @@ import {
   AccordionDetails,
   Chip,
   Divider,
+  Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import DiamondRoundedIcon from '@mui/icons-material/DiamondRounded';
 import SectionReorder from './SectionReorder';
+import { RESUME_STUDIO_THEME as T } from '../../../utilities/resumeStudioTheme';
+
+function atsScoreColor(score) {
+  if (score >= 90) return '#059669';
+  if (score >= 80) return '#0d9488';
+  if (score >= 70) return '#d97706';
+  return '#64748b';
+}
+
+/** Normalize template / user hex for `<input type="color">` (requires #rrggbb). */
+function normalizeHexForColorInput(hex) {
+  if (hex == null || typeof hex !== 'string') return '#000000';
+  const v = hex.trim();
+  if (/^#[0-9A-Fa-f]{6}$/i.test(v)) return v.toLowerCase();
+  if (/^#[0-9A-Fa-f]{3}$/i.test(v)) {
+    const r = v[1];
+    const g = v[2];
+    const b = v[3];
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+  }
+  return '#000000';
+}
+
+function ColorPickerRow({ id, label, value, fallbackHex, onChange, onClear }) {
+  const hasValue = Boolean(value);
+  const display = normalizeHexForColorInput(value || fallbackHex);
+  return (
+    <Box sx={{ mb: 2, '&:last-child': { mb: 0 } }}>
+      <Typography
+        sx={{
+          fontSize: '0.72rem',
+          fontWeight: 600,
+          color: T.textPrimary,
+          fontFamily: 'var(--font-family)',
+          mb: 0.75,
+        }}
+      >
+        {label}
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.25 }}>
+        <Box
+          component="label"
+          htmlFor={id}
+          sx={{
+            position: 'relative',
+            width: 40,
+            height: 40,
+            borderRadius: 1,
+            overflow: 'hidden',
+            cursor: 'pointer',
+            flexShrink: 0,
+            border: `2px solid ${hasValue ? T.primary : T.mutedBorder}`,
+            boxShadow: hasValue ? `0 0 0 2px ${T.primarySoft}` : 'none',
+            '&:focus-within': { outline: `2px solid ${T.primary}`, outlineOffset: 2 },
+          }}
+        >
+          <input
+            id={id}
+            type="color"
+            value={display}
+            onChange={(e) => onChange(e.target.value.toLowerCase())}
+            aria-label={label}
+            style={{
+              width: '120%',
+              height: '120%',
+              margin: '-10%',
+              padding: 0,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          />
+        </Box>
+        <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: T.textSecondary, fontFamily: 'var(--font-family)' }}>
+          {hasValue ? normalizeHexForColorInput(value) : `${display} · preset`}
+        </Typography>
+        {hasValue && (
+          <Button
+            size="small"
+            variant="text"
+            onClick={onClear}
+            sx={{ textTransform: 'none', fontSize: '0.75rem', fontWeight: 600, color: T.primary, minWidth: 0 }}
+          >
+            Reset
+          </Button>
+        )}
+      </Box>
+    </Box>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Template Tile
@@ -34,118 +125,163 @@ function TemplateTile({ template, selected, onSelect }) {
   const [imgErr, setImgErr] = useState(false);
   const img = `/resume-templates/${template.id}.svg`;
   const paletteColor = template.color_schemes?.[0]?.primary ?? '#374151';
+  const ats = typeof template.ats_score === 'number' ? template.ats_score : 0;
 
   return (
     <Card
       onClick={onSelect}
       elevation={0}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       sx={{
         overflow: 'hidden',
         cursor: 'pointer',
         border: '2px solid',
-        borderColor: selected ? '#335EDE' : '#E5E7EB',
-        borderRadius: '10px',
-        bgcolor: 'white',
-        boxShadow: selected ? '0 0 0 3px rgba(51,94,222,0.14)' : 'none',
+        borderColor: selected ? T.primary : T.mutedBorder,
+        borderRadius: 2,
+        bgcolor: T.surface,
+        boxShadow: selected ? '0 0 0 3px rgba(51, 94, 222, 0.12)' : '0 1px 2px rgba(15, 23, 42, 0.04)',
         transition: 'all 0.18s ease',
         '&:hover': {
-          borderColor: selected ? '#335EDE' : '#C7D2FE',
+          borderColor: selected ? T.primary : 'rgba(51, 94, 222, 0.35)',
           transform: 'translateY(-2px)',
           boxShadow: selected
-            ? '0 0 0 3px rgba(51,94,222,0.2)'
-            : '0 4px 12px rgba(0,0,0,0.08)',
+            ? '0 0 0 3px rgba(51, 94, 222, 0.18)'
+            : '0 4px 14px rgba(15, 23, 42, 0.08)',
         },
       }}
     >
-      <Box sx={{ aspectRatio: '120/160', display: 'flex', flexDirection: 'column' }}>
-        {!imgErr ? (
-          <Box
-            component="img"
-            src={img}
-            alt={template.name}
-            loading="eager"
-            onError={() => setImgErr(true)}
-            sx={{
-              width: '100%',
-              height: 'auto',
-              objectFit: 'contain',
-              flex: 1,
-              bgcolor: '#F9FAFB',
-              display: 'block',
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: '#F9FAFB',
-              gap: 0.5,
-              p: 1,
-            }}
-          >
-            <Box sx={{ width: '80%', height: 6, bgcolor: paletteColor, borderRadius: 1, mb: 0.5 }} />
-            {[1, 0.7, 0.7, 0.5, 0.5, 0.5].map((w, i) => (
-              <Box
-                key={i}
-                sx={{
-                  width: `${w * 80}%`,
-                  height: 3,
-                  bgcolor: '#D1D5DB',
-                  borderRadius: 0.5,
-                  mt: i === 2 ? 0.75 : 0,
-                }}
-              />
-            ))}
-          </Box>
-        )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            px: 1.25,
-            py: 0.75,
-            bgcolor: selected ? 'rgba(51,94,222,0.06)' : 'white',
-            borderTop: '1px solid #F3F4F6',
+            position: 'relative',
+            width: '100%',
+            aspectRatio: '120 / 160',
+            bgcolor: '#f1f5f9',
+            flexShrink: 0,
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
+          {!imgErr ? (
+            <Box
+              component="img"
+              src={img}
+              alt={template.name}
+              loading="lazy"
+              onError={() => setImgErr(true)}
               sx={{
-                fontSize: '0.65rem',
-                fontWeight: selected ? 700 : 500,
-                color: selected ? '#335EDE' : '#374151',
-                fontFamily: 'var(--font-family)',
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                objectPosition: 'top center',
                 display: 'block',
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.5,
+                p: 1,
+              }}
+            >
+              <Box sx={{ width: '80%', height: 6, bgcolor: paletteColor, borderRadius: 1, mb: 0.5 }} />
+              {[1, 0.7, 0.7, 0.5, 0.5, 0.5].map((w, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    width: `${w * 80}%`,
+                    height: 3,
+                    bgcolor: '#cbd5e1',
+                    borderRadius: 0.5,
+                    mt: i === 2 ? 0.75 : 0,
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+          {selected && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 8,
+                right: 8,
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                bgcolor: 'rgba(255,255,255,0.96)',
+                boxShadow: '0 2px 8px rgba(15, 23, 42, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+              }}
+            >
+              <CheckCircleRoundedIcon sx={{ color: T.primary, fontSize: 20 }} />
+            </Box>
+          )}
+        </Box>
+
+        <Box
+          sx={{
+            px: 1.25,
+            py: 0.85,
+            bgcolor: selected ? T.primarySoft : T.surface,
+            borderTop: `1px solid ${T.border}`,
+            minHeight: 48,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35, minWidth: 0 }}>
+            <Typography
+              component="span"
+              title={template.name}
+              sx={{
+                fontSize: '0.6875rem',
+                fontWeight: selected ? 700 : 600,
+                color: selected ? T.primary : T.textPrimary,
+                fontFamily: 'var(--font-family)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 lineHeight: 1.3,
+                flex: 1,
+                minWidth: 0,
               }}
             >
-              {template.name}{template.premium ? ' ✦' : ''}
+              {template.name}
             </Typography>
-            {template.ats_score >= 90 && (
-              <Typography
-                sx={{
-                  fontSize: '0.58rem',
-                  color: '#059669',
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-family)',
-                  letterSpacing: '0.02em',
-                }}
-              >
-                ATS {template.ats_score}
-              </Typography>
+            {template.premium && (
+              <DiamondRoundedIcon
+                sx={{ fontSize: 12, color: '#b45309', flexShrink: 0, opacity: 0.9 }}
+                aria-label="Premium template"
+              />
             )}
           </Box>
-          {selected && (
-            <CheckCircleRoundedIcon sx={{ color: '#335EDE', fontSize: 14, flexShrink: 0 }} />
-          )}
+          <Typography
+            sx={{
+              fontSize: '0.625rem',
+              color: atsScoreColor(ats),
+              fontWeight: 700,
+              fontFamily: 'var(--font-family)',
+              letterSpacing: '0.04em',
+              mt: 0.25,
+            }}
+          >
+            ATS {ats}
+          </Typography>
         </Box>
       </Box>
     </Card>
@@ -156,7 +292,7 @@ function TemplateTile({ template, selected, onSelect }) {
 // Collapsible panel section (accordion)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PanelSection({ label, accentColor = '#335EDE', defaultExpanded = false, children }) {
+function PanelSection({ label, accentColor = T.primary, defaultExpanded = false, children }) {
   return (
     <Accordion
       defaultExpanded={defaultExpanded}
@@ -165,24 +301,24 @@ function PanelSection({ label, accentColor = '#335EDE', defaultExpanded = false,
       sx={{
         bgcolor: 'transparent',
         '&:before': { display: 'none' },
-        borderBottom: '1px solid #F0F0F0',
+        borderBottom: `1px solid ${T.border}`,
         '&.Mui-expanded': { margin: 0 },
       }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />}
+        expandIcon={<ExpandMoreIcon sx={{ fontSize: 18, color: T.textSecondary }} />}
         sx={{
           px: 2,
-          minHeight: 42,
+          minHeight: 48,
           '& .MuiAccordionSummary-content': { my: 0, alignItems: 'center', gap: 1 },
-          '&:hover': { bgcolor: '#F9FAFB' },
-          '&.Mui-expanded': { bgcolor: '#F9FAFB' },
+          '&:hover': { bgcolor: T.pageBg },
+          '&.Mui-expanded': { bgcolor: T.pageBg },
         }}
       >
         <Box
           sx={{
             width: 3,
-            height: 13,
+            height: 14,
             bgcolor: accentColor,
             borderRadius: '2px',
             flexShrink: 0,
@@ -192,8 +328,8 @@ function PanelSection({ label, accentColor = '#335EDE', defaultExpanded = false,
           sx={{
             fontSize: '0.7rem',
             fontWeight: 700,
-            color: '#1F2937',
-            letterSpacing: '0.07em',
+            color: T.textPrimary,
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
             fontFamily: 'var(--font-family)',
           }}
@@ -201,7 +337,7 @@ function PanelSection({ label, accentColor = '#335EDE', defaultExpanded = false,
           {label}
         </Typography>
       </AccordionSummary>
-      <AccordionDetails sx={{ px: 2, pt: 1, pb: 2.5, bgcolor: 'white' }}>
+      <AccordionDetails sx={{ px: 2, pt: 1, pb: 2.5, bgcolor: T.surface }}>
         {children}
       </AccordionDetails>
     </Accordion>
@@ -225,10 +361,10 @@ function CtrlLabel({ children, value, sx: sxProp }) {
     >
       <Typography
         sx={{
-          fontSize: '0.72rem',
-          color: '#374151',
+          fontSize: '0.75rem',
+          color: T.textPrimary,
           fontFamily: 'var(--font-family)',
-          fontWeight: 500,
+          fontWeight: 600,
         }}
       >
         {children}
@@ -236,8 +372,8 @@ function CtrlLabel({ children, value, sx: sxProp }) {
       {value !== undefined && (
         <Typography
           sx={{
-            fontSize: '0.68rem',
-            color: '#335EDE',
+            fontSize: '0.7rem',
+            color: T.primary,
             fontFamily: 'var(--font-family)',
             fontWeight: 600,
           }}
@@ -262,15 +398,15 @@ function ToggleRow({ label, checked, onChange }) {
         justifyContent: 'space-between',
         px: 1.25,
         py: 0.875,
-        bgcolor: '#F9FAFB',
-        borderRadius: '8px',
-        border: '1px solid #F0F0F0',
+        bgcolor: T.pageBg,
+        borderRadius: 1,
+        border: `1px solid ${T.border}`,
       }}
     >
       <Typography
         sx={{
           fontSize: '0.75rem',
-          color: '#374151',
+          color: T.textPrimary,
           fontFamily: 'var(--font-family)',
           fontWeight: 500,
         }}
@@ -315,46 +451,93 @@ export default function CustomizationPanel({
     onDesignChange({ sections_visible: updated });
   };
 
+  const activeColorScheme =
+    colorSchemes.find((s) => s.id === designConfig.color_scheme_id) || colorSchemes[0] || null;
+  const hasCustomPrimary = Boolean(designConfig.custom_primary_color);
+  const colorPickerValue = normalizeHexForColorInput(
+    designConfig.custom_primary_color || activeColorScheme?.primary || '#000000'
+  );
+  const primaryHex = normalizeHexForColorInput(
+    activeColorScheme?.primary || currentTemplate?.color_schemes?.[0]?.primary || '#000000'
+  );
+  const schemeBgHex = normalizeHexForColorInput(
+    activeColorScheme?.bg || currentTemplate?.color_schemes?.[0]?.bg || '#ffffff'
+  );
+  const headerTextFallback = '#ffffff';
+  const bodyTextFallback = '#111827';
+
   return (
-    <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100%' }}>
+    <Box sx={{ bgcolor: T.pageBg, minHeight: '100%' }}>
 
       {/* ── TEMPLATE ──────────────────────────────────────────────────────── */}
-      <Box sx={{ px: 2, pt: 2, pb: 2, bgcolor: 'white', borderBottom: '1px solid #F0F0F0' }}>
+      <Box
+        sx={{
+          mx: 2,
+          mt: 2,
+          mb: 2,
+          px: 2,
+          pt: 2,
+          pb: 2,
+          bgcolor: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: 2,
+          boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        }}
+      >
         <TopLabel>Template</TopLabel>
         {templates.length > 0 ? (
-          <Grid container spacing={1.25}>
-            {templates.map((t) => (
-              <Grid item xs={4} key={t.id}>
+          <Grid container spacing={1.5}>
+            {templates.map((tmpl) => (
+              <Grid item xs={6} sm={4} key={tmpl.id}>
                 <TemplateTile
-                  template={t}
-                  selected={designConfig.template_id === t.id}
-                  onSelect={() => onDesignChange({ template_id: t.id })}
+                  template={tmpl}
+                  selected={designConfig.template_id === tmpl.id}
+                  onSelect={() => onDesignChange({ template_id: tmpl.id })}
                 />
               </Grid>
             ))}
           </Grid>
         ) : (
-          <Typography variant="caption" sx={{ color: '#9CA3AF', fontFamily: 'var(--font-family)' }}>
+          <Typography variant="caption" sx={{ color: T.textSecondary, fontFamily: 'var(--font-family)' }}>
             Loading templates…
           </Typography>
         )}
       </Box>
 
+      <Box
+        sx={{
+          mx: 2,
+          mb: 2,
+          border: `1px solid ${T.border}`,
+          borderRadius: 2,
+          bgcolor: T.surface,
+          boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+          overflow: 'hidden',
+        }}
+      >
       {/* ── APPEARANCE: color scheme + typography ─────────────────────────── */}
-      <PanelSection label="Appearance" accentColor="#8B5CF6" defaultExpanded>
+      <PanelSection label="Appearance" defaultExpanded>
 
-        {colorSchemes.length > 1 && (
+        {colorSchemes.length > 0 && (
           <Box sx={{ mb: 2 }}>
             <CtrlLabel>Color Scheme</CtrlLabel>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', pt: 0.25 }}>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', pt: 0.25 }}>
               {colorSchemes.map((cs) => {
-                const isActive = designConfig.color_scheme_id
+                const isActive = !hasCustomPrimary && (designConfig.color_scheme_id
                   ? designConfig.color_scheme_id === cs.id
-                  : cs.id === colorSchemes[0].id;
+                  : cs.id === colorSchemes[0].id);
                 return (
                   <Tooltip key={cs.id} title={cs.label} placement="top" arrow>
                     <Box
-                      onClick={() => onDesignChange({ color_scheme_id: cs.id })}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => onDesignChange({ color_scheme_id: cs.id, custom_primary_color: null })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onDesignChange({ color_scheme_id: cs.id, custom_primary_color: null });
+                        }
+                      }}
                       sx={{
                         width: 26,
                         height: 26,
@@ -362,12 +545,12 @@ export default function CustomizationPanel({
                         borderRadius: '50%',
                         cursor: 'pointer',
                         boxShadow: isActive
-                          ? `0 0 0 2px white, 0 0 0 4px #335EDE`
-                          : '0 1px 3px rgba(0,0,0,0.2)',
+                          ? `0 0 0 2px white, 0 0 0 4px ${T.primary}`
+                          : '0 1px 3px rgba(15, 23, 42, 0.2)',
                         transition: 'transform 0.15s, box-shadow 0.15s',
                         '&:hover': {
-                          transform: 'scale(1.2)',
-                          boxShadow: '0 0 0 2px white, 0 0 0 4px rgba(51,94,222,0.5)',
+                          transform: 'scale(1.15)',
+                          boxShadow: `0 0 0 2px white, 0 0 0 4px rgba(51, 94, 222, 0.45)`,
                         },
                       }}
                     />
@@ -375,6 +558,162 @@ export default function CustomizationPanel({
                 );
               })}
             </Box>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.25, mt: 1.5 }}>
+              <Typography
+                component="label"
+                htmlFor="resume-custom-primary-color"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: T.textPrimary,
+                  fontFamily: 'var(--font-family)',
+                }}
+              >
+                Accent (section titles)
+              </Typography>
+              <Box
+                component="label"
+                htmlFor="resume-custom-primary-color"
+                sx={{
+                  position: 'relative',
+                  width: 40,
+                  height: 40,
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  border: `2px solid ${hasCustomPrimary ? T.primary : T.mutedBorder}`,
+                  boxShadow: hasCustomPrimary ? `0 0 0 2px ${T.primarySoft}` : 'none',
+                  '&:focus-within': {
+                    outline: `2px solid ${T.primary}`,
+                    outlineOffset: 2,
+                  },
+                }}
+              >
+                <input
+                  id="resume-custom-primary-color"
+                  type="color"
+                  value={colorPickerValue}
+                  onChange={(e) => onDesignChange({ custom_primary_color: e.target.value.toLowerCase() })}
+                  aria-label="Accent color for section titles and rules"
+                  style={{
+                    width: '120%',
+                    height: '120%',
+                    margin: '-10%',
+                    padding: 0,
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                />
+              </Box>
+              <Typography sx={{ fontSize: '0.7rem', color: T.textSecondary, fontFamily: 'var(--font-family)', fontWeight: 600 }}>
+                {colorPickerValue}
+              </Typography>
+              {hasCustomPrimary && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => onDesignChange({ custom_primary_color: null })}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: T.primary,
+                    minWidth: 0,
+                  }}
+                >
+                  Use preset only
+                </Button>
+              )}
+            </Box>
+            <Typography sx={{ fontSize: '0.65rem', color: T.textSecondary, fontFamily: 'var(--font-family)', mt: 0.75, lineHeight: 1.4, mb: 1.5 }}>
+              Section titles and underlines use the accent. Header/body colors below override template defaults for preview and PDF.
+            </Typography>
+
+            {currentTemplate && (
+              <>
+                <Accordion
+                  defaultExpanded
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    border: `1px solid ${T.border}`,
+                    borderRadius: '8px !important',
+                    mb: 1.5,
+                    overflow: 'hidden',
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon sx={{ fontSize: 18, color: T.textSecondary }} />}
+                    sx={{ px: 1.5, minHeight: 44, bgcolor: T.pageBg, '& .MuiAccordionSummary-content': { my: 1 } }}
+                  >
+                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: T.textPrimary, fontFamily: 'var(--font-family)' }}>
+                      Header
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ px: 1.5, pt: 0, pb: 2, bgcolor: T.surface }}>
+                    <ColorPickerRow
+                      id="resume-header-bg"
+                      label="Background"
+                      value={designConfig.header_background_color}
+                      fallbackHex={primaryHex}
+                      onChange={(hex) => onDesignChange({ header_background_color: hex })}
+                      onClear={() => onDesignChange({ header_background_color: null })}
+                    />
+                    <ColorPickerRow
+                      id="resume-header-text"
+                      label="Text"
+                      value={designConfig.header_text_color}
+                      fallbackHex={headerTextFallback}
+                      onChange={(hex) => onDesignChange({ header_text_color: hex })}
+                      onClear={() => onDesignChange({ header_text_color: null })}
+                    />
+                  </AccordionDetails>
+                </Accordion>
+
+                <Accordion
+                  defaultExpanded
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    border: `1px solid ${T.border}`,
+                    borderRadius: '8px !important',
+                    mb: 0,
+                    overflow: 'hidden',
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon sx={{ fontSize: 18, color: T.textSecondary }} />}
+                    sx={{ px: 1.5, minHeight: 44, bgcolor: T.pageBg, '& .MuiAccordionSummary-content': { my: 1 } }}
+                  >
+                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: T.textPrimary, fontFamily: 'var(--font-family)' }}>
+                      Body
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ px: 1.5, pt: 0, pb: 2, bgcolor: T.surface }}>
+                    <ColorPickerRow
+                      id="resume-body-bg"
+                      label="Background"
+                      value={designConfig.body_background_color}
+                      fallbackHex={schemeBgHex}
+                      onChange={(hex) => onDesignChange({ body_background_color: hex })}
+                      onClear={() => onDesignChange({ body_background_color: null })}
+                    />
+                    <ColorPickerRow
+                      id="resume-body-text"
+                      label="Text"
+                      value={designConfig.body_text_color}
+                      fallbackHex={bodyTextFallback}
+                      onChange={(hex) => onDesignChange({ body_text_color: hex })}
+                      onClear={() => onDesignChange({ body_text_color: null })}
+                    />
+                  </AccordionDetails>
+                </Accordion>
+              </>
+            )}
           </Box>
         )}
 
@@ -430,7 +769,7 @@ export default function CustomizationPanel({
       </PanelSection>
 
       {/* ── LAYOUT: alignment + page + margins ────────────────────────────── */}
-      <PanelSection label="Layout" accentColor="#0EA5E9" defaultExpanded>
+      <PanelSection label="Layout" defaultExpanded>
 
         <Box sx={{ mb: 1.75 }}>
           <CtrlLabel>Header Alignment</CtrlLabel>
@@ -475,10 +814,10 @@ export default function CustomizationPanel({
               return (
                 <Grid item xs={6} key={key}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.25 }}>
-                    <Typography sx={{ fontSize: '0.68rem', color: '#6B7280', fontFamily: 'var(--font-family)' }}>
+                    <Typography sx={{ fontSize: '0.68rem', color: T.textSecondary, fontFamily: 'var(--font-family)' }}>
                       {lbl}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.68rem', color: '#335EDE', fontFamily: 'var(--font-family)', fontWeight: 600 }}>
+                    <Typography sx={{ fontSize: '0.68rem', color: T.primary, fontFamily: 'var(--font-family)', fontWeight: 600 }}>
                       {(val / 10).toFixed(1)}in
                     </Typography>
                   </Box>
@@ -515,7 +854,7 @@ export default function CustomizationPanel({
       </PanelSection>
 
       {/* ── SPACING: section gap + bullet indent + item padding ───────────── */}
-      <PanelSection label="Spacing" accentColor="#10B981">
+      <PanelSection label="Spacing">
 
         <Box sx={{ mb: 1.75 }}>
           <CtrlLabel>Section Spacing</CtrlLabel>
@@ -571,7 +910,7 @@ export default function CustomizationPanel({
       </PanelSection>
 
       {/* ── CONTENT: bullet style + dates + name caps ─────────────────────── */}
-      <PanelSection label="Content" accentColor="#F59E0B">
+      <PanelSection label="Content">
 
         <Box sx={{ mb: 1.75 }}>
           <CtrlLabel>Bullet Style</CtrlLabel>
@@ -612,7 +951,7 @@ export default function CustomizationPanel({
       </PanelSection>
 
       {/* ── SECTIONS: visibility chips + drag reorder ─────────────────────── */}
-      <PanelSection label="Sections" accentColor="#EF4444" defaultExpanded>
+      <PanelSection label="Sections" defaultExpanded>
 
         <CtrlLabel sx={{ mb: 1 }}>Toggle visibility</CtrlLabel>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2.25 }}>
@@ -630,13 +969,13 @@ export default function CustomizationPanel({
                   fontFamily: 'var(--font-family)',
                   fontWeight: on ? 600 : 400,
                   cursor: 'pointer',
-                  bgcolor: on ? 'rgba(51,94,222,0.1)' : '#F3F4F6',
-                  color: on ? '#335EDE' : '#9CA3AF',
+                  bgcolor: on ? T.primarySoft : T.pageBg,
+                  color: on ? T.primary : T.textSecondary,
                   border: '1px solid',
-                  borderColor: on ? 'rgba(51,94,222,0.35)' : '#E5E7EB',
+                  borderColor: on ? 'rgba(51, 94, 222, 0.35)' : T.mutedBorder,
                   transition: 'all 0.15s',
                   '&:hover': {
-                    bgcolor: on ? 'rgba(51,94,222,0.18)' : '#E9EAEC',
+                    bgcolor: on ? 'rgba(51, 94, 222, 0.16)' : 'rgba(148, 163, 184, 0.2)',
                   },
                   '& .MuiChip-label': { px: 1 },
                 }}
@@ -645,12 +984,12 @@ export default function CustomizationPanel({
           })}
         </Box>
 
-        <Divider sx={{ mb: 1.5, borderColor: '#F0F0F0' }} />
+        <Divider sx={{ mb: 1.5, borderColor: T.border }} />
 
         <Typography
           sx={{
             fontSize: '0.68rem',
-            color: '#9CA3AF',
+            color: T.textSecondary,
             fontFamily: 'var(--font-family)',
             mb: 0.75,
             letterSpacing: '0.05em',
@@ -666,6 +1005,7 @@ export default function CustomizationPanel({
         />
 
       </PanelSection>
+      </Box>
 
     </Box>
   );
@@ -681,10 +1021,10 @@ function TopLabel({ children }) {
       sx={{
         fontSize: '0.7rem',
         fontWeight: 700,
-        color: '#1F2937',
+        color: T.textPrimary,
         fontFamily: 'var(--font-family)',
         textTransform: 'uppercase',
-        letterSpacing: '0.07em',
+        letterSpacing: '0.08em',
         mb: 1.25,
       }}
     >
@@ -694,62 +1034,65 @@ function TopLabel({ children }) {
 }
 
 const selectSx = {
-  '& .MuiOutlinedInput-root': { borderRadius: '8px', minHeight: 34, bgcolor: 'white' },
-  '& fieldset': { borderColor: '#E5E7EB' },
-  '& .MuiOutlinedInput-root:hover fieldset': { borderColor: '#C7D2FE' },
-  '& .MuiSelect-select': { py: '6px', fontSize: '0.8125rem', fontFamily: 'var(--font-family)' },
+  '& .MuiOutlinedInput-root': { borderRadius: 1, minHeight: 36, bgcolor: T.surface },
+  '& fieldset': { borderColor: T.mutedBorder },
+  '& .MuiOutlinedInput-root:hover fieldset': { borderColor: 'rgba(51, 94, 222, 0.35)' },
+  '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: T.primary, borderWidth: 1 },
+  '& .MuiSelect-select': { py: '7px', fontSize: '0.8125rem', fontFamily: 'var(--font-family)' },
 };
 
-// Segmented-control style: pill container, white active card
+/** Segmented controls — same visual model for 2-option and 5-option rows (matches AI Resume Studio). */
 const tgSx = {
-  bgcolor: '#F3F4F6',
-  borderRadius: '8px',
-  p: '3px',
-  gap: '2px',
+  bgcolor: T.previewCanvas,
+  borderRadius: 1,
+  p: '4px',
+  gap: '3px',
   border: 'none',
   width: '100%',
   '& .MuiToggleButtonGroup-grouped': {
     border: 'none !important',
     borderRadius: '6px !important',
     mx: 0,
+    minHeight: 32,
     '&.Mui-selected': {
-      bgcolor: 'white !important',
-      color: '#335EDE',
+      bgcolor: `${T.surface} !important`,
+      color: `${T.primary} !important`,
       fontWeight: 700,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      boxShadow: '0 1px 3px rgba(15, 23, 42, 0.1)',
     },
     '&:not(.Mui-selected)': {
-      color: '#6B7280',
+      color: T.textSecondary,
       bgcolor: 'transparent',
     },
     '&:hover:not(.Mui-selected)': {
-      bgcolor: 'rgba(255,255,255,0.55) !important',
+      bgcolor: 'rgba(255, 255, 255, 0.7) !important',
     },
   },
 };
 
 const tgBtnSx = {
   fontFamily: 'var(--font-family)',
-  fontSize: '0.72rem',
+  fontSize: '0.75rem',
   textTransform: 'none',
-  py: '4px',
+  py: '6px',
   flex: 1,
   minWidth: 0,
+  lineHeight: 1.2,
 };
 
 const sliderSx = {
-  color: '#335EDE',
+  color: T.primary,
   height: 4,
   mt: 0.5,
   '& .MuiSlider-thumb': {
     width: 14,
     height: 14,
-    bgcolor: 'white',
-    border: '2px solid #335EDE',
-    boxShadow: '0 1px 4px rgba(51,94,222,0.3)',
-    '&:hover': { boxShadow: '0 0 0 7px rgba(51,94,222,0.1)' },
-    '&.Mui-focusVisible': { boxShadow: '0 0 0 7px rgba(51,94,222,0.15)' },
+    bgcolor: T.surface,
+    border: `2px solid ${T.primary}`,
+    boxShadow: '0 1px 4px rgba(51, 94, 222, 0.25)',
+    '&:hover': { boxShadow: '0 0 0 7px rgba(51, 94, 222, 0.1)' },
+    '&.Mui-focusVisible': { boxShadow: '0 0 0 7px rgba(51, 94, 222, 0.15)' },
   },
   '& .MuiSlider-track': { border: 'none', height: 4 },
-  '& .MuiSlider-rail': { bgcolor: '#E5E7EB', opacity: 1, height: 4 },
+  '& .MuiSlider-rail': { bgcolor: T.mutedBorder, opacity: 1, height: 4 },
 };

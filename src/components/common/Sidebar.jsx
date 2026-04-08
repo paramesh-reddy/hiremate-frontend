@@ -27,7 +27,7 @@ import BugReportRoundedIcon from '@mui/icons-material/BugReportRounded';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import ExtensionRoundedIcon from '@mui/icons-material/ExtensionRounded';
 import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
-import BusinessCenterRoundedIcon from '@mui/icons-material/BusinessCenterRounded';
+import RecommendRoundedIcon from '@mui/icons-material/RecommendRounded';
 import { logout } from '../../store/auth/authSlice';
 import { toggleTheme } from '../../store/theme/themeSlice';
 import { getProfileCompletion } from '../../pages/profile/utils/profileCompletion';
@@ -36,10 +36,10 @@ import logoImg from '../../assets/logo.png';
 
 const MAIN_NAV = [
   { label: 'Dashboard', path: '/', icon: SpaceDashboardRoundedIcon },
+  { label: 'Job Recommendation', path: '/job-recommendation', icon: RecommendRoundedIcon },
   { label: 'Application Tracker', path: '/application-tracker', icon: ViewKanbanRoundedIcon },
   { label: 'AI Resume Studio', path: '/ai-resume-studio', icon: AutoFixHighRoundedIcon, badge: 'AI' },
   { label: 'Interview Practice', path: '/interview-practice', icon: MicRoundedIcon },
-  { label: 'Company Search', path: '/company-search', icon: BusinessCenterRoundedIcon },
 ];
 
 const ACCOUNT_NAV = [
@@ -62,7 +62,7 @@ const ICON_COLORS = {
   '/application-tracker': '#0ea5e9',
   '/ai-resume-studio': '#8b5cf6',
   '/interview-practice': '#10b981',
-  '/company-search': '#f59e0b',
+  '/job-recommendation': 'var(--primary, #335ede)',
   '/profile': '#f59e0b',
   '/settings': '#64748b',
   '/admin': '#ef4444',

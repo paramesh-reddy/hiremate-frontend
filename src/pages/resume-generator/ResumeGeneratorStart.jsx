@@ -26,14 +26,7 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import PageBreadcrumb from '../../components/common/PageBreadcrumb';
 import { listResumesAPI, deleteResumeAPI } from '../../services';
 import { BASE_URL } from '../../utilities/const';
-
-const THEME = {
-  primary: 'var(--primary, #2563eb)',
-  primarySoft: 'var(--light-blue-bg, rgba(96, 165, 250, 0.08))',
-  border: 'var(--divider, rgba(0,0,0,0.08))',
-  textPrimary: 'var(--text-primary)',
-  textSecondary: 'var(--text-secondary)',
-};
+import { RESUME_STUDIO_THEME as THEME } from '../../utilities/resumeStudioTheme';
 
 const RESUME_GEN_STORAGE_KEY = 'resumeGeneratorView';
 const RESUME_GEN_SELECTED_KEY = 'resumeGeneratorSelectedId';
@@ -193,7 +186,7 @@ export default function ResumeGeneratorStart() {
             cursor: 'pointer',
             transition: 'box-shadow 0.2s, border-color 0.2s',
             '&:hover': {
-              borderColor: 'rgba(37, 99, 235, 0.35)',
+              borderColor: 'rgba(51, 94, 222, 0.35)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
               '& .profile-arrow': { transform: 'translateX(4px)', color: THEME.primary },
               '& .profile-icon-wrap': { bgcolor: THEME.primarySoft },

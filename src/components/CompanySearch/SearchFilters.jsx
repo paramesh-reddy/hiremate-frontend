@@ -1,37 +1,53 @@
-import { Autocomplete, Box, Chip, TextField } from '@mui/material';
-
-const inputSx = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: 1.5,
-    fontFamily: 'var(--font-family)',
-    fontSize: '0.9rem',
-  },
-  '& .MuiInputLabel-root': {
-    fontFamily: 'var(--font-family)',
-    fontSize: '0.9rem',
-  },
-};
+import { Autocomplete, Box, Chip, InputAdornment, TextField } from '@mui/material';
+import WorkOutlineRoundedIcon from '@mui/icons-material/WorkOutlineRounded';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import StyleRoundedIcon from '@mui/icons-material/StyleRounded';
+import { RESUME_STUDIO_THEME as THEME, STUDIO_FILTER_TEXTFIELD_SX } from '../../utilities/resumeStudioTheme';
 
 export default function SearchFilters({ filters, onChange }) {
   const { role = '', location = '', skills = [] } = filters;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: 1.25,
+        flexWrap: 'wrap',
+        alignItems: { xs: 'stretch', sm: 'flex-start' },
+      }}
+    >
       <TextField
-        label="Role / Job Title"
+        id="jr-filter-role"
+        size="small"
+        hiddenLabel
+        placeholder="Role / job title"
         value={role}
         onChange={(e) => onChange({ ...filters, role: e.target.value })}
-        size="small"
-        sx={{ flex: 1, ...inputSx }}
-        placeholder="e.g. Software Engineer"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <WorkOutlineRoundedIcon sx={{ fontSize: 18, color: THEME.textSecondary }} />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 }, ...STUDIO_FILTER_TEXTFIELD_SX }}
       />
       <TextField
-        label="Location"
+        id="jr-filter-location"
+        size="small"
+        hiddenLabel
+        placeholder="Location"
         value={location}
         onChange={(e) => onChange({ ...filters, location: e.target.value })}
-        size="small"
-        sx={{ flex: 1, ...inputSx }}
-        placeholder="e.g. India — filters scraped listing locations"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <PlaceOutlinedIcon sx={{ fontSize: 18, color: THEME.textSecondary }} />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 }, ...STUDIO_FILTER_TEXTFIELD_SX }}
       />
       <Autocomplete
         multiple
@@ -49,8 +65,8 @@ export default function SearchFilters({ filters, onChange }) {
               sx={{
                 fontFamily: 'var(--font-family)',
                 fontSize: '0.75rem',
-                bgcolor: 'rgba(79,70,229,0.08)',
-                color: 'var(--text-primary)',
+                bgcolor: THEME.primarySoft,
+                color: THEME.primary,
               }}
             />
           ))
@@ -58,13 +74,36 @@ export default function SearchFilters({ filters, onChange }) {
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Skills"
+            id="jr-filter-skills"
             size="small"
-            placeholder={skills.length === 0 ? 'Type a skill and press Enter' : ''}
-            sx={{ flex: 1, minWidth: 200, ...inputSx }}
+            hiddenLabel
+            placeholder={skills.length === 0 ? 'Skills — type and press Enter' : ''}
+            InputProps={{
+              ...params.InputProps,
+              startAdornment: (
+                <>
+                  <InputAdornment position="start">
+                    <StyleRoundedIcon sx={{ fontSize: 18, color: THEME.textSecondary, ml: 0.5 }} />
+                  </InputAdornment>
+                  {params.InputProps.startAdornment}
+                </>
+              ),
+            }}
+            sx={{
+              flex: 1,
+              minWidth: { xs: '100%', sm: 200 },
+              ...STUDIO_FILTER_TEXTFIELD_SX,
+              '& .MuiOutlinedInput-root': {
+                ...STUDIO_FILTER_TEXTFIELD_SX['& .MuiOutlinedInput-root'],
+                minHeight: 36,
+                height: 'auto',
+                alignItems: 'flex-start',
+                py: 0.5,
+              },
+            }}
           />
         )}
-        sx={{ flex: 1 }}
+        sx={{ flex: 1, minWidth: { xs: '100%', sm: 220 } }}
       />
     </Box>
   );

@@ -20,16 +20,32 @@ import CircularProgress from '@mui/material/CircularProgress';
 import CustomInput from '../../../components/inputs/CustomInput';
 import CustomizationPanel from './CustomizationPanel';
 import SectionEditor from './SectionEditor';
-import { 
-  ResumeSectionCard, 
-  BulletEditor, 
+import {
+  ResumeSectionCard,
+  BulletEditor,
   getBulletChar,
   EMPTY_EDUCATION,
   EMPTY_EXPERIENCE,
   EMPTY_TECH_SKILL,
   EMPTY_SOFT_SKILL,
-  EMPTY_PROJECT
+  EMPTY_PROJECT,
 } from './SharedComponents';
+import { RESUME_STUDIO_THEME as T } from '../../../utilities/resumeStudioTheme';
+
+const toolbarBtnSecondary = {
+  height: 36,
+  minHeight: 36,
+  textTransform: 'none',
+  fontFamily: 'var(--font-family)',
+  fontSize: '0.8125rem',
+  fontWeight: 600,
+  borderRadius: 1,
+  px: 1.75,
+  color: T.textPrimary,
+  borderColor: T.mutedBorder,
+  bgcolor: T.surface,
+  '&:hover': { bgcolor: 'rgba(248, 250, 252, 0.95)', borderColor: 'rgba(51, 94, 222, 0.35)' },
+};
 
 export default function EditorPanel({
   activeTab,
@@ -73,9 +89,9 @@ export default function EditorPanel({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRight: '1px solid #E5E7EB',
-        boxShadow: '4px 0 16px rgba(0,0,0,0.07)',
-        bgcolor: '#FAFAFA',
+        borderRight: `1px solid ${T.border}`,
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        bgcolor: T.pageBg,
         overflow: 'hidden',
         zIndex: 2,
         position: 'relative',
@@ -83,27 +99,36 @@ export default function EditorPanel({
     >
       <Box
         sx={{
-          px: 2,
+          px: { xs: 1.5, sm: 2 },
           pt: 1.25,
           pb: 1,
-          borderBottom: '1px solid #E5E7EB',
-          bgcolor: '#FFFFFF',
+          borderBottom: `1px solid ${T.border}`,
+          bgcolor: T.surface,
           flexShrink: 0,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
             <Button
               startIcon={<ArrowBackRoundedIcon sx={{ fontSize: 15 }} />}
               onClick={goToInput}
               size="small"
-              sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', color: '#6B7280', fontWeight: 500, px: 0.75, minWidth: 0, fontSize: '0.8125rem' }}
+              sx={{
+                textTransform: 'none',
+                fontFamily: 'var(--font-family)',
+                color: T.textSecondary,
+                fontWeight: 600,
+                px: 0.75,
+                minWidth: 0,
+                fontSize: '0.8125rem',
+                '&:hover': { bgcolor: T.primarySoft, color: T.primary },
+              }}
             >
               Documents
             </Button>
-            <ChevronRightRoundedIcon sx={{ fontSize: 14, color: '#D1D5DB' }} />
-            <Typography sx={{ fontSize: '0.8125rem', color: '#374151', fontFamily: 'var(--font-family)', fontWeight: 500 }}>
-              Resume Editor
+            <ChevronRightRoundedIcon sx={{ fontSize: 14, color: T.border, flexShrink: 0 }} />
+            <Typography sx={{ fontSize: '0.8125rem', color: T.textPrimary, fontFamily: 'var(--font-family)', fontWeight: 600 }} noWrap>
+              Resume editor
             </Typography>
           </Box>
           {selectedResume && (
@@ -111,7 +136,7 @@ export default function EditorPanel({
               <IconButton
                 size="small"
                 onClick={() => confirmDelete(selectedResume)}
-                sx={{ color: '#9CA3AF', borderRadius: '8px', '&:hover': { color: '#EF4444', bgcolor: 'rgba(239,68,68,0.06)' } }}
+                sx={{ color: T.textSecondary, borderRadius: 1, '&:hover': { color: 'error.main', bgcolor: 'rgba(211, 47, 47, 0.06)' } }}
               >
                 <DeleteOutlinedIcon sx={{ fontSize: 17 }} />
               </IconButton>
@@ -119,49 +144,56 @@ export default function EditorPanel({
           )}
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
           <Tooltip title="Create a new resume">
             <Button
+              variant="outlined"
               size="small"
-              startIcon={<AddRoundedIcon sx={{ fontSize: '15px !important' }} />}
+              disableElevation
+              startIcon={<AddRoundedIcon sx={{ fontSize: '16px !important' }} />}
               onClick={handleGenerateNew}
-              sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', color: '#374151', borderColor: '#E5E7EB', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.78rem', px: 1.25, py: 0.5, fontWeight: 500, bgcolor: '#FAFAFA', '&:hover': { bgcolor: '#F3F4F6', borderColor: '#D1D5DB' } }}
+              sx={{ ...toolbarBtnSecondary }}
             >
               New
             </Button>
           </Tooltip>
           <Tooltip title={selectedResume ? 'Save changes' : 'Save as new resume'}>
             <Button
+              variant="outlined"
               size="small"
-              startIcon={isSaving ? <CircularProgress size={13} sx={{ color: '#374151' }} /> : <SaveRoundedIcon sx={{ fontSize: '15px !important' }} />}
+              disableElevation
+              startIcon={isSaving ? <CircularProgress size={14} sx={{ color: T.primary }} /> : <SaveRoundedIcon sx={{ fontSize: '16px !important' }} />}
               onClick={handleSave}
               disabled={isSaving}
-              sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', color: '#374151', borderColor: '#E5E7EB', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.78rem', px: 1.25, py: 0.5, fontWeight: 500, bgcolor: '#FAFAFA', '&:hover': { bgcolor: '#F3F4F6', borderColor: '#D1D5DB' } }}
+              sx={{ ...toolbarBtnSecondary }}
             >
               {isSaving ? 'Saving…' : 'Save'}
             </Button>
           </Tooltip>
           <Tooltip title="Auto-fit content to one page">
             <Button
+              variant="outlined"
               size="small"
-              startIcon={<FitScreenRoundedIcon sx={{ fontSize: '15px !important' }} />}
+              disableElevation
+              startIcon={<FitScreenRoundedIcon sx={{ fontSize: '16px !important' }} />}
               onClick={handleAutoFit}
-              sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', color: '#374151', borderColor: '#E5E7EB', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.78rem', px: 1.25, py: 0.5, fontWeight: 500, bgcolor: '#FAFAFA', '&:hover': { bgcolor: '#F3F4F6', borderColor: '#D1D5DB' } }}
+              sx={{ ...toolbarBtnSecondary }}
             >
               Fit Page
             </Button>
           </Tooltip>
 
-          <Box sx={{ flex: 1 }} />
+          <Box sx={{ flex: 1, minWidth: 8 }} />
 
           <Tooltip title="Download PDF">
             <Button
               variant="outlined"
               size="small"
-              startIcon={<FileDownloadOutlinedIcon sx={{ fontSize: '15px !important' }} />}
+              disableElevation
+              startIcon={<FileDownloadOutlinedIcon sx={{ fontSize: '16px !important' }} />}
               onClick={handleDownload}
               disabled={downloading}
-              sx={{ textTransform: 'none', fontFamily: 'var(--font-family)', borderColor: '#D1D5DB', color: '#374151', borderRadius: '8px', fontSize: '0.78rem', px: 1.25, py: 0.5 }}
+              sx={{ ...toolbarBtnSecondary }}
             >
               {downloading ? 'Generating…' : 'Download'}
             </Button>
@@ -170,10 +202,24 @@ export default function EditorPanel({
             <Button
               variant="contained"
               size="small"
-              startIcon={<GetAppRoundedIcon sx={{ fontSize: '15px !important' }} />}
+              disableElevation
+              startIcon={<GetAppRoundedIcon sx={{ fontSize: '16px !important' }} />}
               onClick={handleSaveAndUse}
               disabled={downloading}
-              sx={{ bgcolor: '#2563EB', textTransform: 'none', fontWeight: 600, fontFamily: 'var(--font-family)', borderRadius: '8px', fontSize: '0.78rem', px: 1.5, py: 0.5, whiteSpace: 'nowrap', boxShadow: 'none', '&:hover': { bgcolor: '#1D4ED8', boxShadow: 'none' } }}
+              sx={{
+                height: 36,
+                minHeight: 36,
+                bgcolor: T.primary,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontFamily: 'var(--font-family)',
+                borderRadius: 1,
+                fontSize: '0.8125rem',
+                px: 2,
+                whiteSpace: 'nowrap',
+                boxShadow: 'none',
+                '&:hover': { bgcolor: T.primaryDark, boxShadow: 'none' },
+              }}
             >
               Save & Use
             </Button>
@@ -181,9 +227,23 @@ export default function EditorPanel({
             <Button
               variant="contained"
               size="small"
-              startIcon={<AutoAwesomeRoundedIcon sx={{ fontSize: '15px !important' }} />}
+              disableElevation
+              startIcon={<AutoAwesomeRoundedIcon sx={{ fontSize: '16px !important' }} />}
               onClick={() => { setJdDialogMode('add'); setShowJdUploadDialog(true); }}
-              sx={{ background: 'linear-gradient(135deg, #2563EB 0%, #7c3aed 100%)', textTransform: 'none', fontWeight: 600, fontFamily: 'var(--font-family)', borderRadius: '8px', fontSize: '0.78rem', px: 1.5, py: 0.5, whiteSpace: 'nowrap', boxShadow: 'none' }}
+              sx={{
+                height: 36,
+                minHeight: 36,
+                bgcolor: T.primary,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontFamily: 'var(--font-family)',
+                borderRadius: 1,
+                fontSize: '0.8125rem',
+                px: 2,
+                whiteSpace: 'nowrap',
+                boxShadow: 'none',
+                '&:hover': { bgcolor: T.primaryDark, boxShadow: 'none' },
+              }}
             >
               Tailor to Job
             </Button>
@@ -195,16 +255,21 @@ export default function EditorPanel({
         value={activeTab}
         onChange={(_, v) => setActiveTab(v)}
         sx={{
-          borderBottom: '1px solid #E5E7EB',
-          bgcolor: '#FFFFFF',
-          px: 2,
+          borderBottom: `1px solid ${T.border}`,
+          bgcolor: T.surface,
+          px: { xs: 1.5, sm: 2 },
           minHeight: 44,
           flexShrink: 0,
-          '& .MuiTab-root': { minHeight: 44, textTransform: 'none', fontFamily: 'var(--font-family)' },
-          '& .Mui-selected': { color: '#1D4ED8', fontWeight: 500, bgcolor: '#F8FAFF', borderBottom: '2px solid #2563EB' },
-          '& .MuiTabs-indicator': { display: 'none' },
-          '& .MuiTab-root:not(.Mui-selected)': { color: '#6B7280', borderBottom: '2px solid transparent' },
-          '& .MuiTab-root:not(.Mui-selected):hover': { bgcolor: '#F3F4F6' },
+          '& .MuiTab-root': {
+            minHeight: 44,
+            textTransform: 'none',
+            fontWeight: 600,
+            fontSize: '0.95rem',
+            fontFamily: 'var(--font-family)',
+            color: T.textSecondary,
+          },
+          '& .Mui-selected': { color: `${T.primary} !important` },
+          '& .MuiTabs-indicator': { bgcolor: T.primary, height: 3 },
         }}
       >
         <Tab icon={<EditNoteRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Edit Content" value="content" />
@@ -239,7 +304,7 @@ export default function EditorPanel({
                 <Chip
                   label="Profile Preview"
                   size="small"
-                  sx={{ bgcolor: 'rgba(37,99,235,0.08)', color: 'var(--primary)', fontWeight: 700, fontSize: '0.7rem', height: 22, '& .MuiChip-label': { px: 1 } }}
+                  sx={{ bgcolor: T.primarySoft, color: T.primary, fontWeight: 700, fontSize: '0.7rem', height: 22, '& .MuiChip-label': { px: 1 } }}
                 />
                 <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'var(--font-family)' }}>
                   Live preview from your profile
@@ -263,12 +328,12 @@ export default function EditorPanel({
                       fontFamily: 'var(--font-family)',
                       fontWeight: 600,
                       fontSize: '0.9375rem',
-                      color: 'var(--text-primary)',
-                      border: '1.5px solid #2563EB',
-                      borderRadius: '6px',
+                      color: T.textPrimary,
+                      border: `1.5px solid ${T.primary}`,
+                      borderRadius: 1,
                       px: 1,
                       py: 0.25,
-                      bgcolor: '#F0F6FF',
+                      bgcolor: T.primarySoft,
                       minWidth: 0,
                     }}
                   />
@@ -294,7 +359,7 @@ export default function EditorPanel({
                     </Typography>
                   </Tooltip>
                   <Tooltip title="Rename resume">
-                    <IconButton size="small" onClick={() => setIsTitleEditing(true)} sx={{ color: '#9ca3af', p: 0.375, flexShrink: 0, '&:hover': { color: '#2563EB', bgcolor: 'rgba(37,99,235,0.06)' } }}>
+                    <IconButton size="small" onClick={() => setIsTitleEditing(true)} sx={{ color: T.textSecondary, p: 0.375, flexShrink: 0, '&:hover': { color: T.primary, bgcolor: T.primarySoft } }}>
                       <DriveFileRenameOutlineRoundedIcon sx={{ fontSize: 15 }} />
                     </IconButton>
                   </Tooltip>
@@ -357,36 +422,42 @@ export default function EditorPanel({
                   p: 1.75,
                   mb: 3,
                   borderRadius: 2,
-                  border: '1.5px dashed rgba(37,99,235,0.35)',
-                  background: 'linear-gradient(135deg, rgba(37,99,235,0.03) 0%, rgba(124,58,237,0.03) 100%)',
+                  border: `1.5px dashed rgba(51, 94, 222, 0.35)`,
+                  bgcolor: T.primarySoft,
                   cursor: 'pointer',
                   transition: 'all 0.18s ease',
                   '&:hover': {
-                    borderColor: 'rgba(37,99,235,0.65)',
-                    background: 'linear-gradient(135deg, rgba(37,99,235,0.07) 0%, rgba(124,58,237,0.05) 100%)',
+                    borderColor: 'rgba(51, 94, 222, 0.55)',
+                    bgcolor: 'rgba(51, 94, 222, 0.12)',
                     transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 16px rgba(37,99,235,0.1)',
+                    boxShadow: '0 4px 16px rgba(51, 94, 222, 0.12)',
                   },
                 }}
               >
                 <Box
                   sx={{
-                    width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
-                    background: 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.12))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 40,
+                    height: 40,
+                    borderRadius: 2,
+                    flexShrink: 0,
+                    bgcolor: T.surface,
+                    border: `1px solid ${T.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  <AutoAwesomeRoundedIcon sx={{ color: 'var(--primary)', fontSize: 20 }} />
+                  <AutoAwesomeRoundedIcon sx={{ color: T.primary, fontSize: 20 }} />
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.875rem', color: '#0f172a', lineHeight: 1.3 }}>
+                  <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 700, fontSize: '0.875rem', color: T.textPrimary, lineHeight: 1.3 }}>
                     Tailor to a Job
                   </Typography>
-                  <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.775rem', color: '#64748b', lineHeight: 1.4 }}>
+                  <Typography sx={{ fontFamily: 'var(--font-family)', fontSize: '0.775rem', color: T.textSecondary, lineHeight: 1.4 }}>
                     Add a JD — AI rewrites your resume to maximize keyword match
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1.25, py: 0.625, borderRadius: '8px', background: 'var(--primary)', flexShrink: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1.25, py: 0.625, borderRadius: 1, bgcolor: T.primary, flexShrink: 0 }}>
                   <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'white', fontFamily: 'var(--font-family)', whiteSpace: 'nowrap' }}>Add JD</Typography>
                   <ChevronRightRoundedIcon sx={{ color: 'white', fontSize: 14 }} />
                 </Box>
@@ -663,7 +734,7 @@ export default function EditorPanel({
         )}
       </Box>
       {!extensionBannerDismissed && (
-        <Box sx={{ px: 2, py: 2, borderTop: '1px solid #E5E7EB', bgcolor: '#FFFFFF', flexShrink: 0 }}>
+        <Box sx={{ px: 2, py: 2, borderTop: `1px solid ${T.border}`, bgcolor: T.surface, flexShrink: 0 }}>
           <Button
             size="small"
             onClick={() => setExtensionBannerDismissedAndStore(true)}

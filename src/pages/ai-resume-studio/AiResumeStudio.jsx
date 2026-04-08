@@ -54,14 +54,7 @@ import {
   renameResumeAPI,
 } from '../../services';
 import { BASE_URL } from '../../utilities/const';
-
-const THEME = {
-  primary: 'var(--primary, #335ede)',
-  primarySoft: 'var(--light-blue-bg, rgba(51, 94, 222, 0.08))',
-  border: 'var(--divider, rgba(0,0,0,0.08))',
-  textPrimary: 'var(--text-primary)',
-  textSecondary: 'var(--text-secondary)',
-};
+import { RESUME_STUDIO_THEME as THEME } from '../../utilities/resumeStudioTheme';
 
 /** Original AI Resume Studio tools — all fields except `features` are shown on each card. */
 const TOOLS = [

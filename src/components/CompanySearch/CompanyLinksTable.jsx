@@ -12,31 +12,29 @@ import {
   Typography,
 } from '@mui/material';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import { RESUME_STUDIO_THEME as THEME } from '../../utilities/resumeStudioTheme';
 
 const PAGE_SIZE = 10;
 
 const cellSx = {
-  fontFamily: 'var(--font-family)',
   fontSize: '0.875rem',
-  color: 'var(--text-primary)',
-  borderColor: 'var(--border-color)',
+  color: THEME.textPrimary,
+  borderColor: THEME.border,
 };
 
 const headCellSx = {
   ...cellSx,
-  fontWeight: 700,
-  color: 'var(--text-secondary)',
-  fontSize: '0.8125rem',
+  fontWeight: 600,
+  fontSize: '0.6875rem',
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
-  letterSpacing: '0.04em',
+  color: THEME.textSecondary,
 };
 
 function LinkCell({ href, label }) {
   if (!href) {
     return (
-      <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontFamily: 'var(--font-family)' }}>
-        —
-      </Typography>
+      <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary }}>—</Typography>
     );
   }
   return (
@@ -49,11 +47,11 @@ function LinkCell({ href, label }) {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 0.5,
-        color: '#4f46e5',
+        color: THEME.primary,
         textDecoration: 'none',
         fontSize: '0.8125rem',
-        fontFamily: 'var(--font-family)',
-        '&:hover': { textDecoration: 'underline' },
+        fontWeight: 600,
+        '&:hover': { textDecoration: 'underline', color: THEME.primaryDark },
       }}
     >
       {label}
@@ -83,14 +81,22 @@ export default function CompanyLinksTable({ rows = [], loading = false }) {
     <Box sx={{ mt: 2 }}>
       <TableContainer
         sx={{
-          border: '1px solid var(--border-color)',
+          border: `1px solid ${THEME.border}`,
           borderRadius: 2,
           overflow: 'hidden',
         }}
       >
-        <Table size="small">
+        <Table size="small" sx={{ tableLayout: 'fixed' }}>
           <TableHead>
-            <TableRow sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
+            <TableRow
+              sx={{
+                '& th': {
+                  bgcolor: THEME.previewCanvas,
+                  borderBottom: `1px solid ${THEME.border}`,
+                  py: 1.25,
+                },
+              }}
+            >
               <TableCell sx={headCellSx}>Company</TableCell>
               <TableCell sx={headCellSx}>Careers (scraped)</TableCell>
               <TableCell sx={headCellSx}>LinkedIn (manual)</TableCell>
@@ -122,7 +128,7 @@ export default function CompanyLinksTable({ rows = [], loading = false }) {
           onPageChange={(_, p) => setPage(p)}
           rowsPerPage={PAGE_SIZE}
           rowsPerPageOptions={[PAGE_SIZE]}
-          sx={{ fontFamily: 'var(--font-family)', color: 'var(--text-secondary)' }}
+          sx={{ color: THEME.textSecondary, '& .MuiTablePagination-toolbar': { minHeight: 48 } }}
         />
       )}
     </Box>

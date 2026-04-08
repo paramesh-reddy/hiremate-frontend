@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import { RESUME_STUDIO_THEME as THEME } from '../../utilities/resumeStudioTheme';
 
 const STATUS_COLORS = {
   pending: { bg: 'rgba(234,179,8,0.1)', color: '#b45309', border: 'rgba(234,179,8,0.3)' },
@@ -42,29 +43,26 @@ function JobCard({ job }) {
   return (
     <Box
       sx={{
-        border: '1px solid var(--border-color)',
-        borderRadius: 1.5,
+        border: `1px solid ${THEME.border}`,
+        borderRadius: 2,
         p: 1.5,
         mb: 1,
+        bgcolor: THEME.surface,
         '&:last-child': { mb: 0 },
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
         <Box sx={{ flex: 1 }}>
-          <Typography
-            sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}
-          >
+          <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: THEME.textPrimary }}>
             {job.title}
           </Typography>
           {job.location && (
-            <Typography sx={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-family)', mt: 0.25 }}>
+            <Typography sx={{ fontSize: '0.8rem', color: THEME.textSecondary, mt: 0.25 }}>
               {job.location}
             </Typography>
           )}
           {job.snippet && (
-            <Typography
-              sx={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-family)', mt: 0.5, lineHeight: 1.5 }}
-            >
+            <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary, mt: 0.5, lineHeight: 1.5 }}>
               {job.snippet}
             </Typography>
           )}
@@ -76,17 +74,18 @@ function JobCard({ job }) {
             target="_blank"
             rel="noopener noreferrer"
             size="small"
+            variant="outlined"
             endIcon={<OpenInNewRoundedIcon sx={{ fontSize: '13px !important' }} />}
             sx={{
-              fontFamily: 'var(--font-family)',
-              fontSize: '0.75rem',
+              fontSize: '0.8125rem',
               textTransform: 'none',
+              fontWeight: 600,
               flexShrink: 0,
-              color: '#4f46e5',
-              borderColor: 'rgba(79,70,229,0.3)',
-              '&:hover': { borderColor: '#4f46e5', bgcolor: 'rgba(79,70,229,0.04)' },
+              borderRadius: 1,
+              color: THEME.primary,
+              borderColor: 'rgba(51, 94, 222, 0.35)',
+              '&:hover': { borderColor: THEME.primary, bgcolor: THEME.primarySoft },
             }}
-            variant="outlined"
           >
             View
           </Button>
@@ -111,28 +110,37 @@ export default function JobResultsList({ events = [] }) {
             disableGutters
             sx={{
               mb: 1,
-              border: '1px solid var(--border-color)',
+              border: `1px solid ${THEME.border}`,
               borderRadius: '10px !important',
               boxShadow: 'none',
+              bgcolor: THEME.surface,
               '&:before': { display: 'none' },
               '&.Mui-expanded': { margin: '0 0 8px 0' },
             }}
           >
             <AccordionSummary
-              expandIcon={<ExpandMoreRoundedIcon sx={{ color: 'var(--text-muted)' }} />}
+              expandIcon={<ExpandMoreRoundedIcon sx={{ color: THEME.textSecondary }} />}
               sx={{ minHeight: 48, '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 1.5, my: 0 } }}
             >
-              <Typography sx={{ fontFamily: 'var(--font-family)', fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)', flex: 1 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', color: THEME.textPrimary, flex: 1 }}>
                 {event.company}
               </Typography>
-              <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontFamily: 'var(--font-family)' }}>
+              <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary }}>
                 {event.jobs.length} role{event.jobs.length !== 1 ? 's' : ''}
               </Typography>
               <StatusBadge status={event.status} />
             </AccordionSummary>
             <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
               {event.status === 'pending' && (
-                <LinearProgress sx={{ borderRadius: 1, mb: 1.5, height: 3 }} />
+                <LinearProgress
+                  sx={{
+                    borderRadius: 1,
+                    mb: 1.5,
+                    height: 3,
+                    bgcolor: 'rgba(51, 94, 222, 0.08)',
+                    '& .MuiLinearProgress-bar': { bgcolor: THEME.primary },
+                  }}
+                />
               )}
               {event.status === 'error' && event.message && (
                 <Typography sx={{ fontSize: '0.8125rem', color: '#b91c1c', fontFamily: 'var(--font-family)', mb: 1 }}>
@@ -142,7 +150,7 @@ export default function JobResultsList({ events = [] }) {
               {event.jobs.length > 0
                 ? event.jobs.map((job, i) => <JobCard key={i} job={job} />)
                 : event.status === 'done' && (
-                    <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontFamily: 'var(--font-family)' }}>
+                    <Typography sx={{ fontSize: '0.8125rem', color: THEME.textSecondary }}>
                       No matching roles found.
                     </Typography>
                   )}

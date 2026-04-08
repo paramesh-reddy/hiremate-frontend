@@ -39,7 +39,7 @@ import AdminLearning from '../pages/admin/AdminLearning';
 import AdminIssues from '../pages/admin/AdminIssues';
 import PrivacyPolicy from '../pages/legal/PrivacyPolicy';
 import ReportIssuePage from '../pages/report-issue/ReportIssuePage';
-import CompanySearchPage from '../pages/CompanySearch/CompanySearchPage';
+import JobRecommendationPage from '../pages/job-recommendation/JobRecommendationPage';
 
 export default function AppRoutes() {
   return (
@@ -90,7 +90,8 @@ export default function AppRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/report-issue" element={<ReportIssuePage />} />
-            <Route path="/company-search" element={<CompanySearchPage />} />
+            <Route path="/job-recommendation" element={<JobRecommendationPage />} />
+            <Route path="/company-search" element={<Navigate to="/job-recommendation" replace />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
